@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +10,8 @@ import { lovable } from "@/integrations/lovable";
 
 const Register = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const refId = searchParams.get("ref");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -22,7 +24,7 @@ const Register = () => {
       email,
       password,
       options: {
-        data: { full_name: name },
+        data: { full_name: name, ...(refId ? { referred_by: refId } : {}) },
         emailRedirectTo: window.location.origin,
       },
     });
@@ -53,6 +55,7 @@ const Register = () => {
           </Link>
           <h1 className="font-heading text-2xl font-bold">Criar Conta</h1>
           <p className="text-muted-foreground text-sm mt-1">Comece a ganhar dinheiro agora</p>
+          {refId && <p className="text-primary text-xs mt-2">📎 Indicado por um amigo!</p>}
         </div>
 
         <div className="space-y-3 mb-6">
