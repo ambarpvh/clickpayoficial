@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { DollarSign, Eye, TrendingUp, Zap, LogOut, Copy, Gift, Clock, ArrowUpRight } from "lucide-react";
+import { DollarSign, Eye, TrendingUp, Zap, LogOut, Copy, Gift, Clock, ArrowUpRight, Crown, History as HistoryIcon } from "lucide-react";
 import AdTimer from "@/components/AdTimer";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -24,7 +24,7 @@ interface Click {
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { user, signOut, loading: authLoading } = useAuth();
+  const { user, isAdmin, signOut, loading: authLoading } = useAuth();
   const [ads, setAds] = useState<Ad[]>([]);
   const [clicks, setClicks] = useState<Click[]>([]);
   const [balance, setBalance] = useState(0);
@@ -32,23 +32,18 @@ const Dashboard = () => {
   const [planName, setPlanName] = useState("Free");
   const [dailyLimit, setDailyLimit] = useState(10);
   const [todayClicks, setTodayClicks] = useState(0);
+  const [todayEarnings, setTodayEarnings] = useState(0);
   const [activeAd, setActiveAd] = useState<{ id: number; title: string; url: string; reward: string } | null>(null);
   const [referralCount, setReferralCount] = useState(0);
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate("/login");
-      return;
-    }
-    if (user) {
-      loadData();
-    }
+    if (!authLoading && !user) { navigate("/login"); return; }
+    if (user) loadData();
   }, [user, authLoading]);
 
   const loadData = async () => {
     if (!user) return;
 
-    // Load user plan
     const { data: userPlan } = await supabase
       .from("user_plans")
       .select("plan_id, plans(name, click_value, daily_click_limit)")
@@ -63,14 +58,9 @@ const Dashboard = () => {
       setDailyLimit(plan.daily_click_limit);
     }
 
-    // Load active ads
-    const { data: adsData } = await supabase
-      .from("ads")
-      .select("*")
-      .eq("is_active", true);
+    const { data: adsData } = await supabase.from("ads").select("*").eq("is_active", true);
     setAds(adsData || []);
 
-    // Load today's clicks
     const today = new Date().toISOString().split("T")[0];
     const { data: todayClicksData } = await supabase
       .from("clicks")
@@ -79,26 +69,15 @@ const Dashboard = () => {
       .gte("clicked_at", today);
 
     setTodayClicks(todayClicksData?.length || 0);
+    setTodayEarnings(todayClicksData?.reduce((sum, c) => sum + Number(c.earned_value), 0) || 0);
 
-    // Load all clicks for balance
-    const { data: allClicks } = await supabase
-      .from("clicks")
-      .select("earned_value")
-      .eq("user_id", user.id);
-
+    const { data: allClicks } = await supabase.from("clicks").select("earned_value").eq("user_id", user.id);
     const totalEarned = allClicks?.reduce((sum, c) => sum + Number(c.earned_value), 0) || 0;
 
-    // Subtract approved withdrawals
-    const { data: withdrawals } = await supabase
-      .from("withdrawals")
-      .select("amount")
-      .eq("user_id", user.id)
-      .eq("status", "approved");
-
+    const { data: withdrawals } = await supabase.from("withdrawals").select("amount").eq("user_id", user.id).eq("status", "approved");
     const totalWithdrawn = withdrawals?.reduce((sum, w) => sum + Number(w.amount), 0) || 0;
     setBalance(totalEarned - totalWithdrawn);
 
-    // Load recent clicks
     const { data: recentClicks } = await supabase
       .from("clicks")
       .select("*, ads(title)")
@@ -107,11 +86,7 @@ const Dashboard = () => {
       .limit(10);
     setClicks(recentClicks || []);
 
-    // Count referrals
-    const { count } = await supabase
-      .from("profiles")
-      .select("id", { count: "exact", head: true })
-      .eq("referred_by", user.id);
+    const { count } = await supabase.from("referrals").select("id", { count: "exact", head: true }).eq("referrer_id", user.id);
     setReferralCount(count || 0);
   };
 
@@ -137,20 +112,11 @@ const Dashboard = () => {
 
   const handleWithdrawal = async () => {
     if (!user) return;
-    if (balance < 5) {
-      toast.info("Saque mínimo: $5.00");
-      return;
-    }
-    const { error } = await supabase.from("withdrawals").insert({
-      user_id: user.id,
-      amount: balance,
-    });
-    if (error) {
-      toast.error("Erro ao solicitar saque");
-    } else {
-      toast.success("Saque solicitado!");
-      loadData();
-    }
+    if (balance < 5) { toast.info("Saque mínimo: $5.00"); return; }
+    const { error } = await supabase.from("withdrawals").insert({ user_id: user.id, amount: balance });
+    if (error) { toast.error("Erro ao solicitar saque"); return; }
+    toast.success("Saque solicitado!");
+    loadData();
   };
 
   const copyReferral = () => {
@@ -166,6 +132,7 @@ const Dashboard = () => {
 
   const availableAds = ads.filter((a) => !todayClickedAdIds.has(a.id));
   const canClick = todayClicks < dailyLimit;
+  const progressPercent = Math.min((todayClicks / dailyLimit) * 100, 100);
 
   if (authLoading) return <div className="min-h-screen bg-background flex items-center justify-center"><Zap className="h-8 w-8 text-primary animate-pulse" /></div>;
 
@@ -178,7 +145,16 @@ const Dashboard = () => {
             <span className="font-heading text-lg font-bold">ClickPay</span>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-sm text-muted-foreground">Plano: <span className="text-primary font-semibold">{planName}</span></span>
+            {isAdmin && (
+              <Button variant="ghost" size="sm" onClick={() => navigate("/admin")}>Admin</Button>
+            )}
+            <Button variant="ghost" size="sm" onClick={() => navigate("/history")}>
+              <HistoryIcon className="h-4 w-4" />
+            </Button>
+            <Button variant="gold" size="sm" onClick={() => navigate("/plans")}>
+              <Crown className="h-4 w-4 mr-1" /> Upgrade
+            </Button>
+            <span className="text-sm text-muted-foreground hidden sm:inline">Plano: <span className="text-primary font-semibold">{planName}</span></span>
             <Button variant="ghost" size="sm" onClick={() => { signOut(); navigate("/"); }}>
               <LogOut className="h-4 w-4" />
             </Button>
@@ -187,11 +163,12 @@ const Dashboard = () => {
       </nav>
 
       <div className="container mx-auto px-4 py-8 space-y-8">
+        {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             { label: "Saldo Atual", value: `$${balance.toFixed(4)}`, icon: DollarSign, glow: true },
             { label: "Anúncios Hoje", value: `${todayClicks}/${dailyLimit}`, icon: Eye, glow: false },
-            { label: "Ganhos Hoje", value: `$${(todayClicks * clickValue).toFixed(4)}`, icon: TrendingUp, glow: false },
+            { label: "Ganhos Hoje", value: `$${todayEarnings.toFixed(4)}`, icon: TrendingUp, glow: false },
             { label: "Indicações", value: String(referralCount), icon: Gift, glow: false },
           ].map((stat) => (
             <div key={stat.label} className={`glass-card rounded-xl p-5 ${stat.glow ? "glow-primary border-primary/30" : ""}`}>
@@ -204,16 +181,39 @@ const Dashboard = () => {
           ))}
         </div>
 
+        {/* Daily progress bar */}
+        <div className="glass-card rounded-xl p-5">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-semibold">Progresso diário</span>
+            <span className="text-muted-foreground text-xs">{todayClicks}/{dailyLimit} cliques</span>
+          </div>
+          <div className="w-full h-3 bg-secondary rounded-full overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-500 ease-out"
+              style={{
+                width: `${progressPercent}%`,
+                background: "var(--gradient-primary)",
+              }}
+            />
+          </div>
+          <p className="text-muted-foreground text-xs mt-2">
+            Ganhos hoje: <span className="text-primary font-semibold">${todayEarnings.toFixed(4)}</span>
+          </p>
+        </div>
+
+        {/* Referral link */}
         <div className="glass-card rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
             <p className="text-sm font-semibold mb-1">Seu link de indicação</p>
             <p className="text-muted-foreground text-xs break-all">{window.location.origin}/register?ref={user?.id?.slice(0, 8)}...</p>
+            <p className="text-accent text-xs mt-1">Nível 1: 10% | Nível 2: 5% de comissão</p>
           </div>
           <Button variant="outline" size="sm" onClick={copyReferral}>
             <Copy className="h-3.5 w-3.5 mr-1" /> Copiar
           </Button>
         </div>
 
+        {/* Ads + History */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-4">
             <h2 className="font-heading text-xl font-bold">Anúncios Disponíveis</h2>
@@ -222,6 +222,9 @@ const Dashboard = () => {
                 <Clock className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
                 <p className="text-muted-foreground">Limite diário atingido!</p>
                 <p className="text-muted-foreground text-sm mt-1">Volte amanhã ou faça upgrade do plano.</p>
+                <Button variant="gold" size="sm" className="mt-4" onClick={() => navigate("/plans")}>
+                  <Crown className="h-4 w-4 mr-1" /> Fazer Upgrade
+                </Button>
               </div>
             ) : availableAds.length === 0 ? (
               <div className="glass-card rounded-xl p-8 text-center">
@@ -237,7 +240,7 @@ const Dashboard = () => {
                     </div>
                     <div>
                       <p className="font-semibold text-sm">{ad.title}</p>
-                      <p className="text-muted-foreground text-xs">Ganhe ${clickValue.toFixed(4)}</p>
+                      <p className="text-muted-foreground text-xs">Ganhe ${clickValue.toFixed(4)} • {ad.view_time}s</p>
                     </div>
                   </div>
                   <Button size="sm" onClick={() => setActiveAd({ id: Number(ad.id), title: ad.title, url: ad.url, reward: `$${clickValue.toFixed(4)}` })}>
@@ -249,7 +252,10 @@ const Dashboard = () => {
           </div>
 
           <div className="space-y-4">
-            <h2 className="font-heading text-xl font-bold">Histórico</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="font-heading text-xl font-bold">Histórico</h2>
+              <Button variant="ghost" size="sm" onClick={() => navigate("/history")}>Ver tudo</Button>
+            </div>
             <div className="glass-card rounded-xl divide-y divide-border/50">
               {clicks.length === 0 ? (
                 <p className="p-4 text-muted-foreground text-sm text-center">Nenhum clique ainda</p>
