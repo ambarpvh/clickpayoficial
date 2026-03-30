@@ -62,7 +62,7 @@ const Admin = () => {
     const { data: plansData } = await supabase.from("plans").select("*").order("price", { ascending: true });
     setPlans(plansData || []);
 
-    const { data: withdrawalsData } = await supabase.from("withdrawals").select("*, profiles!withdrawals_user_id_fkey(name, email)").eq("status", "pending").order("requested_at", { ascending: false });
+    const { data: withdrawalsData } = await supabase.from("withdrawals").select("*").eq("status", "pending").order("requested_at", { ascending: false });
     setWithdrawals(withdrawalsData || []);
   };
 
@@ -71,17 +71,22 @@ const Admin = () => {
 
   const saveAd = async () => {
     if (!adTitle || !adUrl) { toast.error("Preencha todos os campos"); return; }
-    if (editingAd) {
-      const { error } = await supabase.from("ads").update({ title: adTitle, url: adUrl, view_time: adTime }).eq("id", editingAd.id);
-      if (error) { toast.error("Erro ao editar"); return; }
-      toast.success("Anúncio atualizado!");
-    } else {
-      const { error } = await supabase.from("ads").insert({ title: adTitle, url: adUrl, view_time: adTime });
-      if (error) { toast.error("Erro ao criar"); return; }
-      toast.success("Anúncio criado!");
+    try {
+      if (editingAd) {
+        const { error } = await supabase.from("ads").update({ title: adTitle, url: adUrl, view_time: adTime }).eq("id", editingAd.id);
+        if (error) { console.error("Erro ao editar anúncio:", error); toast.error("Erro ao editar: " + error.message); return; }
+        toast.success("Anúncio atualizado!");
+      } else {
+        const { error } = await supabase.from("ads").insert([{ title: adTitle, url: adUrl, view_time: adTime }]);
+        if (error) { console.error("Erro ao criar anúncio:", error); toast.error("Erro ao criar: " + error.message); return; }
+        toast.success("Anúncio criado!");
+      }
+      resetAdForm();
+      loadData();
+    } catch (e: any) {
+      console.error("Exceção ao salvar anúncio:", e);
+      toast.error("Erro inesperado: " + e.message);
     }
-    resetAdForm();
-    loadData();
   };
 
   const toggleAd = async (id: string, active: boolean) => {
