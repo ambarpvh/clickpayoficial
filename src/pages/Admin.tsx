@@ -17,6 +17,7 @@ const Admin = () => {
   const [adTitle, setAdTitle] = useState("");
   const [adUrl, setAdUrl] = useState("");
   const [adTime, setAdTime] = useState(10);
+  const [adSubmitting, setAdSubmitting] = useState(false);
 
   // Plan editing
   const [editingPlan, setEditingPlan] = useState<any>(null);
@@ -43,27 +44,48 @@ const Admin = () => {
   }, [user, isAdmin, authLoading]);
 
   const loadData = async () => {
-    const { count: userCount } = await supabase.from("profiles").select("id", { count: "exact", head: true });
-    const { count: clickCount } = await supabase.from("clicks").select("id", { count: "exact", head: true });
-    const { count: pendingCount } = await supabase.from("withdrawals").select("id", { count: "exact", head: true }).eq("status", "pending");
-    const { count: activeAdsCount } = await supabase.from("ads").select("id", { count: "exact", head: true }).eq("is_active", true);
+    try {
+      const [
+        { count: userCount, error: userCountError },
+        { count: clickCount, error: clickCountError },
+        { count: pendingCount, error: pendingCountError },
+        { count: activeAdsCount, error: activeAdsCountError },
+        { data: approvedW, error: approvedWError },
+        { data: profilesData, error: profilesError },
+        { data: adsData, error: adsError },
+        { data: plansData, error: plansError },
+        { data: withdrawalsData, error: withdrawalsError },
+      ] = await Promise.all([
+        supabase.from("profiles").select("id", { count: "exact", head: true }),
+        supabase.from("clicks").select("id", { count: "exact", head: true }),
+        supabase.from("withdrawals").select("id", { count: "exact", head: true }).eq("status", "pending"),
+        supabase.from("ads").select("id", { count: "exact", head: true }).eq("is_active", true),
+        supabase.from("withdrawals").select("amount").eq("status", "approved"),
+        supabase.from("profiles").select("*, user_plans(plan_id, plans(name)), user_roles(role)").limit(100),
+        supabase.from("ads").select("*").order("created_at", { ascending: false }),
+        supabase.from("plans").select("*").order("price", { ascending: true }),
+        supabase.from("withdrawals").select("*").eq("status", "pending").order("requested_at", { ascending: false }),
+      ]);
 
-    const { data: approvedW } = await supabase.from("withdrawals").select("amount").eq("status", "approved");
-    const totalPaid = approvedW?.reduce((s, w) => s + Number(w.amount), 0) || 0;
+      const firstError = userCountError || clickCountError || pendingCountError || activeAdsCountError || approvedWError || profilesError || adsError || plansError || withdrawalsError;
 
-    setStats({ users: userCount || 0, clicks: clickCount || 0, pendingWithdrawals: pendingCount || 0, activeAds: activeAdsCount || 0, totalPaid });
+      if (firstError) {
+        console.error("Erro ao carregar dados do admin:", firstError);
+        toast.error(`Erro ao carregar painel: ${firstError.message}`);
+        return;
+      }
 
-    const { data: profilesData } = await supabase.from("profiles").select("*, user_plans(plan_id, plans(name)), user_roles(role)").limit(100);
-    setUsers(profilesData || []);
+      const totalPaid = approvedW?.reduce((s, w) => s + Number(w.amount), 0) || 0;
 
-    const { data: adsData } = await supabase.from("ads").select("*").order("created_at", { ascending: false });
-    setAds(adsData || []);
-
-    const { data: plansData } = await supabase.from("plans").select("*").order("price", { ascending: true });
-    setPlans(plansData || []);
-
-    const { data: withdrawalsData } = await supabase.from("withdrawals").select("*").eq("status", "pending").order("requested_at", { ascending: false });
-    setWithdrawals(withdrawalsData || []);
+      setStats({ users: userCount || 0, clicks: clickCount || 0, pendingWithdrawals: pendingCount || 0, activeAds: activeAdsCount || 0, totalPaid });
+      setUsers(profilesData || []);
+      setAds(adsData || []);
+      setPlans(plansData || []);
+      setWithdrawals(withdrawalsData || []);
+    } catch (error: any) {
+      console.error("Exceção ao carregar admin:", error);
+      toast.error(`Erro inesperado no painel: ${error.message}`);
+    }
   };
 
   // --- Ad CRUD ---
@@ -71,6 +93,10 @@ const Admin = () => {
 
   const saveAd = async () => {
     if (!adTitle || !adUrl) { toast.error("Preencha todos os campos"); return; }
+    if (adSubmitting) return;
+
+    setAdSubmitting(true);
+
     try {
       if (editingAd) {
         const { error } = await supabase.from("ads").update({ title: adTitle, url: adUrl, view_time: adTime }).eq("id", editingAd.id);
@@ -82,23 +108,35 @@ const Admin = () => {
         toast.success("Anúncio criado!");
       }
       resetAdForm();
-      loadData();
+      await loadData();
     } catch (e: any) {
       console.error("Exceção ao salvar anúncio:", e);
       toast.error("Erro inesperado: " + e.message);
+    } finally {
+      setAdSubmitting(false);
     }
   };
 
   const toggleAd = async (id: string, active: boolean) => {
-    await supabase.from("ads").update({ is_active: !active }).eq("id", id);
+    const { error } = await supabase.from("ads").update({ is_active: !active }).eq("id", id);
+    if (error) {
+      console.error("Erro ao alterar status do anúncio:", error);
+      toast.error("Erro ao alterar status: " + error.message);
+      return;
+    }
     toast.success(active ? "Anúncio pausado" : "Anúncio ativado");
-    loadData();
+    await loadData();
   };
 
   const deleteAd = async (id: string) => {
-    await supabase.from("ads").delete().eq("id", id);
+    const { error } = await supabase.from("ads").delete().eq("id", id);
+    if (error) {
+      console.error("Erro ao excluir anúncio:", error);
+      toast.error("Erro ao excluir: " + error.message);
+      return;
+    }
     toast.success("Anúncio excluído");
-    loadData();
+    await loadData();
   };
 
   const startEditAd = (ad: any) => {
@@ -296,7 +334,7 @@ const Admin = () => {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <Button onClick={saveAd}>{editingAd ? "Salvar Alterações" : "Criar Anúncio"}</Button>
+                  <Button onClick={saveAd} disabled={adSubmitting}>{adSubmitting ? "Salvando..." : editingAd ? "Salvar Alterações" : "Criar Anúncio"}</Button>
                   <Button variant="ghost" onClick={resetAdForm}>Cancelar</Button>
                 </div>
               </div>
