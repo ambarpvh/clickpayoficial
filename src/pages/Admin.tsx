@@ -61,7 +61,7 @@ const Admin = () => {
         supabase.from("withdrawals").select("id", { count: "exact", head: true }).eq("status", "pending"),
         supabase.from("ads").select("id", { count: "exact", head: true }).eq("is_active", true),
         supabase.from("withdrawals").select("amount").eq("status", "approved"),
-        supabase.from("profiles").select("*, user_plans(plan_id, plans(name)), user_roles(role)").limit(100),
+        supabase.from("profiles").select("*").limit(100),
         supabase.from("ads").select("*").order("created_at", { ascending: false }),
         supabase.from("plans").select("*").order("price", { ascending: true }),
         supabase.from("withdrawals").select("*").eq("status", "pending").order("requested_at", { ascending: false }),
