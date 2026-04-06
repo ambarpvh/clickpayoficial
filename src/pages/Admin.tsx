@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Zap, Users, Eye, DollarSign, AlertCircle, LogOut, Plus, BarChart3, Pencil, Trash2, Ban, ShieldCheck, Settings } from "lucide-react";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
+import { format, subDays, parseISO } from "date-fns";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,6 +40,7 @@ const Admin = () => {
   const [plans, setPlans] = useState<any[]>([]);
   const [withdrawals, setWithdrawals] = useState<any[]>([]);
   const [adMetrics, setAdMetrics] = useState<Record<string, { clicks: number; earned: number }>>({});
+  const [clicksPerDay, setClicksPerDay] = useState<{ date: string; clicks: number }[]>([]);
   const [stats, setStats] = useState({ users: 0, clicks: 0, pendingWithdrawals: 0, activeAds: 0, totalPaid: 0 });
 
   useEffect(() => {
@@ -84,15 +88,26 @@ const Admin = () => {
       setPlans(plansData || []);
       setWithdrawals(withdrawalsData || []);
 
-      // Fetch click metrics per ad
-      const { data: clicksData } = await supabase.from("clicks").select("ad_id, earned_value");
+      // Fetch click metrics per ad + clicks per day chart
+      const thirtyDaysAgo = subDays(new Date(), 29).toISOString();
+      const { data: clicksData } = await supabase.from("clicks").select("ad_id, earned_value, clicked_at").gte("clicked_at", thirtyDaysAgo);
       const metrics: Record<string, { clicks: number; earned: number }> = {};
+      const dayMap: Record<string, number> = {};
       (clicksData || []).forEach((c: any) => {
         if (!metrics[c.ad_id]) metrics[c.ad_id] = { clicks: 0, earned: 0 };
         metrics[c.ad_id].clicks += 1;
         metrics[c.ad_id].earned += Number(c.earned_value);
+        const day = format(parseISO(c.clicked_at), "dd/MM");
+        dayMap[day] = (dayMap[day] || 0) + 1;
       });
       setAdMetrics(metrics);
+      // Build last 30 days array
+      const days: { date: string; clicks: number }[] = [];
+      for (let i = 29; i >= 0; i--) {
+        const d = format(subDays(new Date(), i), "dd/MM");
+        days.push({ date: d, clicks: dayMap[d] || 0 });
+      }
+      setClicksPerDay(days);
     } catch (error: any) {
       console.error("Exceção ao carregar admin:", error);
       toast.error(`Erro inesperado no painel: ${error.message}`);
@@ -272,6 +287,21 @@ const Admin = () => {
                 <DollarSign className="h-4 w-4 text-accent" />
               </div>
               <p className="font-heading text-2xl font-bold gradient-text-gold">${stats.totalPaid.toFixed(2)}</p>
+            </div>
+            <div className="glass-card rounded-xl p-5 sm:col-span-2 lg:col-span-4">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-muted-foreground text-sm font-medium">Cliques por Dia (últimos 30 dias)</span>
+                <BarChart3 className="h-4 w-4 text-primary" />
+              </div>
+              <ChartContainer config={{ clicks: { label: "Cliques", color: "hsl(var(--primary))" } }} className="h-[250px] w-full">
+                <BarChart data={clicksPerDay}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
+                  <XAxis dataKey="date" tick={{ fontSize: 11 }} className="fill-muted-foreground" />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 11 }} className="fill-muted-foreground" />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar dataKey="clicks" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ChartContainer>
             </div>
           </div>
         )}
