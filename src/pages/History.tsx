@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Zap, ArrowLeft, TrendingUp, Users, Clock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { formatBRL } from "@/lib/format";
 
 interface ClickRecord {
   id: string;
@@ -114,7 +115,7 @@ const History = () => {
                       {new Date(c.clicked_at).toLocaleDateString("pt-BR")} às {new Date(c.clicked_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                     </p>
                   </div>
-                  <span className="text-primary font-semibold text-sm">+R${Number(c.earned_value).toFixed(4)}</span>
+                  <span className="text-primary font-semibold text-sm">+{formatBRL(Number(c.earned_value), 4)}</span>
                 </div>
               ))
             )}

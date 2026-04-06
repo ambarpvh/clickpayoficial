@@ -11,6 +11,7 @@ import { format, subDays, parseISO } from "date-fns";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { formatBRL } from "@/lib/format";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -265,7 +266,7 @@ const Admin = () => {
       earned_value: amount,
     });
     if (error) { toast.error("Erro ao creditar"); return; }
-    toast.success(`R$${amount.toFixed(2)} creditado!`);
+    toast.success(`${formatBRL(amount)} creditado!`);
     setEditingBalance(null);
     setBalanceAmount("");
     loadData();
@@ -344,7 +345,7 @@ const Admin = () => {
                 <span className="text-muted-foreground text-sm">Total Pago</span>
                 <DollarSign className="h-4 w-4 text-accent" />
               </div>
-              <p className="font-heading text-2xl font-bold gradient-text-gold">R${stats.totalPaid.toFixed(2)}</p>
+              <p className="font-heading text-2xl font-bold gradient-text-gold">{formatBRL(stats.totalPaid)}</p>
             </div>
             <div className="glass-card rounded-xl p-5 sm:col-span-2 lg:col-span-4">
               <div className="flex items-center justify-between mb-4">
@@ -366,7 +367,7 @@ const Admin = () => {
                 <span className="text-muted-foreground text-sm font-medium">Receita por Dia (últimos 30 dias)</span>
                 <DollarSign className="h-4 w-4 text-accent" />
               </div>
-              <ChartContainer config={{ revenue: { label: "Receita ($)", color: "hsl(var(--accent))" } }} className="h-[250px] w-full">
+              <ChartContainer config={{ revenue: { label: "Receita (R$)", color: "hsl(var(--accent))" } }} className="h-[250px] w-full">
                 <BarChart data={revenuePerDay}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
                   <XAxis dataKey="date" tick={{ fontSize: 11 }} className="fill-muted-foreground" />
@@ -487,7 +488,7 @@ const Admin = () => {
                     <p className="text-muted-foreground text-xs truncate">{ad.url}</p>
                     <div className="flex gap-3 mt-1">
                       <span className="text-xs text-muted-foreground"><Eye className="h-3 w-3 inline mr-0.5" />{m.clicks} cliques</span>
-                      <span className="text-xs text-muted-foreground"><DollarSign className="h-3 w-3 inline mr-0.5" />R${m.earned.toFixed(4)} ganho</span>
+                      <span className="text-xs text-muted-foreground"><DollarSign className="h-3 w-3 inline mr-0.5" />{formatBRL(m.earned, 4)} ganho</span>
                       <span className="text-xs text-muted-foreground">
                         {ad.open_link !== false ? <Link2 className="h-3 w-3 inline mr-0.5" /> : <Link2Off className="h-3 w-3 inline mr-0.5" />}
                         {ad.open_link !== false ? "Abre link" : "Só timer"}
@@ -537,12 +538,12 @@ const Admin = () => {
                     <Label>Nome</Label>
                     <Input value={planName} onChange={(e) => setPlanName(e.target.value)} className="bg-secondary border-border" />
                   </div>
-                  <div className="space-y-2">
-                    <Label>Preço ($)</Label>
+                   <div className="space-y-2">
+                    <Label>Preço (R$)</Label>
                     <Input type="number" step="0.01" value={planPrice} onChange={(e) => setPlanPrice(Number(e.target.value))} className="bg-secondary border-border" />
                   </div>
                   <div className="space-y-2">
-                    <Label>Valor/Clique ($)</Label>
+                    <Label>Valor/Clique (R$)</Label>
                     <Input type="number" step="0.001" value={planClickValue} onChange={(e) => setPlanClickValue(Number(e.target.value))} className="bg-secondary border-border" />
                   </div>
                   <div className="space-y-2">
@@ -570,9 +571,9 @@ const Admin = () => {
                       </Button>
                     </div>
                   </div>
-                  <p className="gradient-text-gold text-2xl font-bold mb-3">{plan.price === 0 ? "Grátis" : `R$${plan.price}`}</p>
+                  <p className="gradient-text-gold text-2xl font-bold mb-3">{plan.price === 0 ? "Grátis" : formatBRL(plan.price)}</p>
                   <div className="space-y-1 text-sm text-muted-foreground">
-                    <p>Clique: <span className="text-primary font-semibold">R${Number(plan.click_value).toFixed(3)}</span></p>
+                    <p>Clique: <span className="text-primary font-semibold">{formatBRL(Number(plan.click_value), 3)}</span></p>
                     <p>Limite: <span className="text-foreground font-semibold">{plan.daily_click_limit}/dia</span></p>
                   </div>
                 </div>
@@ -609,7 +610,7 @@ const Admin = () => {
                           >
                             <option value="">Selecione um plano...</option>
                             {plans.filter((p: any) => p.id !== deletingPlan.id).map((p: any) => (
-                              <option key={p.id} value={p.id}>{p.name} (${p.price})</option>
+                              <option key={p.id} value={p.id}>{p.name} ({formatBRL(p.price)})</option>
                             ))}
                           </select>
                         </div>
@@ -636,7 +637,7 @@ const Admin = () => {
                 <div key={w.id} className="p-4 flex items-center justify-between">
                   <div>
                     <p className="font-medium text-sm">{w.profiles?.name || w.profiles?.email || "Usuário"}</p>
-                    <p className="text-muted-foreground text-xs">{new Date(w.requested_at).toLocaleDateString("pt-BR")} — R${Number(w.amount).toFixed(2)}</p>
+                    <p className="text-muted-foreground text-xs">{new Date(w.requested_at).toLocaleDateString("pt-BR")} — {formatBRL(Number(w.amount))}</p>
                   </div>
                   <div className="flex gap-2">
                     <Button size="sm" onClick={() => handleWithdrawal(w.id, "approved")}>Aprovar</Button>

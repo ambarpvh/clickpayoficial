@@ -5,6 +5,7 @@ import { Zap, Crown, ArrowLeft, Check } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { formatBRL } from "@/lib/format";
 
 interface Plan {
   id: string;
@@ -105,10 +106,10 @@ const Plans = () => {
                 )}
                 <h3 className="font-heading text-2xl font-bold mb-1">{plan.name}</h3>
                 <p className="gradient-text-gold text-3xl font-bold my-4">
-                  {plan.price === 0 ? "Grátis" : `R$${plan.price}/mês`}
+                  {plan.price === 0 ? "Grátis" : `${formatBRL(plan.price)}/mês`}
                 </p>
                 <div className="space-y-3 text-sm text-muted-foreground mb-6">
-                  <p className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Ganho: <span className="text-primary font-semibold">R${plan.click_value}</span></p>
+                  <p className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Ganho: <span className="text-primary font-semibold">{formatBRL(plan.click_value, 4)}</span></p>
                   <p className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Limite: <span className="text-foreground font-semibold">{plan.daily_click_limit}/dia</span></p>
                 </div>
                 <Button
