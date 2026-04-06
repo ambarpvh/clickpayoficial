@@ -33,7 +33,8 @@ const Dashboard = () => {
   const [dailyLimit, setDailyLimit] = useState(10);
   const [todayClicks, setTodayClicks] = useState(0);
   const [todayEarnings, setTodayEarnings] = useState(0);
-  const [activeAd, setActiveAd] = useState<{ id: number; title: string; url: string; reward: string } | null>(null);
+  const [todayClickedAdIds, setTodayClickedAdIds] = useState<Set<string>>(new Set());
+  const [activeAd, setActiveAd] = useState<{ id: string; title: string; url: string; reward: string; view_time: number } | null>(null);
   const [referralCount, setReferralCount] = useState(0);
 
   useEffect(() => {
@@ -70,6 +71,7 @@ const Dashboard = () => {
 
     setTodayClicks(todayClicksData?.length || 0);
     setTodayEarnings(todayClicksData?.reduce((sum, c) => sum + Number(c.earned_value), 0) || 0);
+    setTodayClickedAdIds(new Set((todayClicksData || []).map((c) => c.ad_id)));
 
     const { data: allClicks } = await supabase.from("clicks").select("earned_value").eq("user_id", user.id);
     const totalEarned = allClicks?.reduce((sum, c) => sum + Number(c.earned_value), 0) || 0;
@@ -90,10 +92,9 @@ const Dashboard = () => {
     setReferralCount(count || 0);
   };
 
-  const handleAdComplete = async (adId: number) => {
+  const handleAdComplete = async (adId: string) => {
     if (!user) return;
-    const adIdStr = String(adId);
-    const ad = ads.find((a) => a.id === adIdStr);
+    const ad = ads.find((a) => a.id === adId);
     if (!ad) return;
 
     const { error } = await supabase.from("clicks").insert({
@@ -124,11 +125,6 @@ const Dashboard = () => {
     navigator.clipboard.writeText(link);
     toast.success("Link copiado!");
   };
-
-  const todayClickedAdIds = new Set(clicks.filter((c) => {
-    const today = new Date().toISOString().split("T")[0];
-    return c.clicked_at >= today;
-  }).map((c) => c.ad_id));
 
   const availableAds = ads.filter((a) => !todayClickedAdIds.has(a.id));
   const canClick = todayClicks < dailyLimit;
@@ -243,7 +239,7 @@ const Dashboard = () => {
                       <p className="text-muted-foreground text-xs">Ganhe ${clickValue.toFixed(4)} • {ad.view_time}s</p>
                     </div>
                   </div>
-                  <Button size="sm" onClick={() => setActiveAd({ id: Number(ad.id), title: ad.title, url: ad.url, reward: `$${clickValue.toFixed(4)}` })}>
+                  <Button size="sm" onClick={() => setActiveAd({ id: ad.id, title: ad.title, url: ad.url, reward: `$${clickValue.toFixed(4)}`, view_time: ad.view_time })}>
                     Ver Anúncio <ArrowUpRight className="h-3.5 w-3.5" />
                   </Button>
                 </div>

@@ -3,14 +3,16 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle, Clock, X } from "lucide-react";
 
 interface AdTimerProps {
-  ad: { id: number; title: string; url: string; reward: string };
-  onComplete: (adId: number) => void;
+  ad: { id: string; title: string; url: string; reward: string; view_time: number };
+  onComplete: (adId: string) => void;
   onClose: () => void;
 }
 
 const AdTimer = ({ ad, onComplete, onClose }: AdTimerProps) => {
-  const [seconds, setSeconds] = useState(10);
+  const [seconds, setSeconds] = useState(ad.view_time || 10);
   const [completed, setCompleted] = useState(false);
+  const [urlOpened, setUrlOpened] = useState(false);
+  const totalTime = ad.view_time || 10;
 
   useEffect(() => {
     if (seconds <= 0) {
@@ -20,6 +22,14 @@ const AdTimer = ({ ad, onComplete, onClose }: AdTimerProps) => {
     const timer = setTimeout(() => setSeconds((s) => s - 1), 1000);
     return () => clearTimeout(timer);
   }, [seconds]);
+
+  // Open the ad URL in a new tab after 3 seconds
+  useEffect(() => {
+    if (!urlOpened && totalTime - seconds >= 3) {
+      setUrlOpened(true);
+      window.open(ad.url, "_blank", "noopener,noreferrer");
+    }
+  }, [seconds, urlOpened, ad.url, totalTime]);
 
   const handleConfirm = useCallback(() => {
     onComplete(ad.id);
@@ -46,7 +56,7 @@ const AdTimer = ({ ad, onComplete, onClose }: AdTimerProps) => {
                   strokeWidth="6"
                   strokeLinecap="round"
                   strokeDasharray={264}
-                  strokeDashoffset={264 - (264 * (10 - seconds)) / 10}
+                  strokeDashoffset={264 - (264 * (totalTime - seconds)) / totalTime}
                   className="transition-all duration-1000 ease-linear"
                 />
               </svg>
