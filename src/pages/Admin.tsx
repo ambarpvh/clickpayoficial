@@ -429,6 +429,9 @@ const Admin = () => {
                             </Button>
                           )}
                         </div>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
