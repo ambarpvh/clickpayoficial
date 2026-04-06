@@ -40,6 +40,10 @@ const Admin = () => {
   const [editingBalance, setEditingBalance] = useState<string | null>(null);
   const [balanceAmount, setBalanceAmount] = useState("");
 
+  // Plan change for user
+  const [changingPlanUser, setChangingPlanUser] = useState<string | null>(null);
+  const [selectedNewPlan, setSelectedNewPlan] = useState<string>("");
+
   // Data
   const [users, setUsers] = useState<any[]>([]);
   const [ads, setAds] = useState<any[]>([]);
