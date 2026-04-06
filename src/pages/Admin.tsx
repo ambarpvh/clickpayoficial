@@ -41,6 +41,7 @@ const Admin = () => {
   const [withdrawals, setWithdrawals] = useState<any[]>([]);
   const [adMetrics, setAdMetrics] = useState<Record<string, { clicks: number; earned: number }>>({});
   const [clicksPerDay, setClicksPerDay] = useState<{ date: string; clicks: number }[]>([]);
+  const [revenuePerDay, setRevenuePerDay] = useState<{ date: string; revenue: number }[]>([]);
   const [stats, setStats] = useState({ users: 0, clicks: 0, pendingWithdrawals: 0, activeAds: 0, totalPaid: 0 });
 
   useEffect(() => {
