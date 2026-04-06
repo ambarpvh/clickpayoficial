@@ -40,6 +40,10 @@ const Admin = () => {
   const [editingBalance, setEditingBalance] = useState<string | null>(null);
   const [balanceAmount, setBalanceAmount] = useState("");
 
+  // Plan change for user
+  const [changingPlanUser, setChangingPlanUser] = useState<string | null>(null);
+  const [selectedNewPlan, setSelectedNewPlan] = useState<string>("");
+
   // Data
   const [users, setUsers] = useState<any[]>([]);
   const [ads, setAds] = useState<any[]>([]);
@@ -264,6 +268,19 @@ const Admin = () => {
     loadData();
   };
 
+  const changeUserPlan = async (userId: string) => {
+    if (!selectedNewPlan) { toast.error("Selecione um plano"); return; }
+    // Deactivate current plans
+    await supabase.from("user_plans").update({ is_active: false }).eq("user_id", userId).eq("is_active", true);
+    // Insert new plan
+    const { error } = await supabase.from("user_plans").insert({ user_id: userId, plan_id: selectedNewPlan, is_active: true });
+    if (error) { toast.error("Erro ao mudar plano: " + error.message); return; }
+    toast.success("Plano do usuário atualizado!");
+    setChangingPlanUser(null);
+    setSelectedNewPlan("");
+    loadData();
+  };
+
   const tabs = [
     { key: "overview" as const, label: "Visão Geral", icon: BarChart3 },
     { key: "users" as const, label: "Usuários", icon: Users },
@@ -389,6 +406,26 @@ const Admin = () => {
                           ) : (
                             <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => setEditingBalance(u.user_id)}>
                               <DollarSign className="h-3 w-3 mr-1" /> Saldo
+                            </Button>
+                          )}
+                          {changingPlanUser === u.user_id ? (
+                            <div className="flex items-center gap-1">
+                              <select
+                                value={selectedNewPlan}
+                                onChange={(e) => setSelectedNewPlan(e.target.value)}
+                                className="h-8 text-xs rounded-md bg-secondary border border-border px-2"
+                              >
+                                <option value="">Selecione...</option>
+                                {plans.map((p: any) => (
+                                  <option key={p.id} value={p.id}>{p.name}</option>
+                                ))}
+                              </select>
+                              <Button size="sm" className="h-8 text-xs" onClick={() => changeUserPlan(u.user_id)}>OK</Button>
+                              <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => setChangingPlanUser(null)}>✕</Button>
+                            </div>
+                          ) : (
+                            <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => { setChangingPlanUser(u.user_id); setSelectedNewPlan(""); }}>
+                              <Settings className="h-3 w-3 mr-1" /> Plano
                             </Button>
                           )}
                         </div>
