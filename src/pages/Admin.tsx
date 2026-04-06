@@ -488,12 +488,24 @@ const Admin = () => {
                     <div className="flex gap-3 mt-1">
                       <span className="text-xs text-muted-foreground"><Eye className="h-3 w-3 inline mr-0.5" />{m.clicks} cliques</span>
                       <span className="text-xs text-muted-foreground"><DollarSign className="h-3 w-3 inline mr-0.5" />${m.earned.toFixed(4)} ganho</span>
+                      <span className="text-xs text-muted-foreground">
+                        {ad.open_link !== false ? <Link2 className="h-3 w-3 inline mr-0.5" /> : <Link2Off className="h-3 w-3 inline mr-0.5" />}
+                        {ad.open_link !== false ? "Abre link" : "Só timer"}
+                      </span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <span className={`text-xs px-2 py-1 rounded-full font-medium ${ad.is_active ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"}`}>
                       {ad.is_active ? "Ativo" : "Pausado"}
                     </span>
+                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0" title={ad.open_link !== false ? "Desativar abertura de link" : "Ativar abertura de link"} onClick={async () => {
+                      const { error } = await supabase.from("ads").update({ open_link: !(ad.open_link !== false) }).eq("id", ad.id);
+                      if (error) { toast.error("Erro: " + error.message); return; }
+                      toast.success(ad.open_link !== false ? "Link desativado" : "Link ativado");
+                      loadData();
+                    }}>
+                      {ad.open_link !== false ? <Link2 className="h-3.5 w-3.5" /> : <Link2Off className="h-3.5 w-3.5" />}
+                    </Button>
                     <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => startEditAd(ad)}><Pencil className="h-3.5 w-3.5" /></Button>
                     <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => toggleAd(ad.id, ad.is_active)}>
                       {ad.is_active ? <Ban className="h-3.5 w-3.5" /> : <ShieldCheck className="h-3.5 w-3.5" />}
