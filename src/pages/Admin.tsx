@@ -211,6 +211,33 @@ const Admin = () => {
     setShowPlanForm(true);
   };
 
+  const startDeletePlan = async (plan: any) => {
+    const { count } = await supabase.from("user_plans").select("id", { count: "exact", head: true }).eq("plan_id", plan.id).eq("is_active", true);
+    setDeletingPlan(plan);
+    setDeletePlanUsers(count || 0);
+    setTransferPlanId("");
+    setDeletePlanStep((count || 0) > 0 ? "transfer" : "confirm");
+  };
+
+  const confirmDeletePlan = async (forceDelete: boolean) => {
+    if (!deletingPlan) return;
+    try {
+      if (deletePlanUsers > 0 && !forceDelete && transferPlanId) {
+        const { error: transferErr } = await supabase.from("user_plans").update({ plan_id: transferPlanId }).eq("plan_id", deletingPlan.id).eq("is_active", true);
+        if (transferErr) { toast.error("Erro ao transferir usuários: " + transferErr.message); return; }
+        toast.success(`${deletePlanUsers} usuário(s) transferido(s)!`);
+      }
+      const { error } = await supabase.from("plans").delete().eq("id", deletingPlan.id);
+      if (error) { toast.error("Erro ao excluir plano: " + error.message); return; }
+      toast.success("Plano excluído!");
+      setDeletingPlan(null);
+      setDeletePlanStep(null);
+      loadData();
+    } catch (e: any) {
+      toast.error("Erro: " + e.message);
+    }
+  };
+
   // --- Users ---
   const handleWithdrawal = async (id: string, status: "approved" | "rejected") => {
     const { error } = await supabase.from("withdrawals").update({ status, processed_at: new Date().toISOString() }).eq("id", id);
