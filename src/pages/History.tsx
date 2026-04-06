@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Zap, ArrowLeft, TrendingUp, Users, Clock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { formatBRL } from "@/lib/format";
 
 interface ClickRecord {
   id: string;

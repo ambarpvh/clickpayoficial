@@ -3,6 +3,7 @@ import { ArrowRight, Eye, DollarSign, Shield, Users, Zap, Star, TrendingUp } fro
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { formatBRL } from "@/lib/format";
 
 interface Plan {
   id: string;

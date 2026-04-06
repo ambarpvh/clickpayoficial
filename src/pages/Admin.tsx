@@ -11,6 +11,7 @@ import { format, subDays, parseISO } from "date-fns";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { formatBRL } from "@/lib/format";
 
 const Admin = () => {
   const navigate = useNavigate();
