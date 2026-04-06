@@ -308,6 +308,21 @@ const Admin = () => {
                 </BarChart>
               </ChartContainer>
             </div>
+            <div className="glass-card rounded-xl p-5 sm:col-span-2 lg:col-span-4">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-muted-foreground text-sm font-medium">Receita por Dia (últimos 30 dias)</span>
+                <DollarSign className="h-4 w-4 text-accent" />
+              </div>
+              <ChartContainer config={{ revenue: { label: "Receita ($)", color: "hsl(var(--accent))" } }} className="h-[250px] w-full">
+                <BarChart data={revenuePerDay}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
+                  <XAxis dataKey="date" tick={{ fontSize: 11 }} className="fill-muted-foreground" />
+                  <YAxis tick={{ fontSize: 11 }} className="fill-muted-foreground" />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar dataKey="revenue" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ChartContainer>
+            </div>
           </div>
         )}
 
