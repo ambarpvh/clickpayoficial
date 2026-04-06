@@ -30,6 +30,12 @@ const Admin = () => {
   const [planDailyLimit, setPlanDailyLimit] = useState(10);
   const [showPlanForm, setShowPlanForm] = useState(false);
 
+  // Plan deletion
+  const [deletingPlan, setDeletingPlan] = useState<any>(null);
+  const [deletePlanUsers, setDeletePlanUsers] = useState<number>(0);
+  const [transferPlanId, setTransferPlanId] = useState<string>("");
+  const [deletePlanStep, setDeletePlanStep] = useState<"confirm" | "transfer" | null>(null);
+
   // Balance editing
   const [editingBalance, setEditingBalance] = useState<string | null>(null);
   const [balanceAmount, setBalanceAmount] = useState("");
@@ -203,6 +209,33 @@ const Admin = () => {
     setPlanClickValue(plan.click_value);
     setPlanDailyLimit(plan.daily_click_limit);
     setShowPlanForm(true);
+  };
+
+  const startDeletePlan = async (plan: any) => {
+    const { count } = await supabase.from("user_plans").select("id", { count: "exact", head: true }).eq("plan_id", plan.id).eq("is_active", true);
+    setDeletingPlan(plan);
+    setDeletePlanUsers(count || 0);
+    setTransferPlanId("");
+    setDeletePlanStep((count || 0) > 0 ? "transfer" : "confirm");
+  };
+
+  const confirmDeletePlan = async (forceDelete: boolean) => {
+    if (!deletingPlan) return;
+    try {
+      if (deletePlanUsers > 0 && !forceDelete && transferPlanId) {
+        const { error: transferErr } = await supabase.from("user_plans").update({ plan_id: transferPlanId }).eq("plan_id", deletingPlan.id).eq("is_active", true);
+        if (transferErr) { toast.error("Erro ao transferir usuários: " + transferErr.message); return; }
+        toast.success(`${deletePlanUsers} usuário(s) transferido(s)!`);
+      }
+      const { error } = await supabase.from("plans").delete().eq("id", deletingPlan.id);
+      if (error) { toast.error("Erro ao excluir plano: " + error.message); return; }
+      toast.success("Plano excluído!");
+      setDeletingPlan(null);
+      setDeletePlanStep(null);
+      loadData();
+    } catch (e: any) {
+      toast.error("Erro: " + e.message);
+    }
   };
 
   // --- Users ---
@@ -472,9 +505,14 @@ const Admin = () => {
                 <div key={plan.id} className="glass-card rounded-xl p-5">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="font-heading text-lg font-bold">{plan.name}</h3>
-                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => startEditPlan(plan)}>
-                      <Pencil className="h-3.5 w-3.5" />
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => startEditPlan(plan)}>
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-destructive" onClick={() => startDeletePlan(plan)}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
                   </div>
                   <p className="gradient-text-gold text-2xl font-bold mb-3">{plan.price === 0 ? "Grátis" : `$${plan.price}`}</p>
                   <div className="space-y-1 text-sm text-muted-foreground">
@@ -484,6 +522,52 @@ const Admin = () => {
                 </div>
               ))}
             </div>
+
+            {/* Delete plan dialog */}
+            {deletePlanStep && deletingPlan && (
+              <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onClick={() => { setDeletingPlan(null); setDeletePlanStep(null); }}>
+                <div className="bg-background border border-border rounded-xl p-6 max-w-md w-full space-y-4" onClick={(e) => e.stopPropagation()}>
+                  <h3 className="font-heading text-lg font-bold">Excluir plano "{deletingPlan.name}"</h3>
+                  {deletePlanStep === "confirm" && (
+                    <>
+                      <p className="text-sm text-muted-foreground">Nenhum usuário está neste plano. Deseja excluí-lo?</p>
+                      <div className="flex gap-2 justify-end">
+                        <Button variant="ghost" onClick={() => { setDeletingPlan(null); setDeletePlanStep(null); }}>Cancelar</Button>
+                        <Button variant="destructive" onClick={() => confirmDeletePlan(true)}>Excluir</Button>
+                      </div>
+                    </>
+                  )}
+                  {deletePlanStep === "transfer" && (
+                    <>
+                      <p className="text-sm text-muted-foreground">
+                        <AlertCircle className="h-4 w-4 inline mr-1 text-destructive" />
+                        Existem <strong>{deletePlanUsers}</strong> usuário(s) neste plano. Escolha uma ação:
+                      </p>
+                      <div className="space-y-3">
+                        <div className="space-y-2">
+                          <Label>Transferir para outro plano:</Label>
+                          <select
+                            value={transferPlanId}
+                            onChange={(e) => setTransferPlanId(e.target.value)}
+                            className="w-full rounded-md border border-border bg-secondary p-2 text-sm"
+                          >
+                            <option value="">Selecione um plano...</option>
+                            {plans.filter((p: any) => p.id !== deletingPlan.id).map((p: any) => (
+                              <option key={p.id} value={p.id}>{p.name} (${p.price})</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="flex gap-2 justify-end flex-wrap">
+                          <Button variant="ghost" onClick={() => { setDeletingPlan(null); setDeletePlanStep(null); }}>Cancelar</Button>
+                          <Button variant="destructive" onClick={() => confirmDeletePlan(true)}>Excluir mesmo assim</Button>
+                          <Button disabled={!transferPlanId} onClick={() => confirmDeletePlan(false)}>Transferir e Excluir</Button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
