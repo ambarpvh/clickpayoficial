@@ -90,10 +90,9 @@ const Dashboard = () => {
     setReferralCount(count || 0);
   };
 
-  const handleAdComplete = async (adId: number) => {
+  const handleAdComplete = async (adId: string) => {
     if (!user) return;
-    const adIdStr = String(adId);
-    const ad = ads.find((a) => a.id === adIdStr);
+    const ad = ads.find((a) => a.id === adId);
     if (!ad) return;
 
     const { error } = await supabase.from("clicks").insert({
