@@ -114,7 +114,7 @@ const History = () => {
                       {new Date(c.clicked_at).toLocaleDateString("pt-BR")} às {new Date(c.clicked_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                     </p>
                   </div>
-                  <span className="text-primary font-semibold text-sm">+${Number(c.earned_value).toFixed(4)}</span>
+                  <span className="text-primary font-semibold text-sm">+R${Number(c.earned_value).toFixed(4)}</span>
                 </div>
               ))
             )}
