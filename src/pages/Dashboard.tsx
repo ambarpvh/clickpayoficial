@@ -115,7 +115,7 @@ const Dashboard = () => {
 
   const handleWithdrawal = async () => {
     if (!user) return;
-    if (balance < 5) { toast.info("Saque mínimo: R$5,00"); return; }
+    if (balance < 5) { toast.info("Saque mínimo: R$ 5,00"); return; }
     const { error } = await supabase.from("withdrawals").insert({ user_id: user.id, amount: balance });
     if (error) { toast.error("Erro ao solicitar saque"); return; }
     toast.success("Saque solicitado!");
@@ -164,9 +164,9 @@ const Dashboard = () => {
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: "Saldo Atual", value: `R$${balance.toFixed(4)}`, icon: DollarSign, glow: true },
+            { label: "Saldo Atual", value: formatBRL(balance, 4), icon: DollarSign, glow: true },
             { label: "Anúncios Hoje", value: `${todayClicks}/${dailyLimit}`, icon: Eye, glow: false },
-            { label: "Ganhos Hoje", value: `R$${todayEarnings.toFixed(4)}`, icon: TrendingUp, glow: false },
+            { label: "Ganhos Hoje", value: formatBRL(todayEarnings, 4), icon: TrendingUp, glow: false },
             { label: "Indicações", value: String(referralCount), icon: Gift, glow: false },
           ].map((stat) => (
             <div key={stat.label} className={`glass-card rounded-xl p-5 ${stat.glow ? "glow-primary border-primary/30" : ""}`}>
@@ -195,7 +195,7 @@ const Dashboard = () => {
             />
           </div>
           <p className="text-muted-foreground text-xs mt-2">
-            Ganhos hoje: <span className="text-primary font-semibold">R${todayEarnings.toFixed(4)}</span>
+            Ganhos hoje: <span className="text-primary font-semibold">{formatBRL(todayEarnings, 4)}</span>
           </p>
         </div>
 
@@ -204,7 +204,7 @@ const Dashboard = () => {
           <div>
             <p className="text-sm font-semibold mb-1">Seu link de indicação</p>
             <p className="text-muted-foreground text-xs break-all">{window.location.origin}/register?ref={user?.id?.slice(0, 8)}...</p>
-            <p className="text-accent text-xs mt-1">Nível 1: 10% | Nível 2: 5% de comissão</p>
+            <p className="text-accent text-xs mt-1">Nível 1: 30% | Nível 2: 20% | Nível 3: 10% de comissão</p>
           </div>
           <Button variant="outline" size="sm" onClick={copyReferral}>
             <Copy className="h-3.5 w-3.5 mr-1" /> Copiar
@@ -238,10 +238,10 @@ const Dashboard = () => {
                     </div>
                     <div>
                       <p className="font-semibold text-sm">{ad.title}</p>
-                      <p className="text-muted-foreground text-xs">Ganhe R${clickValue.toFixed(4)} • {ad.view_time}s</p>
+                      <p className="text-muted-foreground text-xs">Ganhe {formatBRL(clickValue, 4)} • {ad.view_time}s</p>
                     </div>
                   </div>
-                  <Button size="sm" onClick={() => setActiveAd({ id: ad.id, title: ad.title, url: ad.url, reward: `R$${clickValue.toFixed(4)}`, view_time: ad.view_time, open_link: ad.open_link !== false })}>
+                  <Button size="sm" onClick={() => setActiveAd({ id: ad.id, title: ad.title, url: ad.url, reward: formatBRL(clickValue, 4), view_time: ad.view_time, open_link: ad.open_link !== false })}>
                     Ver Anúncio <ArrowUpRight className="h-3.5 w-3.5" />
                   </Button>
                 </div>
@@ -264,7 +264,7 @@ const Dashboard = () => {
                       <p className="text-sm font-medium">{(c.ads as unknown as { title: string })?.title || "Anúncio"}</p>
                       <p className="text-muted-foreground text-xs">{new Date(c.clicked_at).toLocaleDateString("pt-BR")}</p>
                     </div>
-                    <span className="text-primary font-semibold text-sm">+R${Number(c.earned_value).toFixed(4)}</span>
+                    <span className="text-primary font-semibold text-sm">+{formatBRL(Number(c.earned_value), 4)}</span>
                   </div>
                 ))
               )}
