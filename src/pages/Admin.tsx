@@ -131,21 +131,21 @@ const Admin = () => {
     try {
       if (editingAd) {
         const { error } = await supabase.from("ads").update({ title: adTitle, url: adUrl, view_time: adTime }).eq("id", editingAd.id);
-        if (error) { console.error("Erro ao editar anúncio:", error); toast.error("Erro ao editar: " + error.message); return; }
+        if (error) { console.error("Erro ao editar anúncio:", error); toast.error("Erro ao editar: " + error.message); setAdSubmitting(false); return; }
         toast.success("Anúncio atualizado!");
       } else {
-        const { error } = await supabase.from("ads").insert([{ title: adTitle, url: adUrl, view_time: adTime }]);
-        if (error) { console.error("Erro ao criar anúncio:", error); toast.error("Erro ao criar: " + error.message); return; }
+        const { data, error } = await supabase.from("ads").insert([{ title: adTitle, url: adUrl, view_time: adTime }]).select();
+        console.log("Insert result:", data, error);
+        if (error) { console.error("Erro ao criar anúncio:", error); toast.error("Erro ao criar: " + error.message); setAdSubmitting(false); return; }
         toast.success("Anúncio criado!");
       }
       resetAdForm();
-      await loadData();
+      loadData();
     } catch (e: any) {
       console.error("Exceção ao salvar anúncio:", e);
-      toast.error("Erro inesperado: " + e.message);
-    } finally {
-      setAdSubmitting(false);
+      toast.error("Erro inesperado: " + (e?.message || "desconhecido"));
     }
+    setAdSubmitting(false);
   };
 
   const toggleAd = async (id: string, active: boolean) => {
