@@ -19,6 +19,7 @@ export type Database = {
           created_at: string
           id: string
           is_active: boolean
+          open_link: boolean
           title: string
           url: string
           view_time: number
@@ -27,6 +28,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          open_link?: boolean
           title: string
           url: string
           view_time?: number
@@ -35,6 +37,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          open_link?: boolean
           title?: string
           url?: string
           view_time?: number
