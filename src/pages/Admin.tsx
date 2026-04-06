@@ -466,6 +466,10 @@ const Admin = () => {
                     <Label>Tempo (s)</Label>
                     <Input type="number" value={adTime} onChange={(e) => setAdTime(Number(e.target.value))} className="bg-secondary border-border" />
                   </div>
+                  <div className="flex items-center gap-3 mt-2">
+                    <Switch checked={adOpenLink} onCheckedChange={setAdOpenLink} />
+                    <Label className="text-sm">{adOpenLink ? "Abrir link do anúncio" : "Somente contagem de tempo"}</Label>
+                  </div>
                 </div>
                 <div className="flex gap-2">
                   <Button onClick={saveAd} disabled={adSubmitting}>{adSubmitting ? "Salvando..." : editingAd ? "Salvar Alterações" : "Criar Anúncio"}</Button>
