@@ -126,11 +126,6 @@ const Dashboard = () => {
     toast.success("Link copiado!");
   };
 
-  const todayClickedAdIds = new Set(clicks.filter((c) => {
-    const today = new Date().toISOString().split("T")[0];
-    return c.clicked_at >= today;
-  }).map((c) => c.ad_id));
-
   const availableAds = ads.filter((a) => !todayClickedAdIds.has(a.id));
   const canClick = todayClicks < dailyLimit;
   const progressPercent = Math.min((todayClicks / dailyLimit) * 100, 100);
