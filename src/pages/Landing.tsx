@@ -1,13 +1,16 @@
+import { useState, useEffect } from "react";
 import { ArrowRight, Eye, DollarSign, Shield, Users, Zap, Star, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
-const plans = [
-  { name: "Free", price: "Grátis", perClick: "$0.001", dailyLimit: 10, popular: false, color: "border-muted-foreground/30" },
-  { name: "Bronze", price: "$10/mês", perClick: "$0.005", dailyLimit: 20, popular: false, color: "border-accent/50" },
-  { name: "Prata", price: "$25/mês", perClick: "$0.01", dailyLimit: 30, popular: true, color: "border-primary" },
-  { name: "Ouro", price: "$50/mês", perClick: "$0.02", dailyLimit: 50, popular: false, color: "border-accent" },
-];
+interface Plan {
+  id: string;
+  name: string;
+  price: number;
+  click_value: number;
+  daily_click_limit: number;
+}
 
 const stats = [
   { label: "Usuários Ativos", value: "12,450+", icon: Users },
@@ -17,6 +20,19 @@ const stats = [
 
 const Landing = () => {
   const navigate = useNavigate();
+  const [plans, setPlans] = useState<Plan[]>([]);
+
+  useEffect(() => {
+    const loadPlans = async () => {
+      const { data } = await supabase
+        .from("plans")
+        .select("*")
+        .eq("is_active", true)
+        .order("click_value", { ascending: true });
+      setPlans(data || []);
+    };
+    loadPlans();
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -105,32 +121,37 @@ const Landing = () => {
         <div className="container mx-auto text-center">
           <h2 className="font-heading text-3xl md:text-4xl font-bold mb-4">Escolha Seu Plano</h2>
           <p className="text-muted-foreground mb-12">Quanto maior o plano, mais você ganha por clique</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {plans.map((plan) => (
-              <div
-                key={plan.name}
-                className={`glass-card rounded-xl p-6 border-2 ${plan.color} relative ${plan.popular ? "glow-primary" : ""} hover:scale-105 transition-transform duration-300`}
-              >
-                {plan.popular && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full">
-                    Popular
-                  </span>
-                )}
-                <h3 className="font-heading text-2xl font-bold mb-1">{plan.name}</h3>
-                <p className="gradient-text-gold text-3xl font-bold my-4">{plan.price}</p>
-                <div className="space-y-3 text-sm text-muted-foreground mb-6">
-                  <p>Ganho por clique: <span className="text-primary font-semibold">{plan.perClick}</span></p>
-                  <p>Limite diário: <span className="text-foreground font-semibold">{plan.dailyLimit} anúncios</span></p>
-                </div>
-                <Button
-                  variant={plan.popular ? "hero" : "outline"}
-                  className="w-full"
-                  onClick={() => navigate("/register")}
+          <div className={`grid grid-cols-1 sm:grid-cols-2 ${plans.length >= 4 ? "lg:grid-cols-4" : plans.length === 3 ? "lg:grid-cols-3" : ""} gap-6`}>
+            {plans.map((plan, index) => {
+              const isPopular = index === Math.floor(plans.length / 2);
+              return (
+                <div
+                  key={plan.id}
+                  className={`glass-card rounded-xl p-6 border-2 border-primary/20 relative ${isPopular ? "glow-primary border-primary" : ""} hover:scale-105 transition-transform duration-300`}
                 >
-                  {plan.price === "Grátis" ? "Começar Grátis" : "Assinar"}
-                </Button>
-              </div>
-            ))}
+                  {isPopular && (
+                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full">
+                      Popular
+                    </span>
+                  )}
+                  <h3 className="font-heading text-2xl font-bold mb-1">{plan.name}</h3>
+                  <p className="gradient-text-gold text-3xl font-bold my-4">
+                    {plan.price === 0 ? "Grátis" : `$${plan.price}/mês`}
+                  </p>
+                  <div className="space-y-3 text-sm text-muted-foreground mb-6">
+                    <p>Ganho por clique: <span className="text-primary font-semibold">${plan.click_value}</span></p>
+                    <p>Limite diário: <span className="text-foreground font-semibold">{plan.daily_click_limit} anúncios</span></p>
+                  </div>
+                  <Button
+                    variant={isPopular ? "hero" : "outline"}
+                    className="w-full"
+                    onClick={() => navigate("/register")}
+                  >
+                    {plan.price === 0 ? "Começar Grátis" : "Assinar"}
+                  </Button>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
