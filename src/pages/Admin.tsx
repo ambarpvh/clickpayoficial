@@ -41,6 +41,7 @@ const Admin = () => {
   const [withdrawals, setWithdrawals] = useState<any[]>([]);
   const [adMetrics, setAdMetrics] = useState<Record<string, { clicks: number; earned: number }>>({});
   const [clicksPerDay, setClicksPerDay] = useState<{ date: string; clicks: number }[]>([]);
+  const [revenuePerDay, setRevenuePerDay] = useState<{ date: string; revenue: number }[]>([]);
   const [stats, setStats] = useState({ users: 0, clicks: 0, pendingWithdrawals: 0, activeAds: 0, totalPaid: 0 });
 
   useEffect(() => {
@@ -93,21 +94,25 @@ const Admin = () => {
       const { data: clicksData } = await supabase.from("clicks").select("ad_id, earned_value, clicked_at").gte("clicked_at", thirtyDaysAgo);
       const metrics: Record<string, { clicks: number; earned: number }> = {};
       const dayMap: Record<string, number> = {};
+      const revMap: Record<string, number> = {};
       (clicksData || []).forEach((c: any) => {
         if (!metrics[c.ad_id]) metrics[c.ad_id] = { clicks: 0, earned: 0 };
         metrics[c.ad_id].clicks += 1;
         metrics[c.ad_id].earned += Number(c.earned_value);
         const day = format(parseISO(c.clicked_at), "dd/MM");
         dayMap[day] = (dayMap[day] || 0) + 1;
+        revMap[day] = (revMap[day] || 0) + Number(c.earned_value);
       });
       setAdMetrics(metrics);
-      // Build last 30 days array
       const days: { date: string; clicks: number }[] = [];
+      const revDays: { date: string; revenue: number }[] = [];
       for (let i = 29; i >= 0; i--) {
         const d = format(subDays(new Date(), i), "dd/MM");
         days.push({ date: d, clicks: dayMap[d] || 0 });
+        revDays.push({ date: d, revenue: Number((revMap[d] || 0).toFixed(4)) });
       }
       setClicksPerDay(days);
+      setRevenuePerDay(revDays);
     } catch (error: any) {
       console.error("Exceção ao carregar admin:", error);
       toast.error(`Erro inesperado no painel: ${error.message}`);
@@ -300,6 +305,21 @@ const Admin = () => {
                   <YAxis allowDecimals={false} tick={{ fontSize: 11 }} className="fill-muted-foreground" />
                   <ChartTooltip content={<ChartTooltipContent />} />
                   <Bar dataKey="clicks" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ChartContainer>
+            </div>
+            <div className="glass-card rounded-xl p-5 sm:col-span-2 lg:col-span-4">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-muted-foreground text-sm font-medium">Receita por Dia (últimos 30 dias)</span>
+                <DollarSign className="h-4 w-4 text-accent" />
+              </div>
+              <ChartContainer config={{ revenue: { label: "Receita ($)", color: "hsl(var(--accent))" } }} className="h-[250px] w-full">
+                <BarChart data={revenuePerDay}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
+                  <XAxis dataKey="date" tick={{ fontSize: 11 }} className="fill-muted-foreground" />
+                  <YAxis tick={{ fontSize: 11 }} className="fill-muted-foreground" />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar dataKey="revenue" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ChartContainer>
             </div>
