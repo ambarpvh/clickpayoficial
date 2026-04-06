@@ -71,6 +71,7 @@ const Dashboard = () => {
 
     setTodayClicks(todayClicksData?.length || 0);
     setTodayEarnings(todayClicksData?.reduce((sum, c) => sum + Number(c.earned_value), 0) || 0);
+    setTodayClickedAdIds(new Set((todayClicksData || []).map((c) => c.ad_id)));
 
     const { data: allClicks } = await supabase.from("clicks").select("earned_value").eq("user_id", user.id);
     const totalEarned = allClicks?.reduce((sum, c) => sum + Number(c.earned_value), 0) || 0;
