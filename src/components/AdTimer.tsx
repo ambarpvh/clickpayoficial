@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle, Clock, X } from "lucide-react";
 
 interface AdTimerProps {
-  ad: { id: string; title: string; url: string; reward: string; view_time: number };
+  ad: { id: string; title: string; url: string; reward: string; view_time: number; open_link?: boolean };
   onComplete: (adId: string) => void;
   onClose: () => void;
 }
@@ -25,11 +25,11 @@ const AdTimer = ({ ad, onComplete, onClose }: AdTimerProps) => {
 
   // Open the ad URL in a new tab after 3 seconds
   useEffect(() => {
-    if (!urlOpened && totalTime - seconds >= 3) {
+    if (!urlOpened && ad.open_link !== false && totalTime - seconds >= 3) {
       setUrlOpened(true);
       window.open(ad.url, "_blank", "noopener,noreferrer");
     }
-  }, [seconds, urlOpened, ad.url, totalTime]);
+  }, [seconds, urlOpened, ad.url, ad.open_link, totalTime]);
 
   const handleConfirm = useCallback(() => {
     onComplete(ad.id);

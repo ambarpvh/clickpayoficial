@@ -12,6 +12,7 @@ interface Ad {
   title: string;
   url: string;
   view_time: number;
+  open_link?: boolean;
 }
 
 interface Click {
@@ -34,7 +35,7 @@ const Dashboard = () => {
   const [todayClicks, setTodayClicks] = useState(0);
   const [todayEarnings, setTodayEarnings] = useState(0);
   const [todayClickedAdIds, setTodayClickedAdIds] = useState<Set<string>>(new Set());
-  const [activeAd, setActiveAd] = useState<{ id: string; title: string; url: string; reward: string; view_time: number } | null>(null);
+  const [activeAd, setActiveAd] = useState<{ id: string; title: string; url: string; reward: string; view_time: number; open_link: boolean } | null>(null);
   const [referralCount, setReferralCount] = useState(0);
 
   useEffect(() => {
@@ -239,7 +240,7 @@ const Dashboard = () => {
                       <p className="text-muted-foreground text-xs">Ganhe ${clickValue.toFixed(4)} • {ad.view_time}s</p>
                     </div>
                   </div>
-                  <Button size="sm" onClick={() => setActiveAd({ id: ad.id, title: ad.title, url: ad.url, reward: `$${clickValue.toFixed(4)}`, view_time: ad.view_time })}>
+                  <Button size="sm" onClick={() => setActiveAd({ id: ad.id, title: ad.title, url: ad.url, reward: `$${clickValue.toFixed(4)}`, view_time: ad.view_time, open_link: ad.open_link !== false })}>
                     Ver Anúncio <ArrowUpRight className="h-3.5 w-3.5" />
                   </Button>
                 </div>
