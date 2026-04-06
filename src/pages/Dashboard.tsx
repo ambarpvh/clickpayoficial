@@ -33,6 +33,7 @@ const Dashboard = () => {
   const [dailyLimit, setDailyLimit] = useState(10);
   const [todayClicks, setTodayClicks] = useState(0);
   const [todayEarnings, setTodayEarnings] = useState(0);
+  const [todayClickedAdIds, setTodayClickedAdIds] = useState<Set<string>>(new Set());
   const [activeAd, setActiveAd] = useState<{ id: string; title: string; url: string; reward: string; view_time: number } | null>(null);
   const [referralCount, setReferralCount] = useState(0);
 
