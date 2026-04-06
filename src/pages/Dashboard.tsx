@@ -242,7 +242,7 @@ const Dashboard = () => {
                       <p className="text-muted-foreground text-xs">Ganhe ${clickValue.toFixed(4)} • {ad.view_time}s</p>
                     </div>
                   </div>
-                  <Button size="sm" onClick={() => setActiveAd({ id: Number(ad.id), title: ad.title, url: ad.url, reward: `$${clickValue.toFixed(4)}` })}>
+                  <Button size="sm" onClick={() => setActiveAd({ id: ad.id, title: ad.title, url: ad.url, reward: `$${clickValue.toFixed(4)}`, view_time: ad.view_time })}>
                     Ver Anúncio <ArrowUpRight className="h-3.5 w-3.5" />
                   </Button>
                 </div>
