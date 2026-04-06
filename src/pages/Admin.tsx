@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Zap, Users, Eye, DollarSign, AlertCircle, LogOut, Plus, BarChart3, Pencil, Trash2, Ban, ShieldCheck, Settings } from "lucide-react";
+import { Zap, Users, Eye, DollarSign, AlertCircle, LogOut, Plus, BarChart3, Pencil, Trash2, Ban, ShieldCheck, Settings, Link2, Link2Off } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { format, subDays, parseISO } from "date-fns";
@@ -20,6 +21,7 @@ const Admin = () => {
   const [adTitle, setAdTitle] = useState("");
   const [adUrl, setAdUrl] = useState("");
   const [adTime, setAdTime] = useState(10);
+  const [adOpenLink, setAdOpenLink] = useState(true);
   const [adSubmitting, setAdSubmitting] = useState(false);
 
   // Plan editing
@@ -130,7 +132,7 @@ const Admin = () => {
   };
 
   // --- Ad CRUD ---
-  const resetAdForm = () => { setAdTitle(""); setAdUrl(""); setAdTime(10); setEditingAd(null); setShowAdForm(false); };
+  const resetAdForm = () => { setAdTitle(""); setAdUrl(""); setAdTime(10); setAdOpenLink(true); setEditingAd(null); setShowAdForm(false); };
 
   const saveAd = async () => {
     if (!adTitle || !adUrl) { toast.error("Preencha todos os campos"); return; }
@@ -140,11 +142,11 @@ const Admin = () => {
 
     try {
       if (editingAd) {
-        const { error } = await supabase.from("ads").update({ title: adTitle, url: adUrl, view_time: adTime }).eq("id", editingAd.id);
+        const { error } = await supabase.from("ads").update({ title: adTitle, url: adUrl, view_time: adTime, open_link: adOpenLink }).eq("id", editingAd.id);
         if (error) { console.error("Erro ao editar anúncio:", error); toast.error("Erro ao editar: " + error.message); setAdSubmitting(false); return; }
         toast.success("Anúncio atualizado!");
       } else {
-        const { data, error } = await supabase.from("ads").insert([{ title: adTitle, url: adUrl, view_time: adTime }]).select();
+        const { data, error } = await supabase.from("ads").insert([{ title: adTitle, url: adUrl, view_time: adTime, open_link: adOpenLink }]).select();
         console.log("Insert result:", data, error);
         if (error) { console.error("Erro ao criar anúncio:", error); toast.error("Erro ao criar: " + error.message); setAdSubmitting(false); return; }
         toast.success("Anúncio criado!");
@@ -185,6 +187,7 @@ const Admin = () => {
     setAdTitle(ad.title);
     setAdUrl(ad.url);
     setAdTime(ad.view_time);
+    setAdOpenLink(ad.open_link !== false);
     setShowAdForm(true);
   };
 
@@ -463,6 +466,10 @@ const Admin = () => {
                     <Label>Tempo (s)</Label>
                     <Input type="number" value={adTime} onChange={(e) => setAdTime(Number(e.target.value))} className="bg-secondary border-border" />
                   </div>
+                  <div className="flex items-center gap-3 mt-2">
+                    <Switch checked={adOpenLink} onCheckedChange={setAdOpenLink} />
+                    <Label className="text-sm">{adOpenLink ? "Abrir link do anúncio" : "Somente contagem de tempo"}</Label>
+                  </div>
                 </div>
                 <div className="flex gap-2">
                   <Button onClick={saveAd} disabled={adSubmitting}>{adSubmitting ? "Salvando..." : editingAd ? "Salvar Alterações" : "Criar Anúncio"}</Button>
@@ -481,12 +488,24 @@ const Admin = () => {
                     <div className="flex gap-3 mt-1">
                       <span className="text-xs text-muted-foreground"><Eye className="h-3 w-3 inline mr-0.5" />{m.clicks} cliques</span>
                       <span className="text-xs text-muted-foreground"><DollarSign className="h-3 w-3 inline mr-0.5" />${m.earned.toFixed(4)} ganho</span>
+                      <span className="text-xs text-muted-foreground">
+                        {ad.open_link !== false ? <Link2 className="h-3 w-3 inline mr-0.5" /> : <Link2Off className="h-3 w-3 inline mr-0.5" />}
+                        {ad.open_link !== false ? "Abre link" : "Só timer"}
+                      </span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <span className={`text-xs px-2 py-1 rounded-full font-medium ${ad.is_active ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"}`}>
                       {ad.is_active ? "Ativo" : "Pausado"}
                     </span>
+                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0" title={ad.open_link !== false ? "Desativar abertura de link" : "Ativar abertura de link"} onClick={async () => {
+                      const { error } = await supabase.from("ads").update({ open_link: !(ad.open_link !== false) }).eq("id", ad.id);
+                      if (error) { toast.error("Erro: " + error.message); return; }
+                      toast.success(ad.open_link !== false ? "Link desativado" : "Link ativado");
+                      loadData();
+                    }}>
+                      {ad.open_link !== false ? <Link2 className="h-3.5 w-3.5" /> : <Link2Off className="h-3.5 w-3.5" />}
+                    </Button>
                     <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => startEditAd(ad)}><Pencil className="h-3.5 w-3.5" /></Button>
                     <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => toggleAd(ad.id, ad.is_active)}>
                       {ad.is_active ? <Ban className="h-3.5 w-3.5" /> : <ShieldCheck className="h-3.5 w-3.5" />}
