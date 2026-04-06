@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Zap, Users, Eye, DollarSign, AlertCircle, LogOut, Plus, BarChart3, Pencil, Trash2, Ban, ShieldCheck, Settings } from "lucide-react";
+import { Zap, Users, Eye, DollarSign, AlertCircle, LogOut, Plus, BarChart3, Pencil, Trash2, Ban, ShieldCheck, Settings, Link2, Link2Off } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { format, subDays, parseISO } from "date-fns";
@@ -20,6 +21,7 @@ const Admin = () => {
   const [adTitle, setAdTitle] = useState("");
   const [adUrl, setAdUrl] = useState("");
   const [adTime, setAdTime] = useState(10);
+  const [adOpenLink, setAdOpenLink] = useState(true);
   const [adSubmitting, setAdSubmitting] = useState(false);
 
   // Plan editing
@@ -130,7 +132,7 @@ const Admin = () => {
   };
 
   // --- Ad CRUD ---
-  const resetAdForm = () => { setAdTitle(""); setAdUrl(""); setAdTime(10); setEditingAd(null); setShowAdForm(false); };
+  const resetAdForm = () => { setAdTitle(""); setAdUrl(""); setAdTime(10); setAdOpenLink(true); setEditingAd(null); setShowAdForm(false); };
 
   const saveAd = async () => {
     if (!adTitle || !adUrl) { toast.error("Preencha todos os campos"); return; }
@@ -140,11 +142,11 @@ const Admin = () => {
 
     try {
       if (editingAd) {
-        const { error } = await supabase.from("ads").update({ title: adTitle, url: adUrl, view_time: adTime }).eq("id", editingAd.id);
+        const { error } = await supabase.from("ads").update({ title: adTitle, url: adUrl, view_time: adTime, open_link: adOpenLink }).eq("id", editingAd.id);
         if (error) { console.error("Erro ao editar anúncio:", error); toast.error("Erro ao editar: " + error.message); setAdSubmitting(false); return; }
         toast.success("Anúncio atualizado!");
       } else {
-        const { data, error } = await supabase.from("ads").insert([{ title: adTitle, url: adUrl, view_time: adTime }]).select();
+        const { data, error } = await supabase.from("ads").insert([{ title: adTitle, url: adUrl, view_time: adTime, open_link: adOpenLink }]).select();
         console.log("Insert result:", data, error);
         if (error) { console.error("Erro ao criar anúncio:", error); toast.error("Erro ao criar: " + error.message); setAdSubmitting(false); return; }
         toast.success("Anúncio criado!");
@@ -185,6 +187,7 @@ const Admin = () => {
     setAdTitle(ad.title);
     setAdUrl(ad.url);
     setAdTime(ad.view_time);
+    setAdOpenLink(ad.open_link !== false);
     setShowAdForm(true);
   };
 
