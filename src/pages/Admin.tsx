@@ -268,7 +268,20 @@ const Admin = () => {
     loadData();
   };
 
-  const tabs = [
+  const changeUserPlan = async (userId: string) => {
+    if (!selectedNewPlan) { toast.error("Selecione um plano"); return; }
+    // Deactivate current plans
+    await supabase.from("user_plans").update({ is_active: false }).eq("user_id", userId).eq("is_active", true);
+    // Insert new plan
+    const { error } = await supabase.from("user_plans").insert({ user_id: userId, plan_id: selectedNewPlan, is_active: true });
+    if (error) { toast.error("Erro ao mudar plano: " + error.message); return; }
+    toast.success("Plano do usuário atualizado!");
+    setChangingPlanUser(null);
+    setSelectedNewPlan("");
+    loadData();
+  };
+
+
     { key: "overview" as const, label: "Visão Geral", icon: BarChart3 },
     { key: "users" as const, label: "Usuários", icon: Users },
     { key: "ads" as const, label: "Anúncios", icon: Eye },
