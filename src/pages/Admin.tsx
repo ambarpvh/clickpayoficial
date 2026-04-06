@@ -94,21 +94,25 @@ const Admin = () => {
       const { data: clicksData } = await supabase.from("clicks").select("ad_id, earned_value, clicked_at").gte("clicked_at", thirtyDaysAgo);
       const metrics: Record<string, { clicks: number; earned: number }> = {};
       const dayMap: Record<string, number> = {};
+      const revMap: Record<string, number> = {};
       (clicksData || []).forEach((c: any) => {
         if (!metrics[c.ad_id]) metrics[c.ad_id] = { clicks: 0, earned: 0 };
         metrics[c.ad_id].clicks += 1;
         metrics[c.ad_id].earned += Number(c.earned_value);
         const day = format(parseISO(c.clicked_at), "dd/MM");
         dayMap[day] = (dayMap[day] || 0) + 1;
+        revMap[day] = (revMap[day] || 0) + Number(c.earned_value);
       });
       setAdMetrics(metrics);
-      // Build last 30 days array
       const days: { date: string; clicks: number }[] = [];
+      const revDays: { date: string; revenue: number }[] = [];
       for (let i = 29; i >= 0; i--) {
         const d = format(subDays(new Date(), i), "dd/MM");
         days.push({ date: d, clicks: dayMap[d] || 0 });
+        revDays.push({ date: d, revenue: Number((revMap[d] || 0).toFixed(4)) });
       }
       setClicksPerDay(days);
+      setRevenuePerDay(revDays);
     } catch (error: any) {
       console.error("Exceção ao carregar admin:", error);
       toast.error(`Erro inesperado no painel: ${error.message}`);
