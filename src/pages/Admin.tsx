@@ -281,7 +281,7 @@ const Admin = () => {
     loadData();
   };
 
-
+  const tabs = [
     { key: "overview" as const, label: "Visão Geral", icon: BarChart3 },
     { key: "users" as const, label: "Usuários", icon: Users },
     { key: "ads" as const, label: "Anúncios", icon: Eye },
