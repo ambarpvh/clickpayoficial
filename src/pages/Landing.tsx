@@ -137,7 +137,7 @@ const Landing = () => {
                   )}
                   <h3 className="font-heading text-2xl font-bold mb-1">{plan.name}</h3>
                   <p className="gradient-text-gold text-3xl font-bold my-4">
-                    {plan.price === 0 ? "Grátis" : `${formatBRL(plan.price)}/mês`}
+                    {plan.price === 0 ? "Grátis" : formatBRL(plan.price)}
                   </p>
                   <div className="space-y-3 text-sm text-muted-foreground mb-6">
                     <p>Ganho por clique: <span className="text-primary font-semibold">{formatBRL(plan.click_value, 4)}</span></p>
