@@ -30,6 +30,12 @@ const Admin = () => {
   const [planDailyLimit, setPlanDailyLimit] = useState(10);
   const [showPlanForm, setShowPlanForm] = useState(false);
 
+  // Plan deletion
+  const [deletingPlan, setDeletingPlan] = useState<any>(null);
+  const [deletePlanUsers, setDeletePlanUsers] = useState<number>(0);
+  const [transferPlanId, setTransferPlanId] = useState<string>("");
+  const [deletePlanStep, setDeletePlanStep] = useState<"confirm" | "transfer" | null>(null);
+
   // Balance editing
   const [editingBalance, setEditingBalance] = useState<string | null>(null);
   const [balanceAmount, setBalanceAmount] = useState("");
