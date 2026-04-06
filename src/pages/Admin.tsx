@@ -408,10 +408,27 @@ const Admin = () => {
                               <DollarSign className="h-3 w-3 mr-1" /> Saldo
                             </Button>
                           )}
+                          {changingPlanUser === u.user_id ? (
+                            <div className="flex items-center gap-1">
+                              <select
+                                value={selectedNewPlan}
+                                onChange={(e) => setSelectedNewPlan(e.target.value)}
+                                className="h-8 text-xs rounded-md bg-secondary border border-border px-2"
+                              >
+                                <option value="">Selecione...</option>
+                                {plans.map((p: any) => (
+                                  <option key={p.id} value={p.id}>{p.name}</option>
+                                ))}
+                              </select>
+                              <Button size="sm" className="h-8 text-xs" onClick={() => changeUserPlan(u.user_id)}>OK</Button>
+                              <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => setChangingPlanUser(null)}>✕</Button>
+                            </div>
+                          ) : (
+                            <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => { setChangingPlanUser(u.user_id); setSelectedNewPlan(""); }}>
+                              <Settings className="h-3 w-3 mr-1" /> Plano
+                            </Button>
+                          )}
                         </div>
-                      </td>
-                    </tr>
-                  ))}
                 </tbody>
               </table>
             </div>
