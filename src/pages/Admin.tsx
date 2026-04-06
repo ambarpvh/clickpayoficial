@@ -36,6 +36,7 @@ const Admin = () => {
   const [ads, setAds] = useState<any[]>([]);
   const [plans, setPlans] = useState<any[]>([]);
   const [withdrawals, setWithdrawals] = useState<any[]>([]);
+  const [adMetrics, setAdMetrics] = useState<Record<string, { clicks: number; earned: number }>>({});
   const [stats, setStats] = useState({ users: 0, clicks: 0, pendingWithdrawals: 0, activeAds: 0, totalPaid: 0 });
 
   useEffect(() => {
@@ -82,6 +83,16 @@ const Admin = () => {
       setAds(adsData || []);
       setPlans(plansData || []);
       setWithdrawals(withdrawalsData || []);
+
+      // Fetch click metrics per ad
+      const { data: clicksData } = await supabase.from("clicks").select("ad_id, earned_value");
+      const metrics: Record<string, { clicks: number; earned: number }> = {};
+      (clicksData || []).forEach((c: any) => {
+        if (!metrics[c.ad_id]) metrics[c.ad_id] = { clicks: 0, earned: 0 };
+        metrics[c.ad_id].clicks += 1;
+        metrics[c.ad_id].earned += Number(c.earned_value);
+      });
+      setAdMetrics(metrics);
     } catch (error: any) {
       console.error("Exceção ao carregar admin:", error);
       toast.error(`Erro inesperado no painel: ${error.message}`);
@@ -340,11 +351,17 @@ const Admin = () => {
               </div>
             )}
             <div className="glass-card rounded-xl divide-y divide-border/50">
-              {ads.map((ad: any) => (
+              {ads.map((ad: any) => {
+                const m = adMetrics[ad.id] || { clicks: 0, earned: 0 };
+                return (
                 <div key={ad.id} className="p-4 flex items-center justify-between gap-4">
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="font-medium text-sm truncate">{ad.title}</p>
                     <p className="text-muted-foreground text-xs truncate">{ad.url}</p>
+                    <div className="flex gap-3 mt-1">
+                      <span className="text-xs text-muted-foreground"><Eye className="h-3 w-3 inline mr-0.5" />{m.clicks} cliques</span>
+                      <span className="text-xs text-muted-foreground"><DollarSign className="h-3 w-3 inline mr-0.5" />${m.earned.toFixed(4)} ganho</span>
+                    </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <span className={`text-xs px-2 py-1 rounded-full font-medium ${ad.is_active ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"}`}>
@@ -357,7 +374,8 @@ const Admin = () => {
                     <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-destructive" onClick={() => deleteAd(ad.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
                   </div>
                 </div>
-              ))}
+                );
+              })}
               {ads.length === 0 && <p className="p-4 text-muted-foreground text-sm text-center">Nenhum anúncio</p>}
             </div>
           </div>
