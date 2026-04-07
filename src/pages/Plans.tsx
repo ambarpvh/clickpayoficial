@@ -41,25 +41,21 @@ const Plans = () => {
     setCurrentPlanId(userPlan?.plan_id || null);
   };
 
-  const handleUpgrade = async (planId: string) => {
+  const handleUpgrade = (planId: string, price: number) => {
     if (!user) return;
-    setUpgrading(planId);
-
-    // Deactivate current plan
-    await supabase.from("user_plans").update({ is_active: false }).eq("user_id", user.id).eq("is_active", true);
-
-    // Activate new plan
-    const { error } = await supabase.from("user_plans").insert({
-      user_id: user.id,
-      plan_id: planId,
-    });
-
-    setUpgrading(null);
-    if (error) {
-      toast.error("Erro ao trocar de plano");
+    if (price === 0) {
+      // Free plan - direct switch
+      (async () => {
+        setUpgrading(planId);
+        await supabase.from("user_plans").update({ is_active: false }).eq("user_id", user.id).eq("is_active", true);
+        const { error } = await supabase.from("user_plans").insert({ user_id: user.id, plan_id: planId });
+        setUpgrading(null);
+        if (error) { toast.error("Erro ao trocar de plano"); }
+        else { toast.success("Plano atualizado!"); setCurrentPlanId(planId); }
+      })();
     } else {
-      toast.success("Plano atualizado com sucesso!");
-      setCurrentPlanId(planId);
+      // Paid plan - go to payment page
+      navigate(`/payment/${planId}`);
     }
   };
 
@@ -116,7 +112,7 @@ const Plans = () => {
                   variant={isCurrent ? "outline" : "hero"}
                   className="w-full"
                   disabled={isCurrent || upgrading === plan.id}
-                  onClick={() => handleUpgrade(plan.id)}
+                  onClick={() => handleUpgrade(plan.id, plan.price)}
                 >
                   {isCurrent ? "Plano Atual" : upgrading === plan.id ? "Processando..." : "Selecionar"}
                 </Button>

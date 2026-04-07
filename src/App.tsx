@@ -10,6 +10,7 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Admin from "./pages/Admin";
 import Plans from "./pages/Plans";
+import Payment from "./pages/Payment";
 import History from "./pages/History";
 import NotFound from "./pages/NotFound";
 
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/plans" element={<Plans />} />
+            <Route path="/payment/:planId" element={<Payment />} />
             <Route path="/history" element={<History />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

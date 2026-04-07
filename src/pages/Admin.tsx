@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Zap, Users, Eye, DollarSign, AlertCircle, LogOut, Plus, BarChart3, Pencil, Trash2, Ban, ShieldCheck, Settings, Link2, Link2Off } from "lucide-react";
+import { Zap, Users, Eye, DollarSign, AlertCircle, LogOut, Plus, BarChart3, Pencil, Trash2, Ban, ShieldCheck, Settings, Link2, Link2Off, CreditCard, CheckCircle, XCircle, Image } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
@@ -16,7 +16,7 @@ import { formatBRL } from "@/lib/format";
 const Admin = () => {
   const navigate = useNavigate();
   const { user, isAdmin, loading: authLoading, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState<"overview" | "users" | "ads" | "withdrawals" | "plans">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "users" | "ads" | "withdrawals" | "plans" | "payments">("overview");
   const [showAdForm, setShowAdForm] = useState(false);
   const [editingAd, setEditingAd] = useState<any>(null);
   const [adTitle, setAdTitle] = useState("");
@@ -52,6 +52,7 @@ const Admin = () => {
   const [ads, setAds] = useState<any[]>([]);
   const [plans, setPlans] = useState<any[]>([]);
   const [withdrawals, setWithdrawals] = useState<any[]>([]);
+  const [pendingPayments, setPendingPayments] = useState<any[]>([]);
   const [adMetrics, setAdMetrics] = useState<Record<string, { clicks: number; earned: number }>>({});
   const [clicksPerDay, setClicksPerDay] = useState<{ date: string; clicks: number }[]>([]);
   const [revenuePerDay, setRevenuePerDay] = useState<{ date: string; revenue: number }[]>([]);
@@ -74,6 +75,7 @@ const Admin = () => {
         { data: adsData, error: adsError },
         { data: plansData, error: plansError },
         { data: withdrawalsData, error: withdrawalsError },
+        { data: paymentsData, error: paymentsError },
       ] = await Promise.all([
         supabase.from("profiles").select("id", { count: "exact", head: true }),
         supabase.from("clicks").select("id", { count: "exact", head: true }),
@@ -84,9 +86,10 @@ const Admin = () => {
         supabase.from("ads").select("*").order("created_at", { ascending: false }),
         supabase.from("plans").select("*").order("price", { ascending: true }),
         supabase.from("withdrawals").select("*").eq("status", "pending").order("requested_at", { ascending: false }),
+        supabase.from("payments").select("*").eq("status", "pending").order("created_at", { ascending: false }),
       ]);
 
-      const firstError = userCountError || clickCountError || pendingCountError || activeAdsCountError || approvedWError || profilesError || adsError || plansError || withdrawalsError;
+      const firstError = userCountError || clickCountError || pendingCountError || activeAdsCountError || approvedWError || profilesError || adsError || plansError || withdrawalsError || paymentsError;
 
       if (firstError) {
         console.error("Erro ao carregar dados do admin:", firstError);
@@ -101,6 +104,7 @@ const Admin = () => {
       setAds(adsData || []);
       setPlans(plansData || []);
       setWithdrawals(withdrawalsData || []);
+      setPendingPayments(paymentsData || []);
 
       // Fetch click metrics per ad + clicks per day chart
       const thirtyDaysAgo = subDays(new Date(), 29).toISOString();
@@ -285,11 +289,29 @@ const Admin = () => {
     loadData();
   };
 
+  const handlePaymentAction = async (paymentId: string, action: "approved" | "rejected") => {
+    if (action === "approved") {
+      // Get payment details
+      const payment = pendingPayments.find((p: any) => p.id === paymentId);
+      if (!payment) return;
+      // Deactivate current plan
+      await supabase.from("user_plans").update({ is_active: false }).eq("user_id", payment.user_id).eq("is_active", true);
+      // Activate new plan
+      const { error: planError } = await supabase.from("user_plans").insert({ user_id: payment.user_id, plan_id: payment.plan_id, is_active: true });
+      if (planError) { toast.error("Erro ao ativar plano: " + planError.message); return; }
+    }
+    const { error } = await supabase.from("payments").update({ status: action, updated_at: new Date().toISOString() }).eq("id", paymentId);
+    if (error) { toast.error("Erro ao atualizar pagamento"); return; }
+    toast.success(action === "approved" ? "Pagamento aprovado! Plano ativado." : "Pagamento recusado.");
+    loadData();
+  };
+
   const tabs = [
     { key: "overview" as const, label: "Visão Geral", icon: BarChart3 },
     { key: "users" as const, label: "Usuários", icon: Users },
     { key: "ads" as const, label: "Anúncios", icon: Eye },
     { key: "plans" as const, label: "Planos", icon: Settings },
+    { key: "payments" as const, label: "Pagamentos", icon: CreditCard },
     { key: "withdrawals" as const, label: "Saques", icon: DollarSign },
   ];
 
@@ -628,7 +650,42 @@ const Admin = () => {
           </div>
         )}
 
-        {/* Withdrawals */}
+        {/* Payments */}
+        {activeTab === "payments" && (
+          <div className="animate-fade-in">
+            <h2 className="font-heading text-xl font-bold mb-4">Pagamentos Pendentes</h2>
+            <div className="glass-card rounded-xl divide-y divide-border/50">
+              {pendingPayments.map((p: any) => {
+                const plan = plans.find((pl: any) => pl.id === p.plan_id);
+                return (
+                  <div key={p.id} className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm">Usuário: <span className="text-muted-foreground">{p.user_id.slice(0, 8)}...</span></p>
+                      <p className="text-sm">Plano: <span className="text-primary font-semibold">{plan?.name || "?"}</span> — {formatBRL(Number(p.amount))}</p>
+                      <p className="text-xs text-muted-foreground">{new Date(p.created_at).toLocaleDateString("pt-BR")} às {new Date(p.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {p.proof_url && (
+                        <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => window.open(p.proof_url, "_blank")}>
+                          <Image className="h-3 w-3 mr-1" /> Comprovante
+                        </Button>
+                      )}
+                      <Button size="sm" className="h-8 text-xs" onClick={() => handlePaymentAction(p.id, "approved")}>
+                        <CheckCircle className="h-3 w-3 mr-1" /> Aprovar
+                      </Button>
+                      <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => handlePaymentAction(p.id, "rejected")}>
+                        <XCircle className="h-3 w-3 mr-1" /> Recusar
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+              {pendingPayments.length === 0 && <p className="p-4 text-muted-foreground text-sm text-center">Nenhum pagamento pendente</p>}
+            </div>
+          </div>
+        )}
+
+
         {activeTab === "withdrawals" && (
           <div className="animate-fade-in">
             <h2 className="font-heading text-xl font-bold mb-4">Saques Pendentes</h2>
