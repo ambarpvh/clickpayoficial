@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { ArrowRight, Eye, DollarSign, Shield, Users, Zap, Star, TrendingUp } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { ArrowRight, Eye, DollarSign, Shield, Users, Zap, Star, TrendingUp, ChevronLeft, ChevronRight, Quote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
