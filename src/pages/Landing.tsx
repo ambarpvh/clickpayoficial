@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { ArrowRight, Eye, DollarSign, Shield, Users, Zap, Star, TrendingUp } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { ArrowRight, Eye, DollarSign, Shield, Users, Zap, Star, TrendingUp, ChevronLeft, ChevronRight, Quote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,6 +18,74 @@ const stats = [
   { label: "Anúncios Visualizados", value: "2.5M+", icon: Eye },
   { label: "Pagos aos Afiliados", value: "R$185K+", icon: DollarSign },
 ];
+
+const testimonials = [
+  { name: "Mariana S.", city: "São Paulo, SP", text: "Comecei sem acreditar muito, mas no primeiro mês já tinha sacado R$ 320,00. Uso no horário de almoço e à noite.", avatar: "MS" },
+  { name: "Carlos R.", city: "Belo Horizonte, MG", text: "Indiquei para 5 amigos e agora ganho comissão dos cliques deles também. Já saquei mais de R$ 1.200,00!", avatar: "CR" },
+  { name: "Ana Paula F.", city: "Recife, PE", text: "Sou mãe solo e o ClickPay me ajuda a complementar a renda. Consigo fazer pelo celular enquanto as crianças dormem.", avatar: "AF" },
+  { name: "Lucas M.", city: "Curitiba, PR", text: "No início achei que era golpe, mas o primeiro saque caiu na hora. Hoje faço R$ 50,00 por dia com o plano Premium.", avatar: "LM" },
+  { name: "Fernanda O.", city: "Salvador, BA", text: "Trabalho como freelancer e o ClickPay virou uma renda extra fixa. Já são 4 meses sacando toda semana.", avatar: "FO" },
+  { name: "Roberto A.", city: "Manaus, AM", text: "Minha esposa e eu usamos juntos. Com os dois planos, tiramos quase R$ 800,00 por mês extra.", avatar: "RA" },
+  { name: "Juliana T.", city: "Porto Alegre, RS", text: "Indiquei no meu grupo de WhatsApp e agora tenho uma rede de 20 pessoas. A comissão de rede é real!", avatar: "JT" },
+  { name: "Pedro H.", city: "Goiânia, GO", text: "Desempregado há 3 meses, o ClickPay tem sido essencial para pagar as contas básicas. Muito grato!", avatar: "PH" },
+];
+
+const SocialProofSection = () => {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const scroll = (direction: "left" | "right") => {
+    if (scrollRef.current) {
+      const amount = 320;
+      scrollRef.current.scrollBy({ left: direction === "left" ? -amount : amount, behavior: "smooth" });
+    }
+  };
+
+  return (
+    <section className="py-20 px-4 bg-secondary/20">
+      <div className="container mx-auto">
+        <div className="text-center mb-12">
+          <Quote className="h-10 w-10 text-primary mx-auto mb-4 opacity-60" />
+          <h2 className="font-heading text-3xl md:text-4xl font-bold mb-4">O Que Nossos Usuários Dizem</h2>
+          <p className="text-muted-foreground max-w-lg mx-auto">Pessoas reais que estão transformando tempo livre em renda extra</p>
+        </div>
+        <div className="relative">
+          <button
+            onClick={() => scroll("left")}
+            className="absolute -left-2 md:left-0 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-background border border-border shadow-md flex items-center justify-center hover:bg-accent transition-colors"
+          >
+            <ChevronLeft className="h-5 w-5 text-foreground" />
+          </button>
+          <div ref={scrollRef} className="flex gap-5 overflow-x-auto scrollbar-hide py-4 px-8 snap-x snap-mandatory" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
+            {testimonials.map((t, i) => (
+              <div key={i} className="glass-card rounded-xl p-6 min-w-[290px] max-w-[310px] shrink-0 snap-center border border-border/50 hover:border-primary/40 transition-all duration-300">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-11 w-11 rounded-full bg-primary/15 flex items-center justify-center text-primary font-bold text-sm">{t.avatar}</div>
+                  <div>
+                    <p className="font-semibold text-foreground text-sm">{t.name}</p>
+                    <p className="text-muted-foreground text-xs">{t.city}</p>
+                  </div>
+                </div>
+                <p className="text-muted-foreground text-sm leading-relaxed">"{t.text}"</p>
+                <div className="flex gap-0.5 mt-4">
+                  {[...Array(5)].map((_, j) => (
+                    <Star key={j} className="h-4 w-4 fill-primary text-primary" />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          <button
+            onClick={() => scroll("right")}
+            className="absolute -right-2 md:right-0 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-background border border-border shadow-md flex items-center justify-center hover:bg-accent transition-colors"
+          >
+            <ChevronRight className="h-5 w-5 text-foreground" />
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+};
+
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -168,6 +236,9 @@ const Landing = () => {
           </p>
         </div>
       </section>
+
+      {/* Social Proof */}
+      <SocialProofSection />
 
       {/* Footer */}
       <footer className="border-t border-border/50 py-8 px-4">
