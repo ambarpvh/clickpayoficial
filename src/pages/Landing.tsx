@@ -71,7 +71,7 @@ const SocialProofSection = () => {
           >
             <ChevronLeft className="h-5 w-5 text-foreground" />
           </button>
-          <div ref={scrollRef} className="flex gap-5 overflow-x-auto scrollbar-hide py-4 px-8 snap-x snap-mandatory" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
+          <div ref={scrollRef} onMouseEnter={() => setIsPaused(true)} onMouseLeave={() => setIsPaused(false)} className="flex gap-5 overflow-x-auto scrollbar-hide py-4 px-8 snap-x snap-mandatory" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
             {testimonials.map((t, i) => (
               <div key={i} className="glass-card rounded-xl p-6 min-w-[290px] max-w-[310px] shrink-0 snap-center border border-border/50 hover:border-primary/40 transition-all duration-300">
                 <div className="flex items-center gap-3 mb-4">
