@@ -140,7 +140,7 @@ const Landing = () => {
                     {plan.price === 0 ? "Grátis" : formatBRL(plan.price)}
                   </p>
                   <div className="space-y-3 text-sm text-muted-foreground mb-6">
-                    <p>Ganho por clique: <span className="text-primary font-semibold">{formatBRL(plan.click_value, 4)}</span></p>
+                    <p>Ganho por clique: <span className="text-primary font-semibold">{formatBRL(plan.click_value)}</span></p>
                     <p>Limite diário: <span className="text-foreground font-semibold">{plan.daily_click_limit} anúncios</span></p>
                   </div>
                   <Button
