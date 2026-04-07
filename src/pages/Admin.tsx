@@ -289,11 +289,29 @@ const Admin = () => {
     loadData();
   };
 
+  const handlePaymentAction = async (paymentId: string, action: "approved" | "rejected") => {
+    if (action === "approved") {
+      // Get payment details
+      const payment = pendingPayments.find((p: any) => p.id === paymentId);
+      if (!payment) return;
+      // Deactivate current plan
+      await supabase.from("user_plans").update({ is_active: false }).eq("user_id", payment.user_id).eq("is_active", true);
+      // Activate new plan
+      const { error: planError } = await supabase.from("user_plans").insert({ user_id: payment.user_id, plan_id: payment.plan_id, is_active: true });
+      if (planError) { toast.error("Erro ao ativar plano: " + planError.message); return; }
+    }
+    const { error } = await supabase.from("payments").update({ status: action, updated_at: new Date().toISOString() }).eq("id", paymentId);
+    if (error) { toast.error("Erro ao atualizar pagamento"); return; }
+    toast.success(action === "approved" ? "Pagamento aprovado! Plano ativado." : "Pagamento recusado.");
+    loadData();
+  };
+
   const tabs = [
     { key: "overview" as const, label: "Visão Geral", icon: BarChart3 },
     { key: "users" as const, label: "Usuários", icon: Users },
     { key: "ads" as const, label: "Anúncios", icon: Eye },
     { key: "plans" as const, label: "Planos", icon: Settings },
+    { key: "payments" as const, label: "Pagamentos", icon: CreditCard },
     { key: "withdrawals" as const, label: "Saques", icon: DollarSign },
   ];
 
