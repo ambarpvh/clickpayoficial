@@ -650,7 +650,42 @@ const Admin = () => {
           </div>
         )}
 
-        {/* Withdrawals */}
+        {/* Payments */}
+        {activeTab === "payments" && (
+          <div className="animate-fade-in">
+            <h2 className="font-heading text-xl font-bold mb-4">Pagamentos Pendentes</h2>
+            <div className="glass-card rounded-xl divide-y divide-border/50">
+              {pendingPayments.map((p: any) => {
+                const plan = plans.find((pl: any) => pl.id === p.plan_id);
+                return (
+                  <div key={p.id} className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm">Usuário: <span className="text-muted-foreground">{p.user_id.slice(0, 8)}...</span></p>
+                      <p className="text-sm">Plano: <span className="text-primary font-semibold">{plan?.name || "?"}</span> — {formatBRL(Number(p.amount))}</p>
+                      <p className="text-xs text-muted-foreground">{new Date(p.created_at).toLocaleDateString("pt-BR")} às {new Date(p.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {p.proof_url && (
+                        <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => window.open(p.proof_url, "_blank")}>
+                          <Image className="h-3 w-3 mr-1" /> Comprovante
+                        </Button>
+                      )}
+                      <Button size="sm" className="h-8 text-xs" onClick={() => handlePaymentAction(p.id, "approved")}>
+                        <CheckCircle className="h-3 w-3 mr-1" /> Aprovar
+                      </Button>
+                      <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => handlePaymentAction(p.id, "rejected")}>
+                        <XCircle className="h-3 w-3 mr-1" /> Recusar
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+              {pendingPayments.length === 0 && <p className="p-4 text-muted-foreground text-sm text-center">Nenhum pagamento pendente</p>}
+            </div>
+          </div>
+        )}
+
+
         {activeTab === "withdrawals" && (
           <div className="animate-fade-in">
             <h2 className="font-heading text-xl font-bold mb-4">Saques Pendentes</h2>
