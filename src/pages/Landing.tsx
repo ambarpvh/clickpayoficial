@@ -32,6 +32,7 @@ const testimonials = [
 
 const SocialProofSection = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [isPaused, setIsPaused] = useState(false);
 
   const scroll = (direction: "left" | "right") => {
     if (scrollRef.current) {
@@ -39,6 +40,21 @@ const SocialProofSection = () => {
       scrollRef.current.scrollBy({ left: direction === "left" ? -amount : amount, behavior: "smooth" });
     }
   };
+
+  useEffect(() => {
+    if (isPaused) return;
+    const interval = setInterval(() => {
+      if (scrollRef.current) {
+        const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+        if (scrollLeft + clientWidth >= scrollWidth - 10) {
+          scrollRef.current.scrollTo({ left: 0, behavior: "smooth" });
+        } else {
+          scrollRef.current.scrollBy({ left: 320, behavior: "smooth" });
+        }
+      }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [isPaused]);
 
   return (
     <section className="py-20 px-4 bg-secondary/20">
@@ -55,7 +71,7 @@ const SocialProofSection = () => {
           >
             <ChevronLeft className="h-5 w-5 text-foreground" />
           </button>
-          <div ref={scrollRef} className="flex gap-5 overflow-x-auto scrollbar-hide py-4 px-8 snap-x snap-mandatory" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
+          <div ref={scrollRef} onMouseEnter={() => setIsPaused(true)} onMouseLeave={() => setIsPaused(false)} className="flex gap-5 overflow-x-auto scrollbar-hide py-4 px-8 snap-x snap-mandatory" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
             {testimonials.map((t, i) => (
               <div key={i} className="glass-card rounded-xl p-6 min-w-[290px] max-w-[310px] shrink-0 snap-center border border-border/50 hover:border-primary/40 transition-all duration-300">
                 <div className="flex items-center gap-3 mb-4">
