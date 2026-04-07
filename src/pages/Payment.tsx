@@ -69,16 +69,15 @@ const Payment = () => {
         return;
       }
 
-      const { data: urlData } = supabase.storage
-        .from("payment-proofs")
-        .getPublicUrl(fileName);
+      // Store the file path (not public URL) since bucket is private
+      const proofPath = fileName;
 
       // Create payment record
       const { error: paymentError } = await supabase.from("payments").insert({
         user_id: user.id,
         plan_id: plan.id,
         amount: plan.price,
-        proof_url: urlData.publicUrl,
+        proof_url: proofPath,
       });
 
       if (paymentError) {
