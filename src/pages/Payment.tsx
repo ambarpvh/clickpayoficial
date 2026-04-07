@@ -77,7 +77,7 @@ const Payment = () => {
         user_id: user.id,
         plan_id: plan.id,
         amount: plan.price,
-        proof_url: urlData.publicUrl,
+        proof_url: proofPath,
       });
 
       if (paymentError) {
