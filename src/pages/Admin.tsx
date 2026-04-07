@@ -666,7 +666,11 @@ const Admin = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       {p.proof_url && (
-                        <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => window.open(p.proof_url, "_blank")}>
+                        <Button size="sm" variant="outline" className="h-8 text-xs" onClick={async () => {
+                          const { data } = await supabase.storage.from("payment-proofs").createSignedUrl(p.proof_url!, 300);
+                          if (data?.signedUrl) window.open(data.signedUrl, "_blank");
+                          else toast.error("Erro ao gerar link do comprovante");
+                        }}>
                           <Image className="h-3 w-3 mr-1" /> Comprovante
                         </Button>
                       )}
