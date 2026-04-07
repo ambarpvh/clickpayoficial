@@ -75,6 +75,7 @@ const Admin = () => {
         { data: adsData, error: adsError },
         { data: plansData, error: plansError },
         { data: withdrawalsData, error: withdrawalsError },
+        { data: paymentsData, error: paymentsError },
       ] = await Promise.all([
         supabase.from("profiles").select("id", { count: "exact", head: true }),
         supabase.from("clicks").select("id", { count: "exact", head: true }),
@@ -85,9 +86,10 @@ const Admin = () => {
         supabase.from("ads").select("*").order("created_at", { ascending: false }),
         supabase.from("plans").select("*").order("price", { ascending: true }),
         supabase.from("withdrawals").select("*").eq("status", "pending").order("requested_at", { ascending: false }),
+        supabase.from("payments").select("*").eq("status", "pending").order("created_at", { ascending: false }),
       ]);
 
-      const firstError = userCountError || clickCountError || pendingCountError || activeAdsCountError || approvedWError || profilesError || adsError || plansError || withdrawalsError;
+      const firstError = userCountError || clickCountError || pendingCountError || activeAdsCountError || approvedWError || profilesError || adsError || plansError || withdrawalsError || paymentsError;
 
       if (firstError) {
         console.error("Erro ao carregar dados do admin:", firstError);
@@ -102,6 +104,7 @@ const Admin = () => {
       setAds(adsData || []);
       setPlans(plansData || []);
       setWithdrawals(withdrawalsData || []);
+      setPendingPayments(paymentsData || []);
 
       // Fetch click metrics per ad + clicks per day chart
       const thirtyDaysAgo = subDays(new Date(), 29).toISOString();
