@@ -32,6 +32,7 @@ const testimonials = [
 
 const SocialProofSection = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [isPaused, setIsPaused] = useState(false);
 
   const scroll = (direction: "left" | "right") => {
     if (scrollRef.current) {
@@ -39,6 +40,21 @@ const SocialProofSection = () => {
       scrollRef.current.scrollBy({ left: direction === "left" ? -amount : amount, behavior: "smooth" });
     }
   };
+
+  useEffect(() => {
+    if (isPaused) return;
+    const interval = setInterval(() => {
+      if (scrollRef.current) {
+        const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+        if (scrollLeft + clientWidth >= scrollWidth - 10) {
+          scrollRef.current.scrollTo({ left: 0, behavior: "smooth" });
+        } else {
+          scrollRef.current.scrollBy({ left: 320, behavior: "smooth" });
+        }
+      }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [isPaused]);
 
   return (
     <section className="py-20 px-4 bg-secondary/20">
