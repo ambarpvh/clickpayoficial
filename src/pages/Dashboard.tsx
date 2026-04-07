@@ -164,9 +164,9 @@ const Dashboard = () => {
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: "Saldo Atual", value: formatBRL(balance, 4), icon: DollarSign, glow: true },
+            { label: "Saldo Atual", value: formatBRL(balance), icon: DollarSign, glow: true },
             { label: "Anúncios Hoje", value: `${todayClicks}/${dailyLimit}`, icon: Eye, glow: false },
-            { label: "Ganhos Hoje", value: formatBRL(todayEarnings, 4), icon: TrendingUp, glow: false },
+            { label: "Ganhos Hoje", value: formatBRL(todayEarnings), icon: TrendingUp, glow: false },
             { label: "Indicações", value: String(referralCount), icon: Gift, glow: false },
           ].map((stat) => (
             <div key={stat.label} className={`glass-card rounded-xl p-5 ${stat.glow ? "glow-primary border-primary/30" : ""}`}>
@@ -195,7 +195,7 @@ const Dashboard = () => {
             />
           </div>
           <p className="text-muted-foreground text-xs mt-2">
-            Ganhos hoje: <span className="text-primary font-semibold">{formatBRL(todayEarnings, 4)}</span>
+            Ganhos hoje: <span className="text-primary font-semibold">{formatBRL(todayEarnings)}</span>
           </p>
         </div>
 
@@ -238,10 +238,10 @@ const Dashboard = () => {
                     </div>
                     <div>
                       <p className="font-semibold text-sm">{ad.title}</p>
-                      <p className="text-muted-foreground text-xs">Ganhe {formatBRL(clickValue, 4)} • {ad.view_time}s</p>
+                      <p className="text-muted-foreground text-xs">Ganhe {formatBRL(clickValue)} • {ad.view_time}s</p>
                     </div>
                   </div>
-                  <Button size="sm" onClick={() => setActiveAd({ id: ad.id, title: ad.title, url: ad.url, reward: formatBRL(clickValue, 4), view_time: ad.view_time, open_link: ad.open_link !== false })}>
+                  <Button size="sm" onClick={() => setActiveAd({ id: ad.id, title: ad.title, url: ad.url, reward: formatBRL(clickValue), view_time: ad.view_time, open_link: ad.open_link !== false })}>
                     Ver Anúncio <ArrowUpRight className="h-3.5 w-3.5" />
                   </Button>
                 </div>

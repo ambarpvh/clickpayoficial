@@ -488,7 +488,7 @@ const Admin = () => {
                     <p className="text-muted-foreground text-xs truncate">{ad.url}</p>
                     <div className="flex gap-3 mt-1">
                       <span className="text-xs text-muted-foreground"><Eye className="h-3 w-3 inline mr-0.5" />{m.clicks} cliques</span>
-                      <span className="text-xs text-muted-foreground"><DollarSign className="h-3 w-3 inline mr-0.5" />{formatBRL(m.earned, 4)} ganho</span>
+                      <span className="text-xs text-muted-foreground"><DollarSign className="h-3 w-3 inline mr-0.5" />{formatBRL(m.earned)} ganho</span>
                       <span className="text-xs text-muted-foreground">
                         {ad.open_link !== false ? <Link2 className="h-3 w-3 inline mr-0.5" /> : <Link2Off className="h-3 w-3 inline mr-0.5" />}
                         {ad.open_link !== false ? "Abre link" : "Só timer"}
