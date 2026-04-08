@@ -25,6 +25,7 @@ const Admin = () => {
   const [adUrl, setAdUrl] = useState("");
   const [adTime, setAdTime] = useState(10);
   const [adOpenLink, setAdOpenLink] = useState(true);
+  const [adRewardValue, setAdRewardValue] = useState<string>("");
   const [adSubmitting, setAdSubmitting] = useState(false);
 
   // Plan editing
@@ -153,7 +154,7 @@ const Admin = () => {
   };
 
   // --- Ad CRUD ---
-  const resetAdForm = () => { setAdTitle(""); setAdUrl(""); setAdTime(10); setAdOpenLink(true); setEditingAd(null); setShowAdForm(false); };
+  const resetAdForm = () => { setAdTitle(""); setAdUrl(""); setAdTime(10); setAdOpenLink(true); setAdRewardValue(""); setEditingAd(null); setShowAdForm(false); };
 
   const saveAd = async () => {
     if (!adTitle || !adUrl) { toast.error("Preencha todos os campos"); return; }
@@ -162,12 +163,13 @@ const Admin = () => {
     setAdSubmitting(true);
 
     try {
+      const adData = { title: adTitle, url: adUrl, view_time: adTime, open_link: adOpenLink, reward_value: adRewardValue ? Number(adRewardValue) : null };
       if (editingAd) {
-        const { error } = await supabase.from("ads").update({ title: adTitle, url: adUrl, view_time: adTime, open_link: adOpenLink }).eq("id", editingAd.id);
+        const { error } = await supabase.from("ads").update(adData).eq("id", editingAd.id);
         if (error) { console.error("Erro ao editar anúncio:", error); toast.error("Erro ao editar: " + error.message); setAdSubmitting(false); return; }
         toast.success("Anúncio atualizado!");
       } else {
-        const { data, error } = await supabase.from("ads").insert([{ title: adTitle, url: adUrl, view_time: adTime, open_link: adOpenLink }]).select();
+        const { data, error } = await supabase.from("ads").insert([adData]).select();
         console.log("Insert result:", data, error);
         if (error) { console.error("Erro ao criar anúncio:", error); toast.error("Erro ao criar: " + error.message); setAdSubmitting(false); return; }
         toast.success("Anúncio criado!");
@@ -209,6 +211,7 @@ const Admin = () => {
     setAdUrl(ad.url);
     setAdTime(ad.view_time);
     setAdOpenLink(ad.open_link !== false);
+    setAdRewardValue(ad.reward_value != null ? String(ad.reward_value) : "");
     setShowAdForm(true);
   };
 
@@ -534,6 +537,11 @@ const Admin = () => {
                   <div className="space-y-2">
                     <Label>Tempo (s)</Label>
                     <Input type="number" value={adTime} onChange={(e) => setAdTime(Number(e.target.value))} className="bg-secondary border-border" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Valor por visualização (R$)</Label>
+                    <Input type="number" step="0.01" placeholder="Usar valor do plano" value={adRewardValue} onChange={(e) => setAdRewardValue(e.target.value)} className="bg-secondary border-border" />
+                    <p className="text-xs text-muted-foreground">Deixe vazio para usar o valor do plano do usuário</p>
                   </div>
                   <div className="flex items-center gap-3 mt-2">
                     <Switch checked={adOpenLink} onCheckedChange={setAdOpenLink} />

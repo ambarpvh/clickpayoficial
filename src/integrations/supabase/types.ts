@@ -20,6 +20,7 @@ export type Database = {
           id: string
           is_active: boolean
           open_link: boolean
+          reward_value: number | null
           title: string
           url: string
           view_time: number
@@ -29,6 +30,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           open_link?: boolean
+          reward_value?: number | null
           title: string
           url: string
           view_time?: number
@@ -38,6 +40,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           open_link?: boolean
+          reward_value?: number | null
           title?: string
           url?: string
           view_time?: number
