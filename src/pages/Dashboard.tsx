@@ -277,22 +277,25 @@ const Dashboard = () => {
                 <p className="text-muted-foreground">Nenhum anúncio disponível no momento.</p>
               </div>
             ) : (
-              availableAds.map((ad) => (
-                <div key={ad.id} className="glass-card rounded-xl p-4 flex items-center justify-between hover:border-primary/40 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Eye className="h-5 w-5 text-primary" />
+              availableAds.map((ad) => {
+                const adValue = ad.reward_value != null ? ad.reward_value : clickValue;
+                return (
+                  <div key={ad.id} className="glass-card rounded-xl p-4 flex items-center justify-between hover:border-primary/40 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Eye className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm">{ad.title}</p>
+                        <p className="text-muted-foreground text-xs">Ganhe {formatBRL(adValue)} • {ad.view_time}s</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-semibold text-sm">{ad.title}</p>
-                      <p className="text-muted-foreground text-xs">Ganhe {formatBRL(clickValue)} • {ad.view_time}s</p>
-                    </div>
+                    <Button size="sm" onClick={() => setActiveAd({ id: ad.id, title: ad.title, url: ad.url, reward: formatBRL(adValue), view_time: ad.view_time, open_link: ad.open_link !== false })}>
+                      Ver Anúncio <ArrowUpRight className="h-3.5 w-3.5" />
+                    </Button>
                   </div>
-                  <Button size="sm" onClick={() => setActiveAd({ id: ad.id, title: ad.title, url: ad.url, reward: formatBRL(clickValue), view_time: ad.view_time, open_link: ad.open_link !== false })}>
-                    Ver Anúncio <ArrowUpRight className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
 
