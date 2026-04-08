@@ -222,7 +222,7 @@ const Admin = () => {
   const savePlan = async () => {
     if (!planName) { toast.error("Nome obrigatório"); return; }
     if (editingPlan) {
-      const { error } = await supabase.from("plans").update({ name: planName, price: planPrice, click_value: planClickValue, daily_click_limit: planDailyLimit }).eq("id", editingPlan.id);
+      const { error } = await supabase.from("plans").update({ name: planName, price: planPrice, click_value: planClickValue, daily_click_limit: planDailyLimit, referral_commission: planReferralCommission } as any).eq("id", editingPlan.id);
       if (error) { toast.error("Erro ao editar plano"); return; }
       toast.success("Plano atualizado!");
     } else {
