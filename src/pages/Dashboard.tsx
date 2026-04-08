@@ -302,15 +302,20 @@ const Dashboard = () => {
               {clicks.length === 0 ? (
                 <p className="p-4 text-muted-foreground text-sm text-center">Nenhum clique ainda</p>
               ) : (
-                clicks.slice(0, 8).map((c) => (
-                  <div key={c.id} className="p-3 flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium">{(c.ads as unknown as { title: string })?.title || "Anúncio"}</p>
-                      <p className="text-muted-foreground text-xs">{new Date(c.clicked_at).toLocaleDateString("pt-BR")}</p>
+                clicks.slice(0, 8).map((c) => {
+                  const isCommission = Number(c.earned_value) < clickValue;
+                  return (
+                    <div key={c.id} className="p-3 flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium">{(c.ads as unknown as { title: string })?.title || "Anúncio"}</p>
+                        <p className="text-muted-foreground text-xs">
+                          {isCommission ? "Comissão de indicação" : "Visualização de anúncio"} • {new Date(c.clicked_at).toLocaleDateString("pt-BR")}
+                        </p>
+                      </div>
+                      <span className="text-primary font-semibold text-sm">+{formatBRL(Number(c.earned_value))}</span>
                     </div>
-                    <span className="text-primary font-semibold text-sm">+{formatBRL(Number(c.earned_value))}</span>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
             <Button variant="gold" className="w-full" onClick={() => setShowWithdrawForm(true)}>
