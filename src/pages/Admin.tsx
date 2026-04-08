@@ -226,7 +226,7 @@ const Admin = () => {
       if (error) { toast.error("Erro ao editar plano"); return; }
       toast.success("Plano atualizado!");
     } else {
-      const { error } = await supabase.from("plans").insert({ name: planName, price: planPrice, click_value: planClickValue, daily_click_limit: planDailyLimit });
+      const { error } = await supabase.from("plans").insert({ name: planName, price: planPrice, click_value: planClickValue, daily_click_limit: planDailyLimit, referral_commission: planReferralCommission } as any);
       if (error) { toast.error("Erro ao criar plano"); return; }
       toast.success("Plano criado!");
     }
