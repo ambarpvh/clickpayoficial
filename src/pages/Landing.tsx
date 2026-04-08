@@ -198,7 +198,7 @@ const Landing = () => {
           {stats.map((stat) => (
             <div key={stat.label} className="glass-card rounded-xl p-6 text-center glow-primary">
               <stat.icon className="h-8 w-8 text-primary mx-auto mb-3" />
-              <p className="font-heading text-3xl font-bold text-foreground">{stat.value}</p>
+              <p className="font-heading text-3xl font-bold text-foreground">{stat.value === "dynamic" ? activeUsers : stat.value}</p>
               <p className="text-muted-foreground text-sm mt-1">{stat.label}</p>
             </div>
           ))}
