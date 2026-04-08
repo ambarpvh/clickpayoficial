@@ -15,7 +15,7 @@ const lastNames = [
   "Barbosa", "Ribeiro", "Martins", "Rocha", "Carvalho", "Gomes",
 ];
 
-const plans = ["Free", "Bronze", "Prata", "Ouro", "Premium"];
+const plans = ["Free", "Bronze", "Prata", "Ouro"];
 
 const cities = [
   "São Paulo, SP", "Rio de Janeiro, RJ", "Belo Horizonte, MG",
