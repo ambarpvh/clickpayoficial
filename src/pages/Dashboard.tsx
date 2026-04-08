@@ -54,6 +54,8 @@ const Dashboard = () => {
       .select("plan_id, plans(name, click_value, daily_click_limit)")
       .eq("user_id", user.id)
       .eq("is_active", true)
+      .order("started_at", { ascending: false })
+      .limit(1)
       .maybeSingle();
 
     if (userPlan?.plans) {
