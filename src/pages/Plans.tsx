@@ -111,7 +111,7 @@ const Plans = () => {
                   {plan.price === 0 ? "Grátis" : formatBRL(plan.price)}
                 </p>
                 <div className="space-y-3 text-sm text-muted-foreground mb-6">
-                  <p className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Ganho: <span className="text-primary font-semibold">{formatBRL(plan.click_value)}</span></p>
+                  <p className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Ganho por anúncio: <span className="text-primary font-semibold">{formatBRL(plan.click_value)}</span></p>
                   <p className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Limite: <span className="text-foreground font-semibold">{plan.daily_click_limit}/dia</span></p>
                 </div>
                 <Button
