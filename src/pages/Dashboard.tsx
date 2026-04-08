@@ -150,8 +150,12 @@ const Dashboard = () => {
     loadData();
   };
 
+  const referralBaseUrl = window.location.hostname.includes('preview--') 
+    ? window.location.origin.replace('preview--', '') 
+    : window.location.origin;
+
   const copyReferral = () => {
-    const link = `${window.location.origin}/register?ref=${user?.id}`;
+    const link = `${referralBaseUrl}/register?ref=${user?.id}`;
     navigator.clipboard.writeText(link);
     toast.success("Link copiado!");
   };
@@ -231,7 +235,7 @@ const Dashboard = () => {
         <div className="glass-card rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
             <p className="text-sm font-semibold mb-1">Seu link de indicação</p>
-            <p className="text-muted-foreground text-xs break-all">{window.location.origin}/register?ref={user?.id?.slice(0, 8)}...</p>
+            <p className="text-muted-foreground text-xs break-all">{referralBaseUrl}/register?ref={user?.id?.slice(0, 8)}...</p>
             <p className="text-accent text-xs mt-1">Nível 1: 30% | Nível 2: 20% | Nível 3: 10% de comissão</p>
           </div>
           <Button variant="outline" size="sm" onClick={copyReferral}>
