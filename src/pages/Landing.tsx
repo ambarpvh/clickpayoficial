@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { formatBRL } from "@/lib/format";
 import { useAuth } from "@/contexts/AuthContext";
+import { ensureUserSetup } from "@/lib/ensureUserSetup";
 
 interface Plan {
   id: string;
@@ -110,10 +111,12 @@ const Landing = () => {
   const [plans, setPlans] = useState<Plan[]>([]);
 
   useEffect(() => {
-    if (!authLoading && user) {
+    if (authLoading || !user) return;
+
+    void ensureUserSetup(user).finally(() => {
       navigate("/dashboard", { replace: true });
-    }
-  }, [user, authLoading]);
+    });
+  }, [user, authLoading, navigate]);
 
   useEffect(() => {
     const loadPlans = async () => {
