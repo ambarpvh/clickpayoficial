@@ -229,43 +229,30 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Plans */}
+      {/* Free Plan Highlight */}
       <section id="plans" className="py-20 px-4 bg-secondary/20">
         <div className="container mx-auto text-center">
-          <h2 className="font-heading text-3xl md:text-4xl font-bold mb-4">Escolha Seu Plano</h2>
-          <p className="text-muted-foreground mb-12">Quanto maior o plano, mais você ganha por clique</p>
-          <div className={`grid grid-cols-1 sm:grid-cols-2 ${plans.length >= 4 ? "lg:grid-cols-4" : plans.length === 3 ? "lg:grid-cols-3" : ""} gap-6`}>
-            {plans.map((plan, index) => {
-              const isPopular = index === Math.floor(plans.length / 2);
-              return (
-                <div
-                  key={plan.id}
-                  className={`glass-card rounded-xl p-6 border-2 border-primary/20 relative ${isPopular ? "glow-primary border-primary" : ""} hover:scale-105 transition-transform duration-300`}
-                >
-                  {isPopular && (
-                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full">
-                      Popular
-                    </span>
-                  )}
-                  <h3 className="font-heading text-2xl font-bold mb-1">{plan.name}</h3>
-                  <p className="gradient-text-gold text-3xl font-bold my-4">
-                    {plan.price === 0 ? "Grátis" : formatBRL(plan.price)}
-                  </p>
-                  <div className="space-y-3 text-sm text-muted-foreground mb-6">
-                    <p>Ganho por clique: <span className="text-primary font-semibold">{formatBRL(plan.click_value)}</span></p>
-                    <p>Limite diário: <span className="text-foreground font-semibold">{plan.daily_click_limit} anúncios</span></p>
-                  </div>
-                  <Button
-                    variant={isPopular ? "hero" : "outline"}
-                    className="w-full"
-                    onClick={() => navigate("/register")}
-                  >
-                    {plan.price === 0 ? "Começar Grátis" : "Assinar"}
-                  </Button>
-                </div>
-              );
-            })}
-          </div>
+          <h2 className="font-heading text-3xl md:text-4xl font-bold mb-4">Comece a Ganhar Sem Investir Nada</h2>
+          <p className="text-muted-foreground mb-12 max-w-lg mx-auto">Cadastre-se gratuitamente e comece a ganhar dinheiro assistindo anúncios hoje mesmo</p>
+          {plans.filter(p => p.price === 0).map((plan) => (
+            <div key={plan.id} className="max-w-md mx-auto glass-card rounded-2xl p-8 border-2 border-primary glow-primary relative">
+              <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-4 py-1 rounded-full">
+                100% Grátis
+              </span>
+              <h3 className="font-heading text-3xl font-bold mb-2">{plan.name}</h3>
+              <p className="gradient-text-primary text-5xl font-bold my-6">R$ 0,00</p>
+              <div className="space-y-4 text-sm text-muted-foreground mb-8">
+                <p className="flex items-center justify-center gap-2">✅ Ganho por clique: <span className="text-primary font-bold text-base">{formatBRL(plan.click_value)}</span></p>
+                <p className="flex items-center justify-center gap-2">✅ Limite diário: <span className="text-foreground font-bold text-base">{plan.daily_click_limit} anúncios</span></p>
+                <p className="flex items-center justify-center gap-2">✅ Sem cartão de crédito</p>
+                <p className="flex items-center justify-center gap-2">✅ Saque a qualquer momento</p>
+              </div>
+              <Button variant="hero" size="lg" className="w-full text-lg" onClick={() => navigate("/register")}>
+                Criar Conta Grátis <ArrowRight className="h-5 w-5" />
+              </Button>
+              <p className="text-xs text-muted-foreground mt-4">Depois de cadastrado, você pode fazer upgrade para ganhar ainda mais!</p>
+            </div>
+          ))}
         </div>
       </section>
 
