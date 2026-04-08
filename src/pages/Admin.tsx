@@ -217,7 +217,7 @@ const Admin = () => {
   };
 
   // --- Plan CRUD ---
-  const resetPlanForm = () => { setPlanName(""); setPlanPrice(0); setPlanClickValue(0.001); setPlanDailyLimit(10); setEditingPlan(null); setShowPlanForm(false); };
+  const resetPlanForm = () => { setPlanName(""); setPlanPrice(0); setPlanClickValue(0.001); setPlanDailyLimit(10); setPlanReferralCommission(1.00); setEditingPlan(null); setShowPlanForm(false); };
 
   const savePlan = async () => {
     if (!planName) { toast.error("Nome obrigatório"); return; }
