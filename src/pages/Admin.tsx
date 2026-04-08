@@ -706,14 +706,24 @@ const Admin = () => {
             <h2 className="font-heading text-xl font-bold mb-4">Saques Pendentes</h2>
             <div className="glass-card rounded-xl divide-y divide-border/50">
               {withdrawals.map((w: any) => (
-                <div key={w.id} className="p-4 flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-sm">{w.profiles?.name || w.profiles?.email || "Usuário"}</p>
-                    <p className="text-muted-foreground text-xs">{new Date(w.requested_at).toLocaleDateString("pt-BR")} — {formatBRL(Number(w.amount))}</p>
+                <div key={w.id} className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm">{w.holder_name || "Sem nome"}</p>
+                    <p className="text-sm text-muted-foreground">CPF: {w.cpf || "N/A"} • Pix: {w.pix_key || "N/A"}</p>
+                    <p className="text-sm text-muted-foreground">Tel: {w.phone || "N/A"}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {new Date(w.requested_at).toLocaleDateString("pt-BR")} às {new Date(w.requested_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                      {" — "}
+                      <span className="text-primary font-bold">{formatBRL(Number(w.amount))}</span>
+                    </p>
                   </div>
                   <div className="flex gap-2">
-                    <Button size="sm" onClick={() => handleWithdrawal(w.id, "approved")}>Aprovar</Button>
-                    <Button size="sm" variant="outline" onClick={() => handleWithdrawal(w.id, "rejected")}>Recusar</Button>
+                    <Button size="sm" onClick={() => handleWithdrawal(w.id, "approved")}>
+                      <CheckCircle className="h-3 w-3 mr-1" /> Pagar
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => handleWithdrawal(w.id, "rejected")}>
+                      <XCircle className="h-3 w-3 mr-1" /> Recusar
+                    </Button>
                   </div>
                 </div>
               ))}
