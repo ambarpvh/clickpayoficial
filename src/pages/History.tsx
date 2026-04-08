@@ -96,17 +96,28 @@ const History = () => {
     setDirectCount(direct.length);
     setIndirectCount(indirect.length);
 
-    // Fetch profiles for direct referrals
+    // Fetch profiles and plans for direct referrals
     if (direct.length > 0) {
-      const { data: profiles } = await supabase.from("profiles").select("user_id, name, email").in("user_id", direct.map(r => r.referred_id));
+      const directIds = direct.map(r => r.referred_id);
+      const [{ data: profiles }, { data: userPlans }] = await Promise.all([
+        supabase.from("profiles").select("user_id, name, email").in("user_id", directIds),
+        supabase.from("user_plans").select("user_id, plans(name, price)").in("user_id", directIds).eq("is_active", true),
+      ]);
       const profileMap = new Map((profiles || []).map(p => [p.user_id, p]));
-      const enriched: ReferralWithProfile[] = refs.map(r => ({
-        ...r,
-        profile: r.level === 1 ? (profileMap.get(r.referred_id) || null) : null,
-      }));
+      const planMap = new Map((userPlans || []).map((up: any) => [up.user_id, up.plans]));
+      const enriched: ReferralWithProfile[] = refs.map(r => {
+        const plan = planMap.get(r.referred_id) as { name: string; price: number } | undefined;
+        const commissionValue = plan && plan.price > 0 ? plan.price * r.commission_rate : (r.level === 1 ? 1.0 : 0);
+        return {
+          ...r,
+          profile: r.level === 1 ? (profileMap.get(r.referred_id) || null) : null,
+          planName: plan?.name || "Free",
+          commissionValue,
+        };
+      });
       setReferrals(enriched);
     } else {
-      setReferrals(refs.map(r => ({ ...r, profile: null })));
+      setReferrals(refs.map(r => ({ ...r, profile: null, planName: "Free", commissionValue: r.level === 1 ? 1.0 : 0 })));
     }
 
     // Ranking
