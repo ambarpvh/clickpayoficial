@@ -105,13 +105,35 @@ const Dashboard = () => {
       setWPhone(profileData.phone || "");
     }
 
-    const { data: recentClicks } = await supabase
-      .from("clicks")
-      .select("*, ads(title)")
-      .eq("user_id", user.id)
-      .order("clicked_at", { ascending: false })
-      .limit(10);
-    setClicks(recentClicks || []);
+    const [{ data: recentClicks }, { data: recentAdjustments }] = await Promise.all([
+      supabase.from("clicks").select("*, ads(title)").eq("user_id", user.id).order("clicked_at", { ascending: false }).limit(10),
+      supabase.from("balance_adjustments").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
+    ]);
+
+    const items: Array<{ id: string; type: string; label: string; sublabel: string; amount: number; date: Date }> = [];
+    (recentClicks || []).forEach((c: any) => {
+      const isCommission = c.referral_commission_paid === true;
+      items.push({
+        id: c.id,
+        type: isCommission ? "comissao" : "anuncio",
+        label: isCommission ? "Comissão de indicação" : "Visualização de anúncio",
+        sublabel: c.ads?.title || "Anúncio",
+        amount: Number(c.earned_value),
+        date: new Date(c.clicked_at),
+      });
+    });
+    (recentAdjustments || []).forEach((a: any) => {
+      items.push({
+        id: a.id,
+        type: "ajuste",
+        label: a.note || "Ajuste de saldo",
+        sublabel: "",
+        amount: Number(a.amount),
+        date: new Date(a.created_at),
+      });
+    });
+    items.sort((a, b) => b.date.getTime() - a.date.getTime());
+    setHistoryItems(items.slice(0, 10));
 
     const { count } = await supabase.from("referrals").select("id", { count: "exact", head: true }).eq("referrer_id", user.id);
     setReferralCount(count || 0);
