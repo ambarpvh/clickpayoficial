@@ -660,6 +660,7 @@ const Admin = () => {
                   <div className="space-y-1 text-sm text-muted-foreground">
                     <p>Clique: <span className="text-primary font-semibold">{formatBRL(Number(plan.click_value), 3)}</span></p>
                     <p>Limite: <span className="text-foreground font-semibold">{plan.daily_click_limit}/dia</span></p>
+                    <p>Comissão indicação: <span className="text-green-400 font-semibold">{formatBRL(Number(plan.referral_commission ?? 1))}</span></p>
                   </div>
                 </div>
               ))}
