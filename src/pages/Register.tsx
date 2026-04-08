@@ -56,6 +56,7 @@ const Register = () => {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 relative">
       {refId && <FakeSignupPopups />}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(152_60%_48%/0.06),transparent_60%)]" />
       <div className="glass-card rounded-2xl p-8 w-full max-w-md animate-slide-up relative z-10">
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 mb-4">
