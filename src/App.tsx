@@ -12,6 +12,7 @@ import Admin from "./pages/Admin";
 import Plans from "./pages/Plans";
 import Payment from "./pages/Payment";
 import History from "./pages/History";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/plans" element={<Plans />} />
             <Route path="/payment/:planId" element={<Payment />} />
             <Route path="/history" element={<History />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

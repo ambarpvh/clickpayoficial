@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { DollarSign, Eye, TrendingUp, Zap, LogOut, Copy, Gift, Clock, ArrowUpRight, Crown, History as HistoryIcon } from "lucide-react";
+import { DollarSign, Eye, TrendingUp, Zap, LogOut, Copy, Gift, Clock, ArrowUpRight, Crown, History as HistoryIcon, UserCog } from "lucide-react";
 import AdTimer from "@/components/AdTimer";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -91,6 +91,15 @@ const Dashboard = () => {
     const { data: settingData } = await supabase.from("settings").select("value").eq("key", "min_withdrawal").maybeSingle();
     if (settingData) setMinWithdrawal(Number(settingData.value));
 
+    // Load profile data for withdrawal pre-fill
+    const { data: profileData } = await supabase.from("profiles").select("name, cpf, pix_key, phone").eq("user_id", user.id).maybeSingle();
+    if (profileData) {
+      setWName(profileData.name || "");
+      setWCpf(profileData.cpf || "");
+      setWPix(profileData.pix_key || "");
+      setWPhone(profileData.phone || "");
+    }
+
     const { data: recentClicks } = await supabase
       .from("clicks")
       .select("*, ads(title)")
@@ -178,6 +187,9 @@ const Dashboard = () => {
             {isAdmin && (
               <Button variant="ghost" size="sm" onClick={() => navigate("/admin")}>Admin</Button>
             )}
+            <Button variant="ghost" size="sm" onClick={() => navigate("/profile")}>
+              <UserCog className="h-4 w-4" />
+            </Button>
             <Button variant="ghost" size="sm" onClick={() => navigate("/history")}>
               <HistoryIcon className="h-4 w-4" />
             </Button>

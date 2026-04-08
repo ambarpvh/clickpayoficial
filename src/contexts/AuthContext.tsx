@@ -43,6 +43,65 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     };
 
+    const processOAuthReferral = async (userId: string) => {
+      const refId = localStorage.getItem("clickpay_ref");
+      if (!refId || refId === userId) return;
+      localStorage.removeItem("clickpay_ref");
+
+      // Check if profile already has referred_by
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("referred_by")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (profile?.referred_by) return;
+
+      // Update profile with referrer
+      await supabase
+        .from("profiles")
+        .update({ referred_by: refId })
+        .eq("user_id", userId);
+
+      // Create referral records
+      // Level 1
+      await supabase.from("referrals").insert({
+        referrer_id: refId,
+        referred_id: userId,
+        level: 1,
+        commission_rate: 0.30,
+      });
+
+      // Level 2
+      const { data: l2Profile } = await supabase
+        .from("profiles")
+        .select("referred_by")
+        .eq("user_id", refId)
+        .maybeSingle();
+      if (l2Profile?.referred_by) {
+        await supabase.from("referrals").insert({
+          referrer_id: l2Profile.referred_by,
+          referred_id: userId,
+          level: 2,
+          commission_rate: 0.20,
+        });
+
+        // Level 3
+        const { data: l3Profile } = await supabase
+          .from("profiles")
+          .select("referred_by")
+          .eq("user_id", l2Profile.referred_by)
+          .maybeSingle();
+        if (l3Profile?.referred_by) {
+          await supabase.from("referrals").insert({
+            referrer_id: l3Profile.referred_by,
+            referred_id: userId,
+            level: 3,
+            commission_rate: 0.10,
+          });
+        }
+      }
+    };
+
     // First get the initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!mounted) return;
@@ -50,6 +109,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
         checkAdmin(session.user.id);
+        processOAuthReferral(session.user.id);
       }
       setLoading(false);
     });
