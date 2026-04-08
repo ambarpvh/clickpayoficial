@@ -325,7 +325,7 @@ const Admin = () => {
         .from("referrals")
         .select("referrer_id, level, commission_rate")
         .eq("referred_id", payment.user_id)
-        .lte("level", 2);
+        .eq("level", 1);
 
       if (refs && refs.length > 0) {
         for (const ref of refs) {
@@ -334,7 +334,7 @@ const Admin = () => {
             user_id: ref.referrer_id,
             admin_id: user!.id,
             amount: commission,
-            note: `Comissão Nível ${ref.level} (${(ref.commission_rate * 100).toFixed(0)}%): Upgrade de plano`,
+            note: `Comissão (${(ref.commission_rate * 100).toFixed(0)}%): Upgrade de plano`,
           });
         }
       }

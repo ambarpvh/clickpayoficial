@@ -51,7 +51,6 @@ const History = () => {
   const [referrals, setReferrals] = useState<ReferralWithProfile[]>([]);
   const [ranking, setRanking] = useState<{ name: string; total: number }[]>([]);
   const [directCount, setDirectCount] = useState(0);
-  const [indirectCount, setIndirectCount] = useState(0);
   const [clickValue, setClickValue] = useState(1);
 
   useEffect(() => {
