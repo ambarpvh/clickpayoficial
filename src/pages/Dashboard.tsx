@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { DollarSign, Eye, TrendingUp, Zap, LogOut, Copy, Gift, Clock, ArrowUpRight, Crown, History as HistoryIcon, UserCog } from "lucide-react";
 import AdTimer from "@/components/AdTimer";
@@ -28,7 +28,10 @@ interface Click {
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, isAdmin, signOut, loading: authLoading } = useAuth();
+  const viewAsUserId = isAdmin ? searchParams.get("view_as") : null;
+  const targetUserId = viewAsUserId || user?.id;
   const [ads, setAds] = useState<Ad[]>([]);
   const [historyItems, setHistoryItems] = useState<Array<{ id: string; type: string; label: string; sublabel: string; amount: number; date: Date }>>([]);
   
@@ -49,12 +52,12 @@ const Dashboard = () => {
   }, [user, authLoading]);
 
   const loadData = async () => {
-    if (!user) return;
+    if (!user || !targetUserId) return;
 
     const { data: userPlan } = await supabase
       .from("user_plans")
       .select("plan_id, plans(name, click_value, daily_click_limit)")
-      .eq("user_id", user.id)
+      .eq("user_id", targetUserId)
       .eq("is_active", true)
       .order("started_at", { ascending: false })
       .limit(1)
@@ -74,20 +77,20 @@ const Dashboard = () => {
     const { data: todayClicksData } = await supabase
       .from("clicks")
       .select("*, ads(title)")
-      .eq("user_id", user.id)
+      .eq("user_id", targetUserId)
       .gte("clicked_at", today);
 
     setTodayClicks(todayClicksData?.length || 0);
     setTodayEarnings(todayClicksData?.reduce((sum, c) => sum + Number(c.earned_value), 0) || 0);
     setTodayClickedAdIds(new Set((todayClicksData || []).map((c) => c.ad_id)));
 
-    const { data: allClicks } = await supabase.from("clicks").select("earned_value").eq("user_id", user.id);
+    const { data: allClicks } = await supabase.from("clicks").select("earned_value").eq("user_id", targetUserId);
     const totalEarned = allClicks?.reduce((sum, c) => sum + Number(c.earned_value), 0) || 0;
 
-    const { data: withdrawals } = await supabase.from("withdrawals").select("amount, status").eq("user_id", user.id).in("status", ["approved", "pending"]);
+    const { data: withdrawals } = await supabase.from("withdrawals").select("amount, status").eq("user_id", targetUserId).in("status", ["approved", "pending"]);
     const totalWithdrawn = withdrawals?.reduce((sum, w) => sum + Number(w.amount), 0) || 0;
 
-    const { data: adjustmentsData } = await supabase.from("balance_adjustments").select("amount").eq("user_id", user.id);
+    const { data: adjustmentsData } = await supabase.from("balance_adjustments").select("amount").eq("user_id", targetUserId);
     const totalAdjustments = adjustmentsData?.reduce((sum, a) => sum + Number(a.amount), 0) || 0;
 
     setBalance(totalEarned + totalAdjustments - totalWithdrawn);
@@ -97,7 +100,7 @@ const Dashboard = () => {
     if (settingData) setMinWithdrawal(Number(settingData.value));
 
     // Load profile data for withdrawal pre-fill
-    const { data: profileData } = await supabase.from("profiles").select("name, cpf, pix_key, phone").eq("user_id", user.id).maybeSingle();
+    const { data: profileData } = await supabase.from("profiles").select("name, cpf, pix_key, phone").eq("user_id", targetUserId).maybeSingle();
     if (profileData) {
       setWName(profileData.name || "");
       setWCpf(profileData.cpf || "");
@@ -106,8 +109,8 @@ const Dashboard = () => {
     }
 
     const [{ data: recentClicks }, { data: recentAdjustments }] = await Promise.all([
-      supabase.from("clicks").select("*, ads(title)").eq("user_id", user.id).order("clicked_at", { ascending: false }).limit(10),
-      supabase.from("balance_adjustments").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
+      supabase.from("clicks").select("*, ads(title)").eq("user_id", targetUserId).order("clicked_at", { ascending: false }).limit(10),
+      supabase.from("balance_adjustments").select("*").eq("user_id", targetUserId).order("created_at", { ascending: false }).limit(10),
     ]);
 
     const items: Array<{ id: string; type: string; label: string; sublabel: string; amount: number; date: Date }> = [];
@@ -135,7 +138,7 @@ const Dashboard = () => {
     items.sort((a, b) => b.date.getTime() - a.date.getTime());
     setHistoryItems(items.slice(0, 10));
 
-    const { count } = await supabase.from("referrals").select("id", { count: "exact", head: true }).eq("referrer_id", user.id);
+    const { count } = await supabase.from("referrals").select("id", { count: "exact", head: true }).eq("referrer_id", targetUserId);
     setReferralCount(count || 0);
   };
 
@@ -206,6 +209,11 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {viewAsUserId && (
+        <div className="bg-yellow-500/20 border-b border-yellow-500/50 text-yellow-200 text-center py-2 text-sm font-medium">
+          ⚠️ Visualizando painel do usuário (modo admin) — <button className="underline" onClick={() => window.close()}>Fechar</button>
+        </div>
+      )}
       <nav className="border-b border-border/50 glass-card">
         <div className="container mx-auto flex items-center justify-between h-14 px-4">
           <div className="flex items-center gap-2">
