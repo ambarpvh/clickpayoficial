@@ -106,7 +106,14 @@ const SocialProofSection = () => {
 
 const Landing = () => {
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
   const [plans, setPlans] = useState<Plan[]>([]);
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [user, authLoading]);
 
   useEffect(() => {
     const loadPlans = async () => {
