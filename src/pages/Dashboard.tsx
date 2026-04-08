@@ -292,9 +292,47 @@ const Dashboard = () => {
                 ))
               )}
             </div>
-            <Button variant="gold" className="w-full" onClick={handleWithdrawal}>
-              Solicitar Saque
+            <Button variant="gold" className="w-full" onClick={() => {
+              if (balance < 150) { toast.info("Saque mínimo: R$ 150,00"); return; }
+              setShowWithdrawForm(true);
+            }}>
+              Solicitar Saque (mín. R$ 150,00)
             </Button>
+            {showWithdrawForm && (
+              <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onClick={() => setShowWithdrawForm(false)}>
+                <div className="bg-background border border-border rounded-xl p-6 max-w-md w-full space-y-4" onClick={(e) => e.stopPropagation()}>
+                  <h3 className="font-heading text-lg font-bold">Solicitar Saque</h3>
+                  <p className="text-sm text-muted-foreground">Valor: <span className="text-primary font-bold">{formatBRL(balance)}</span></p>
+                  <div className="bg-accent/10 border border-accent/30 rounded-lg p-3">
+                    <p className="text-xs text-accent font-medium">⚠️ Os dados devem ser iguais aos da conta que receberá o Pix. Confira antes de enviar. Processamento em até 3 dias úteis.</p>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="space-y-1">
+                      <label className="text-sm font-medium">Nome completo (titular)</label>
+                      <input className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="Nome completo" value={wName} onChange={(e) => setWName(e.target.value)} />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-sm font-medium">CPF</label>
+                      <input className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="000.000.000-00" value={wCpf} onChange={(e) => setWCpf(e.target.value)} />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-sm font-medium">Chave Pix</label>
+                      <input className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="CPF, e-mail, celular ou chave aleatória" value={wPix} onChange={(e) => setWPix(e.target.value)} />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-sm font-medium">Telefone</label>
+                      <input className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="(00) 00000-0000" value={wPhone} onChange={(e) => setWPhone(e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="flex gap-2 justify-end">
+                    <Button variant="ghost" onClick={() => setShowWithdrawForm(false)}>Cancelar</Button>
+                    <Button variant="gold" disabled={wSubmitting} onClick={handleWithdrawal}>
+                      {wSubmitting ? "Enviando..." : "Confirmar Saque"}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
