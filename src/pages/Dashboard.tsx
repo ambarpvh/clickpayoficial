@@ -45,6 +45,7 @@ const Dashboard = () => {
   const [activeAd, setActiveAd] = useState<{ id: string; title: string; url: string; reward: string; view_time: number; open_link: boolean } | null>(null);
   const [referralCount, setReferralCount] = useState(0);
   const [minWithdrawal, setMinWithdrawal] = useState(150);
+  const [allPlans, setAllPlans] = useState<Array<{ name: string; referral_commission: number }>>([]);
 
   useEffect(() => {
     if (!authLoading && !user) { navigate("/login"); return; }
@@ -98,6 +99,10 @@ const Dashboard = () => {
     // Load min withdrawal setting
     const { data: settingData } = await supabase.from("settings").select("value").eq("key", "min_withdrawal").maybeSingle();
     if (settingData) setMinWithdrawal(Number(settingData.value));
+
+    // Load all plans for commission display
+    const { data: plansData } = await supabase.from("plans").select("name, referral_commission").eq("is_active", true).order("price", { ascending: true });
+    setAllPlans(plansData || []);
 
     // Load profile data for withdrawal pre-fill
     const { data: profileData } = await supabase.from("profiles").select("name, cpf, pix_key, phone").eq("user_id", targetUserId).maybeSingle();
@@ -285,7 +290,11 @@ const Dashboard = () => {
           <div>
             <p className="text-sm font-semibold mb-1">Seu link de indicação</p>
             <p className="text-muted-foreground text-xs break-all">{referralBaseUrl}/register?ref={user?.id?.slice(0, 8)}...</p>
-            <p className="text-accent text-xs mt-1"><p className="text-accent text-xs mt-1">Cadastro Free: R$ 1,00 | Plano Pago: 30% de comissão</p></p>
+            <p className="text-accent text-xs mt-1">
+              Comissões: {allPlans.map((p, i) => (
+                <span key={p.name}>{i > 0 ? " | " : ""}{p.name}: <span className="font-semibold">{formatBRL(p.referral_commission)}</span></span>
+              ))}
+            </p>
           </div>
           <Button variant="outline" size="sm" onClick={copyReferral}>
             <Copy className="h-3.5 w-3.5 mr-1" /> Copiar
