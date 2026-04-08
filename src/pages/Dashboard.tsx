@@ -248,7 +248,7 @@ const Dashboard = () => {
           <div>
             <p className="text-sm font-semibold mb-1">Seu link de indicação</p>
             <p className="text-muted-foreground text-xs break-all">{referralBaseUrl}/register?ref={user?.id?.slice(0, 8)}...</p>
-            <p className="text-accent text-xs mt-1">Nível 1: 30% | Nível 2: 20% | Nível 3: 10% de comissão</p>
+            <p className="text-accent text-xs mt-1">Nível 1: 30% | Nível 2: 20% | Grátis: R$ 1,00 de comissão</p>
           </div>
           <Button variant="outline" size="sm" onClick={copyReferral}>
             <Copy className="h-3.5 w-3.5 mr-1" /> Copiar
