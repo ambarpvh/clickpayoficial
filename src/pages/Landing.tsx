@@ -15,8 +15,17 @@ interface Plan {
   daily_click_limit: number;
 }
 
+const getActiveUsers = () => {
+  const baseDate = new Date('2026-04-08T00:00:00Z');
+  const now = new Date();
+  const diffMs = now.getTime() - baseDate.getTime();
+  const intervals = Math.floor(diffMs / (30 * 60 * 1000)); // every 30min
+  const count = 2 + (intervals * 2);
+  return count.toLocaleString('pt-BR') + '+';
+};
+
 const stats = [
-  { label: "Usuários Ativos", value: "12,450+", icon: Users },
+  { label: "Usuários Ativos", value: "dynamic", icon: Users },
   { label: "Anúncios Visualizados", value: "2.5M+", icon: Eye },
   { label: "Pagos aos Afiliados", value: "R$185K+", icon: DollarSign },
 ];
@@ -109,6 +118,12 @@ const Landing = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const [plans, setPlans] = useState<Plan[]>([]);
+  const [activeUsers, setActiveUsers] = useState(getActiveUsers());
+
+  useEffect(() => {
+    const interval = setInterval(() => setActiveUsers(getActiveUsers()), 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (authLoading || !user) return;
@@ -183,7 +198,7 @@ const Landing = () => {
           {stats.map((stat) => (
             <div key={stat.label} className="glass-card rounded-xl p-6 text-center glow-primary">
               <stat.icon className="h-8 w-8 text-primary mx-auto mb-3" />
-              <p className="font-heading text-3xl font-bold text-foreground">{stat.value}</p>
+              <p className="font-heading text-3xl font-bold text-foreground">{stat.value === "dynamic" ? activeUsers : stat.value}</p>
               <p className="text-muted-foreground text-sm mt-1">{stat.label}</p>
             </div>
           ))}
