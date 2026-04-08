@@ -118,6 +118,12 @@ const Landing = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const [plans, setPlans] = useState<Plan[]>([]);
+  const [activeUsers, setActiveUsers] = useState(getActiveUsers());
+
+  useEffect(() => {
+    const interval = setInterval(() => setActiveUsers(getActiveUsers()), 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (authLoading || !user) return;
