@@ -260,21 +260,21 @@ const Admin = () => {
     loadData();
   };
 
-  const addBalance = async (userId: string) => {
-    const amount = parseFloat(balanceAmount);
+  const adjustBalance = async (userId: string) => {
+    const amount = parseFloat(adjustAmount);
     if (!amount || amount <= 0) { toast.error("Valor inválido"); return; }
-    // Insert a "manual credit" click
-    const { data: anyAd } = await supabase.from("ads").select("id").limit(1).maybeSingle();
-    if (!anyAd) { toast.error("Crie um anúncio primeiro"); return; }
-    const { error } = await supabase.from("clicks").insert({
+    const finalAmount = adjustType === "remove" ? -amount : amount;
+    const { error } = await supabase.from("balance_adjustments").insert({
       user_id: userId,
-      ad_id: anyAd.id,
-      earned_value: amount,
+      admin_id: user!.id,
+      amount: finalAmount,
+      note: adjustNote || (adjustType === "add" ? "Crédito manual" : "Débito manual"),
     });
-    if (error) { toast.error("Erro ao creditar"); return; }
-    toast.success(`${formatBRL(amount)} creditado!`);
-    setEditingBalance(null);
-    setBalanceAmount("");
+    if (error) { toast.error("Erro ao ajustar saldo"); return; }
+    toast.success(adjustType === "add" ? `${formatBRL(amount)} creditado!` : `${formatBRL(amount)} debitado!`);
+    setAdjustingBalance(null);
+    setAdjustAmount("");
+    setAdjustNote("");
     loadData();
   };
 
