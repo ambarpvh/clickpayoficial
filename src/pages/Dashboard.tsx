@@ -331,23 +331,22 @@ const Dashboard = () => {
               <Button variant="ghost" size="sm" onClick={() => navigate("/history")}>Ver tudo</Button>
             </div>
             <div className="glass-card rounded-xl divide-y divide-border/50">
-              {clicks.length === 0 ? (
-                <p className="p-4 text-muted-foreground text-sm text-center">Nenhum clique ainda</p>
+              {historyItems.length === 0 ? (
+                <p className="p-4 text-muted-foreground text-sm text-center">Nenhuma atividade ainda</p>
               ) : (
-                clicks.slice(0, 8).map((c) => {
-                  const isCommission = c.referral_commission_paid === true;
-                  return (
-                    <div key={c.id} className="p-3 flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium">{(c.ads as unknown as { title: string })?.title || "Anúncio"}</p>
-                        <p className="text-muted-foreground text-xs">
-                          {isCommission ? "Comissão de indicação" : "Visualização de anúncio"} • {new Date(c.clicked_at).toLocaleDateString("pt-BR")}
-                        </p>
-                      </div>
-                      <span className="text-primary font-semibold text-sm">+{formatBRL(Number(c.earned_value))}</span>
+                historyItems.map((item) => (
+                  <div key={item.id} className="p-3 flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium">{item.label}</p>
+                      <p className="text-muted-foreground text-xs">
+                        {item.sublabel ? `${item.sublabel} • ` : ""}{item.date.toLocaleDateString("pt-BR")}
+                      </p>
                     </div>
-                  );
-                })
+                    <span className={`font-semibold text-sm ${item.amount >= 0 ? "text-primary" : "text-destructive"}`}>
+                      {item.amount >= 0 ? "+" : ""}{formatBRL(item.amount)}
+                    </span>
+                  </div>
+                ))
               )}
             </div>
             <Button variant="gold" className="w-full" onClick={() => setShowWithdrawForm(true)}>
