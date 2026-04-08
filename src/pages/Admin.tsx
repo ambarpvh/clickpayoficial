@@ -240,6 +240,7 @@ const Admin = () => {
     setPlanPrice(plan.price);
     setPlanClickValue(plan.click_value);
     setPlanDailyLimit(plan.daily_click_limit);
+    setPlanReferralCommission(plan.referral_commission ?? 1.00);
     setShowPlanForm(true);
   };
 
