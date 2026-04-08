@@ -117,12 +117,31 @@ const Dashboard = () => {
     }
   };
 
+  const [showWithdrawForm, setShowWithdrawForm] = useState(false);
+  const [wName, setWName] = useState("");
+  const [wCpf, setWCpf] = useState("");
+  const [wPix, setWPix] = useState("");
+  const [wPhone, setWPhone] = useState("");
+  const [wSubmitting, setWSubmitting] = useState(false);
+
   const handleWithdrawal = async () => {
     if (!user) return;
-    if (balance < 5) { toast.info("Saque mínimo: R$ 5,00"); return; }
-    const { error } = await supabase.from("withdrawals").insert({ user_id: user.id, amount: balance });
+    if (balance < 150) { toast.info("Saque mínimo: R$ 150,00"); return; }
+    if (!wName || !wCpf || !wPix || !wPhone) { toast.error("Preencha todos os campos"); return; }
+    if (wCpf.replace(/\D/g, "").length !== 11) { toast.error("CPF inválido"); return; }
+
+    if (!window.confirm("⚠️ ATENÇÃO: Confira se os dados estão corretos antes de enviar.\n\nNome: " + wName + "\nCPF: " + wCpf + "\nChave Pix: " + wPix + "\nTelefone: " + wPhone + "\n\nO saque será processado em até 3 dias úteis. Os dados devem ser os mesmos da conta que receberá o Pix.\n\nDeseja continuar?")) return;
+
+    setWSubmitting(true);
+    const { error } = await supabase.from("withdrawals").insert({
+      user_id: user.id, amount: balance,
+      holder_name: wName, cpf: wCpf, pix_key: wPix, phone: wPhone,
+    });
+    setWSubmitting(false);
     if (error) { toast.error("Erro ao solicitar saque"); return; }
-    toast.success("Saque solicitado!");
+    toast.success("Saque solicitado! Será processado em até 3 dias úteis.");
+    setShowWithdrawForm(false);
+    setWName(""); setWCpf(""); setWPix(""); setWPhone("");
     loadData();
   };
 
