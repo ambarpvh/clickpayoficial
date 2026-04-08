@@ -746,6 +746,30 @@ const Admin = () => {
             </div>
           </div>
         )}
+        {activeTab === "settings" && (
+          <div className="animate-fade-in max-w-md">
+            <h2 className="font-heading text-xl font-bold mb-4">Configurações</h2>
+            <div className="glass-card rounded-xl p-6 space-y-4">
+              <div>
+                <Label className="text-sm font-medium">Valor Mínimo de Saque (R$)</Label>
+                <div className="flex gap-2 mt-2">
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={minWithdrawal}
+                    onChange={(e) => setMinWithdrawal(e.target.value)}
+                    placeholder="150"
+                  />
+                  <Button onClick={saveMinWithdrawal} disabled={savingSettings}>
+                    {savingSettings ? "Salvando..." : "Salvar"}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Valor mínimo que o afiliado precisa ter para solicitar saque.</p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
