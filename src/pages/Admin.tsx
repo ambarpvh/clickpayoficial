@@ -34,6 +34,7 @@ const Admin = () => {
   const [planPrice, setPlanPrice] = useState(0);
   const [planClickValue, setPlanClickValue] = useState(0.001);
   const [planDailyLimit, setPlanDailyLimit] = useState(10);
+  const [planReferralCommission, setPlanReferralCommission] = useState(1.00);
   const [showPlanForm, setShowPlanForm] = useState(false);
 
   // Plan deletion
@@ -216,16 +217,16 @@ const Admin = () => {
   };
 
   // --- Plan CRUD ---
-  const resetPlanForm = () => { setPlanName(""); setPlanPrice(0); setPlanClickValue(0.001); setPlanDailyLimit(10); setEditingPlan(null); setShowPlanForm(false); };
+  const resetPlanForm = () => { setPlanName(""); setPlanPrice(0); setPlanClickValue(0.001); setPlanDailyLimit(10); setPlanReferralCommission(1.00); setEditingPlan(null); setShowPlanForm(false); };
 
   const savePlan = async () => {
     if (!planName) { toast.error("Nome obrigatório"); return; }
     if (editingPlan) {
-      const { error } = await supabase.from("plans").update({ name: planName, price: planPrice, click_value: planClickValue, daily_click_limit: planDailyLimit }).eq("id", editingPlan.id);
+      const { error } = await supabase.from("plans").update({ name: planName, price: planPrice, click_value: planClickValue, daily_click_limit: planDailyLimit, referral_commission: planReferralCommission } as any).eq("id", editingPlan.id);
       if (error) { toast.error("Erro ao editar plano"); return; }
       toast.success("Plano atualizado!");
     } else {
-      const { error } = await supabase.from("plans").insert({ name: planName, price: planPrice, click_value: planClickValue, daily_click_limit: planDailyLimit });
+      const { error } = await supabase.from("plans").insert({ name: planName, price: planPrice, click_value: planClickValue, daily_click_limit: planDailyLimit, referral_commission: planReferralCommission } as any);
       if (error) { toast.error("Erro ao criar plano"); return; }
       toast.success("Plano criado!");
     }
@@ -239,6 +240,7 @@ const Admin = () => {
     setPlanPrice(plan.price);
     setPlanClickValue(plan.click_value);
     setPlanDailyLimit(plan.daily_click_limit);
+    setPlanReferralCommission(plan.referral_commission ?? 1.00);
     setShowPlanForm(true);
   };
 
@@ -629,6 +631,10 @@ const Admin = () => {
                     <Label>Limite diário</Label>
                     <Input type="number" value={planDailyLimit} onChange={(e) => setPlanDailyLimit(Number(e.target.value))} className="bg-secondary border-border" />
                   </div>
+                  <div className="space-y-2">
+                    <Label>Comissão por indicação (R$)</Label>
+                    <Input type="number" step="0.01" value={planReferralCommission} onChange={(e) => setPlanReferralCommission(Number(e.target.value))} className="bg-secondary border-border" />
+                  </div>
                 </div>
                 <div className="flex gap-2">
                   <Button onClick={savePlan}>{editingPlan ? "Salvar" : "Criar Plano"}</Button>
@@ -654,6 +660,7 @@ const Admin = () => {
                   <div className="space-y-1 text-sm text-muted-foreground">
                     <p>Clique: <span className="text-primary font-semibold">{formatBRL(Number(plan.click_value), 3)}</span></p>
                     <p>Limite: <span className="text-foreground font-semibold">{plan.daily_click_limit}/dia</span></p>
+                    <p>Comissão indicação: <span className="text-green-400 font-semibold">{formatBRL(Number(plan.referral_commission ?? 1))}</span></p>
                   </div>
                 </div>
               ))}
