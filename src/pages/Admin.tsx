@@ -503,6 +503,9 @@ const Admin = () => {
                               <Settings className="h-3 w-3 mr-1" /> Plano
                             </Button>
                           )}
+                          <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => window.open(`/dashboard?view_as=${u.user_id}`, '_blank')} title="Ver painel do usuário">
+                            <ExternalLink className="h-3 w-3 mr-1" /> Painel
+                          </Button>
                         </div>
                       </td>
                     </tr>
