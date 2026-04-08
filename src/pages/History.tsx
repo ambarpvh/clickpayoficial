@@ -51,7 +51,6 @@ const History = () => {
   const [referrals, setReferrals] = useState<ReferralWithProfile[]>([]);
   const [ranking, setRanking] = useState<{ name: string; total: number }[]>([]);
   const [directCount, setDirectCount] = useState(0);
-  const [indirectCount, setIndirectCount] = useState(0);
   const [clickValue, setClickValue] = useState(1);
 
   useEffect(() => {
@@ -92,9 +91,7 @@ const History = () => {
 
     const refs = referralsData || [];
     const direct = refs.filter(r => r.level === 1);
-    const indirect = refs.filter(r => r.level > 1);
     setDirectCount(direct.length);
-    setIndirectCount(indirect.length);
 
     // Fetch profiles and plans for direct referrals
     if (direct.length > 0) {
@@ -239,18 +236,14 @@ const History = () => {
 
         {tab === "referrals" && (
           <div className="space-y-4 animate-fade-in">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="glass-card rounded-xl p-5">
-                <p className="text-sm text-muted-foreground mb-1">Total na rede</p>
-                <p className="font-heading text-3xl font-bold text-primary">{directCount + indirectCount}</p>
+                <p className="text-sm text-muted-foreground mb-1">Total de indicados</p>
+                <p className="font-heading text-3xl font-bold text-primary">{directCount}</p>
               </div>
               <div className="glass-card rounded-xl p-5">
                 <p className="text-sm text-muted-foreground mb-1">Cadastros diretos</p>
                 <p className="font-heading text-3xl font-bold text-primary">{directCount}</p>
-              </div>
-              <div className="glass-card rounded-xl p-5">
-                <p className="text-sm text-muted-foreground mb-1">Cadastros indiretos</p>
-                <p className="font-heading text-3xl font-bold text-accent">{indirectCount}</p>
               </div>
             </div>
 
