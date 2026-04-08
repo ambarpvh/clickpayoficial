@@ -299,7 +299,11 @@ export type Database = {
       withdrawals: {
         Row: {
           amount: number
+          cpf: string | null
+          holder_name: string | null
           id: string
+          phone: string | null
+          pix_key: string | null
           processed_at: string | null
           requested_at: string
           status: string
@@ -307,7 +311,11 @@ export type Database = {
         }
         Insert: {
           amount: number
+          cpf?: string | null
+          holder_name?: string | null
           id?: string
+          phone?: string | null
+          pix_key?: string | null
           processed_at?: string | null
           requested_at?: string
           status?: string
@@ -315,7 +323,11 @@ export type Database = {
         }
         Update: {
           amount?: number
+          cpf?: string | null
+          holder_name?: string | null
           id?: string
+          phone?: string | null
+          pix_key?: string | null
           processed_at?: string | null
           requested_at?: string
           status?: string
