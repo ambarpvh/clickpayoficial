@@ -118,10 +118,12 @@ const Dashboard = () => {
     const ad = ads.find((a) => a.id === adId);
     if (!ad) return;
 
+    const adEarnedValue = ad.reward_value != null ? ad.reward_value : clickValue;
+
     const { error } = await supabase.from("clicks").insert({
       user_id: user.id,
       ad_id: ad.id,
-      earned_value: clickValue,
+      earned_value: adEarnedValue,
     });
 
     if (error) {
