@@ -242,9 +242,8 @@ const Landing = () => {
               <h3 className="font-heading text-3xl font-bold mb-2">{plan.name}</h3>
               <p className="gradient-text-primary text-5xl font-bold my-6">R$ 0,00</p>
               <div className="space-y-4 text-sm text-muted-foreground mb-8">
-                <p className="flex items-center justify-center gap-2">✅ Ganho por clique: <span className="text-primary font-bold text-base">{formatBRL(plan.click_value)}</span></p>
+                <p className="flex items-center justify-center gap-2">✅ Ganho por anúncio: <span className="text-primary font-bold text-base">{formatBRL(plan.click_value)}</span></p>
                 <p className="flex items-center justify-center gap-2">✅ Limite diário: <span className="text-foreground font-bold text-base">{plan.daily_click_limit} anúncios</span></p>
-                <p className="flex items-center justify-center gap-2">✅ Sem cartão de crédito</p>
                 <p className="flex items-center justify-center gap-2">✅ Saque a qualquer momento</p>
               </div>
               <Button variant="hero" size="lg" className="w-full text-lg" onClick={() => navigate("/register")}>
