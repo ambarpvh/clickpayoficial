@@ -263,9 +263,11 @@ const History = () => {
                   <div key={r.id} className="p-4 flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium">{r.profile?.name || "Afiliado"}</p>
-                      <p className="text-muted-foreground text-xs">{new Date(r.created_at).toLocaleDateString("pt-BR")} • {(r.commission_rate * 100).toFixed(0)}% comissão</p>
+                      <p className="text-muted-foreground text-xs">
+                        {new Date(r.created_at).toLocaleDateString("pt-BR")} • {r.planName || "Free"} • {formatBRL(r.commissionValue || 0)}
+                      </p>
                     </div>
-                    <span className="text-accent font-semibold text-sm">Nível {r.level}</span>
+                    <span className="text-primary font-semibold text-sm">{formatBRL(r.commissionValue || 0)}</span>
                   </div>
                 ))
               )}
