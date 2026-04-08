@@ -57,7 +57,7 @@ const Dashboard = () => {
     const { data: userPlan } = await supabase
       .from("user_plans")
       .select("plan_id, plans(name, click_value, daily_click_limit)")
-      .eq("user_id", user.id)
+      .eq("user_id", targetUserId)
       .eq("is_active", true)
       .order("started_at", { ascending: false })
       .limit(1)
@@ -77,20 +77,20 @@ const Dashboard = () => {
     const { data: todayClicksData } = await supabase
       .from("clicks")
       .select("*, ads(title)")
-      .eq("user_id", user.id)
+      .eq("user_id", targetUserId)
       .gte("clicked_at", today);
 
     setTodayClicks(todayClicksData?.length || 0);
     setTodayEarnings(todayClicksData?.reduce((sum, c) => sum + Number(c.earned_value), 0) || 0);
     setTodayClickedAdIds(new Set((todayClicksData || []).map((c) => c.ad_id)));
 
-    const { data: allClicks } = await supabase.from("clicks").select("earned_value").eq("user_id", user.id);
+    const { data: allClicks } = await supabase.from("clicks").select("earned_value").eq("user_id", targetUserId);
     const totalEarned = allClicks?.reduce((sum, c) => sum + Number(c.earned_value), 0) || 0;
 
-    const { data: withdrawals } = await supabase.from("withdrawals").select("amount, status").eq("user_id", user.id).in("status", ["approved", "pending"]);
+    const { data: withdrawals } = await supabase.from("withdrawals").select("amount, status").eq("user_id", targetUserId).in("status", ["approved", "pending"]);
     const totalWithdrawn = withdrawals?.reduce((sum, w) => sum + Number(w.amount), 0) || 0;
 
-    const { data: adjustmentsData } = await supabase.from("balance_adjustments").select("amount").eq("user_id", user.id);
+    const { data: adjustmentsData } = await supabase.from("balance_adjustments").select("amount").eq("user_id", targetUserId);
     const totalAdjustments = adjustmentsData?.reduce((sum, a) => sum + Number(a.amount), 0) || 0;
 
     setBalance(totalEarned + totalAdjustments - totalWithdrawn);
@@ -100,7 +100,7 @@ const Dashboard = () => {
     if (settingData) setMinWithdrawal(Number(settingData.value));
 
     // Load profile data for withdrawal pre-fill
-    const { data: profileData } = await supabase.from("profiles").select("name, cpf, pix_key, phone").eq("user_id", user.id).maybeSingle();
+    const { data: profileData } = await supabase.from("profiles").select("name, cpf, pix_key, phone").eq("user_id", targetUserId).maybeSingle();
     if (profileData) {
       setWName(profileData.name || "");
       setWCpf(profileData.cpf || "");
@@ -109,8 +109,8 @@ const Dashboard = () => {
     }
 
     const [{ data: recentClicks }, { data: recentAdjustments }] = await Promise.all([
-      supabase.from("clicks").select("*, ads(title)").eq("user_id", user.id).order("clicked_at", { ascending: false }).limit(10),
-      supabase.from("balance_adjustments").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
+      supabase.from("clicks").select("*, ads(title)").eq("user_id", targetUserId).order("clicked_at", { ascending: false }).limit(10),
+      supabase.from("balance_adjustments").select("*").eq("user_id", targetUserId).order("created_at", { ascending: false }).limit(10),
     ]);
 
     const items: Array<{ id: string; type: string; label: string; sublabel: string; amount: number; date: Date }> = [];
