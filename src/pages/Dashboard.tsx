@@ -45,6 +45,7 @@ const Dashboard = () => {
   const [activeAd, setActiveAd] = useState<{ id: string; title: string; url: string; reward: string; view_time: number; open_link: boolean } | null>(null);
   const [referralCount, setReferralCount] = useState(0);
   const [minWithdrawal, setMinWithdrawal] = useState(150);
+  const [allPlans, setAllPlans] = useState<Array<{ name: string; referral_commission: number }>>([]);
 
   useEffect(() => {
     if (!authLoading && !user) { navigate("/login"); return; }
