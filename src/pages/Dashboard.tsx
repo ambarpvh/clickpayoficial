@@ -22,6 +22,7 @@ interface Click {
   ad_id: string;
   earned_value: number;
   clicked_at: string;
+  referral_commission_paid?: boolean | null;
   ads?: { title: string } | null;
 }
 
