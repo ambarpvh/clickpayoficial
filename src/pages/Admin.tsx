@@ -631,6 +631,10 @@ const Admin = () => {
                     <Label>Limite diário</Label>
                     <Input type="number" value={planDailyLimit} onChange={(e) => setPlanDailyLimit(Number(e.target.value))} className="bg-secondary border-border" />
                   </div>
+                  <div className="space-y-2">
+                    <Label>Comissão por indicação (R$)</Label>
+                    <Input type="number" step="0.01" value={planReferralCommission} onChange={(e) => setPlanReferralCommission(Number(e.target.value))} className="bg-secondary border-border" />
+                  </div>
                 </div>
                 <div className="flex gap-2">
                   <Button onClick={savePlan}>{editingPlan ? "Salvar" : "Criar Plano"}</Button>
