@@ -312,7 +312,7 @@ const Dashboard = () => {
                 <p className="p-4 text-muted-foreground text-sm text-center">Nenhum clique ainda</p>
               ) : (
                 clicks.slice(0, 8).map((c) => {
-                  const isCommission = Number(c.earned_value) < clickValue;
+                  const isCommission = c.referral_commission_paid === true;
                   return (
                     <div key={c.id} className="p-3 flex items-center justify-between">
                       <div>
