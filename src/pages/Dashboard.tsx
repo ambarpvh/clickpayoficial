@@ -14,6 +14,7 @@ interface Ad {
   url: string;
   view_time: number;
   open_link?: boolean;
+  reward_value?: number | null;
 }
 
 interface Click {
