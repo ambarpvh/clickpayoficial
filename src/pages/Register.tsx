@@ -7,6 +7,7 @@ import { Zap } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
+import FakeSignupPopups from "@/components/FakeSignupPopups";
 
 const Register = () => {
   const navigate = useNavigate();
