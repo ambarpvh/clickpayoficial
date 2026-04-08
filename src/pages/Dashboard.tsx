@@ -178,6 +178,9 @@ const Dashboard = () => {
             {isAdmin && (
               <Button variant="ghost" size="sm" onClick={() => navigate("/admin")}>Admin</Button>
             )}
+            <Button variant="ghost" size="sm" onClick={() => navigate("/profile")}>
+              <UserCog className="h-4 w-4" />
+            </Button>
             <Button variant="ghost" size="sm" onClick={() => navigate("/history")}>
               <HistoryIcon className="h-4 w-4" />
             </Button>
