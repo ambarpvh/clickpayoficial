@@ -85,6 +85,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           commission_rate: 0.20,
         });
       }
+
+      // Credit R$ 1,00 to referrer for free signup
+      await supabase.from("balance_adjustments").insert({
+        user_id: refId,
+        admin_id: refId,
+        amount: 1.00,
+        note: "Comissão: Cadastro novo (Plano Free)",
+      });
     };
 
     // First get the initial session
