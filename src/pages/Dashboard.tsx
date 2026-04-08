@@ -28,7 +28,10 @@ interface Click {
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, isAdmin, signOut, loading: authLoading } = useAuth();
+  const viewAsUserId = isAdmin ? searchParams.get("view_as") : null;
+  const targetUserId = viewAsUserId || user?.id;
   const [ads, setAds] = useState<Ad[]>([]);
   const [historyItems, setHistoryItems] = useState<Array<{ id: string; type: string; label: string; sublabel: string; amount: number; date: Date }>>([]);
   
