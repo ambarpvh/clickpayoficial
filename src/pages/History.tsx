@@ -37,6 +37,8 @@ interface ReferralWithProfile {
   created_at: string;
   referred_id: string;
   profile?: { name: string; email: string } | null;
+  planName?: string;
+  commissionValue?: number;
 }
 
 const History = () => {
