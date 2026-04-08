@@ -30,7 +30,8 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { user, isAdmin, signOut, loading: authLoading } = useAuth();
   const [ads, setAds] = useState<Ad[]>([]);
-  const [clicks, setClicks] = useState<Click[]>([]);
+  const [historyItems, setHistoryItems] = useState<Array<{ id: string; type: string; label: string; sublabel: string; amount: number; date: Date }>>([]);
+  
   const [balance, setBalance] = useState(0);
   const [clickValue, setClickValue] = useState(0.001);
   const [planName, setPlanName] = useState("Free");
@@ -104,13 +105,35 @@ const Dashboard = () => {
       setWPhone(profileData.phone || "");
     }
 
-    const { data: recentClicks } = await supabase
-      .from("clicks")
-      .select("*, ads(title)")
-      .eq("user_id", user.id)
-      .order("clicked_at", { ascending: false })
-      .limit(10);
-    setClicks(recentClicks || []);
+    const [{ data: recentClicks }, { data: recentAdjustments }] = await Promise.all([
+      supabase.from("clicks").select("*, ads(title)").eq("user_id", user.id).order("clicked_at", { ascending: false }).limit(10),
+      supabase.from("balance_adjustments").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
+    ]);
+
+    const items: Array<{ id: string; type: string; label: string; sublabel: string; amount: number; date: Date }> = [];
+    (recentClicks || []).forEach((c: any) => {
+      const isCommission = c.referral_commission_paid === true;
+      items.push({
+        id: c.id,
+        type: isCommission ? "comissao" : "anuncio",
+        label: isCommission ? "Comissão de indicação" : "Visualização de anúncio",
+        sublabel: c.ads?.title || "Anúncio",
+        amount: Number(c.earned_value),
+        date: new Date(c.clicked_at),
+      });
+    });
+    (recentAdjustments || []).forEach((a: any) => {
+      items.push({
+        id: a.id,
+        type: "ajuste",
+        label: a.note || "Ajuste de saldo",
+        sublabel: "",
+        amount: Number(a.amount),
+        date: new Date(a.created_at),
+      });
+    });
+    items.sort((a, b) => b.date.getTime() - a.date.getTime());
+    setHistoryItems(items.slice(0, 10));
 
     const { count } = await supabase.from("referrals").select("id", { count: "exact", head: true }).eq("referrer_id", user.id);
     setReferralCount(count || 0);
@@ -308,23 +331,22 @@ const Dashboard = () => {
               <Button variant="ghost" size="sm" onClick={() => navigate("/history")}>Ver tudo</Button>
             </div>
             <div className="glass-card rounded-xl divide-y divide-border/50">
-              {clicks.length === 0 ? (
-                <p className="p-4 text-muted-foreground text-sm text-center">Nenhum clique ainda</p>
+              {historyItems.length === 0 ? (
+                <p className="p-4 text-muted-foreground text-sm text-center">Nenhuma atividade ainda</p>
               ) : (
-                clicks.slice(0, 8).map((c) => {
-                  const isCommission = c.referral_commission_paid === true;
-                  return (
-                    <div key={c.id} className="p-3 flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium">{(c.ads as unknown as { title: string })?.title || "Anúncio"}</p>
-                        <p className="text-muted-foreground text-xs">
-                          {isCommission ? "Comissão de indicação" : "Visualização de anúncio"} • {new Date(c.clicked_at).toLocaleDateString("pt-BR")}
-                        </p>
-                      </div>
-                      <span className="text-primary font-semibold text-sm">+{formatBRL(Number(c.earned_value))}</span>
+                historyItems.map((item) => (
+                  <div key={item.id} className="p-3 flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium">{item.label}</p>
+                      <p className="text-muted-foreground text-xs">
+                        {item.sublabel ? `${item.sublabel} • ` : ""}{item.date.toLocaleDateString("pt-BR")}
+                      </p>
                     </div>
-                  );
-                })
+                    <span className={`font-semibold text-sm ${item.amount >= 0 ? "text-primary" : "text-destructive"}`}>
+                      {item.amount >= 0 ? "+" : ""}{formatBRL(item.amount)}
+                    </span>
+                  </div>
+                ))
               )}
             </div>
             <Button variant="gold" className="w-full" onClick={() => setShowWithdrawForm(true)}>
