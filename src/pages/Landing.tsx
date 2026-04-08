@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatBRL } from "@/lib/format";
 import { useAuth } from "@/contexts/AuthContext";
 import { ensureUserSetup } from "@/lib/ensureUserSetup";
+import FakeSignupPopups from "@/components/FakeSignupPopups";
 
 interface Plan {
   id: string;
@@ -147,6 +148,7 @@ const Landing = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <FakeSignupPopups />
       {/* Navbar */}
       <nav className="fixed top-0 w-full z-50 glass-card border-b border-border/50">
         <div className="container mx-auto flex items-center justify-between h-16 px-4">
