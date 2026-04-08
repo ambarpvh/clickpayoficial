@@ -91,6 +91,15 @@ const Dashboard = () => {
     const { data: settingData } = await supabase.from("settings").select("value").eq("key", "min_withdrawal").maybeSingle();
     if (settingData) setMinWithdrawal(Number(settingData.value));
 
+    // Load profile data for withdrawal pre-fill
+    const { data: profileData } = await supabase.from("profiles").select("name, cpf, pix_key, phone").eq("user_id", user.id).maybeSingle();
+    if (profileData) {
+      setWName(profileData.name || "");
+      setWCpf(profileData.cpf || "");
+      setWPix(profileData.pix_key || "");
+      setWPhone(profileData.phone || "");
+    }
+
     const { data: recentClicks } = await supabase
       .from("clicks")
       .select("*, ads(title)")
