@@ -52,7 +52,7 @@ const Dashboard = () => {
   }, [user, authLoading]);
 
   const loadData = async () => {
-    if (!user) return;
+    if (!user || !targetUserId) return;
 
     const { data: userPlan } = await supabase
       .from("user_plans")
