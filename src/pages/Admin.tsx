@@ -424,8 +424,7 @@ const Admin = () => {
                       <td className="p-4 text-muted-foreground hidden sm:table-cell">{u.email}</td>
                       <td className="p-4"><span className="text-primary font-semibold">{u.user_plans?.[0]?.plans?.name || "Free"}</span></td>
                       <td className="p-4">
-                        <div className="flex flex-col gap-2">
-                          <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-start gap-2">
                           {adjustingBalance === u.user_id ? (
                             <div className="flex flex-col gap-1">
                               <div className="flex items-center gap-1">
