@@ -91,48 +91,56 @@ const Plans = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
-          {plans.map((plan) => {
-            const isCurrent = plan.id === currentPlanId;
-            const color = planColors[plan.name] || "border-border";
-            const isSoldOut = ["Bronze", "Prata", "Ouro"].includes(plan.name);
-            return (
-              <div key={plan.id} className={`glass-card rounded-xl p-6 border-2 ${color} relative ${isCurrent ? "glow-primary" : ""} ${isSoldOut ? "opacity-80" : ""} hover:scale-105 transition-transform duration-300`}>
-                {isCurrent && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full">
-                    Atual
-                  </span>
-                )}
-                {isSoldOut && !isCurrent && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-accent-foreground text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap">
-                    Em breve
-                  </span>
-                )}
-                <h3 className="font-heading text-2xl font-bold mb-1">{plan.name}</h3>
-                <p className="gradient-text-gold text-3xl font-bold my-4">
-                  {plan.price === 0 ? "Grátis" : formatBRL(plan.price)}
-                </p>
-                <div className="space-y-3 text-sm text-muted-foreground mb-6">
-                  <p className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Ganho por anúncio: <span className="text-primary font-semibold">{formatBRL(plan.click_value)}</span></p>
-                  <p className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Limite: <span className="text-foreground font-semibold">{plan.daily_click_limit}/dia</span></p>
-                  <p className="flex items-center gap-2"><Check className="h-4 w-4 text-accent" /> Comissão por indicação: <span className="text-accent font-semibold">{formatBRL(plan.referral_commission)}</span></p>
+          {(() => {
+            const maxCommission = Math.max(...plans.map(p => p.referral_commission));
+            return plans.map((plan) => {
+              const isCurrent = plan.id === currentPlanId;
+              const color = planColors[plan.name] || "border-border";
+              const isSoldOut = ["Bronze", "Prata", "Ouro"].includes(plan.name);
+              const isBestCommission = plan.referral_commission === maxCommission && maxCommission > 0;
+              return (
+                <div key={plan.id} className={`glass-card rounded-xl p-6 border-2 ${color} relative ${isCurrent ? "glow-primary" : ""} ${isSoldOut ? "opacity-80" : ""} hover:scale-105 transition-transform duration-300`}>
+                  {isCurrent && (
+                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full">
+                      Atual
+                    </span>
+                  )}
+                  {isSoldOut && !isCurrent && (
+                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-accent-foreground text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap">
+                      Em breve
+                    </span>
+                  )}
+                  <h3 className="font-heading text-2xl font-bold mb-1">{plan.name}</h3>
+                  <p className="gradient-text-gold text-3xl font-bold my-4">
+                    {plan.price === 0 ? "Grátis" : formatBRL(plan.price)}
+                  </p>
+                  <div className="space-y-3 text-sm text-muted-foreground mb-6">
+                    <p className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Ganho por anúncio: <span className="text-primary font-semibold">{formatBRL(plan.click_value)}</span></p>
+                    <p className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Limite: <span className="text-foreground font-semibold">{plan.daily_click_limit}/dia</span></p>
+                    <div className={`flex items-center gap-2 ${isBestCommission ? "bg-accent/15 border border-accent/30 rounded-lg px-2 py-1.5 -mx-2" : ""}`}>
+                      <Check className="h-4 w-4 text-accent" />
+                      <span>Comissão por indicação: <span className={`font-semibold ${isBestCommission ? "text-accent text-base" : "text-accent"}`}>{formatBRL(plan.referral_commission)}</span></span>
+                      {isBestCommission && <Crown className="h-4 w-4 text-accent animate-pulse" />}
+                    </div>
+                  </div>
+                  <Button
+                    variant={isCurrent ? "outline" : "hero"}
+                    className="w-full"
+                    disabled={isCurrent || upgrading === plan.id || isSoldOut}
+                    onClick={() => {
+                      if (isSoldOut) {
+                        toast.info("Este plano esgotou, está disponível em breve! 🚀");
+                        return;
+                      }
+                      handleUpgrade(plan.id, plan.price);
+                    }}
+                  >
+                    {isCurrent ? "Plano Atual" : isSoldOut ? "Esgotado" : upgrading === plan.id ? "Processando..." : "Selecionar"}
+                  </Button>
                 </div>
-                <Button
-                  variant={isCurrent ? "outline" : "hero"}
-                  className="w-full"
-                  disabled={isCurrent || upgrading === plan.id || isSoldOut}
-                  onClick={() => {
-                    if (isSoldOut) {
-                      toast.info("Este plano esgotou, está disponível em breve! 🚀");
-                      return;
-                    }
-                    handleUpgrade(plan.id, plan.price);
-                  }}
-                >
-                  {isCurrent ? "Plano Atual" : isSoldOut ? "Esgotado" : upgrading === plan.id ? "Processando..." : "Selecionar"}
-                </Button>
-              </div>
-            );
-          })}
+              );
+            });
+          })()}
         </div>
       </div>
     </div>
