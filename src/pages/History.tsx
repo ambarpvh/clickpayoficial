@@ -50,6 +50,7 @@ const History = () => {
   const [ranking, setRanking] = useState<{ name: string; total: number }[]>([]);
   const [directCount, setDirectCount] = useState(0);
   const [indirectCount, setIndirectCount] = useState(0);
+  const [clickValue, setClickValue] = useState(1);
 
   useEffect(() => {
     if (!authLoading && !user) { navigate("/login"); return; }
@@ -58,6 +59,18 @@ const History = () => {
 
   const loadData = async () => {
     if (!user) return;
+
+    // Load user's click value
+    const { data: userPlan } = await supabase
+      .from("user_plans")
+      .select("plan_id, plans(click_value)")
+      .eq("user_id", user.id)
+      .eq("is_active", true)
+      .maybeSingle();
+    if (userPlan?.plans) {
+      const plan = userPlan.plans as unknown as { click_value: number };
+      setClickValue(plan.click_value);
+    }
 
     const [
       { data: clicksData },
@@ -151,17 +164,20 @@ const History = () => {
             {clicks.length === 0 ? (
               <p className="p-8 text-muted-foreground text-sm text-center">Nenhum clique registrado ainda</p>
             ) : (
-              clicks.map((c) => (
-                <div key={c.id} className="p-4 flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium">Visualização de anúncio</p>
-                    <p className="text-muted-foreground text-xs">
-                      {(c.ads as unknown as { title: string })?.title || "Anúncio"} • {new Date(c.clicked_at).toLocaleDateString("pt-BR")} às {new Date(c.clicked_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-                    </p>
+              clicks.map((c) => {
+                const isCommission = Number(c.earned_value) < clickValue;
+                return (
+                  <div key={c.id} className="p-4 flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium">{isCommission ? "Comissão de indicação" : "Visualização de anúncio"}</p>
+                      <p className="text-muted-foreground text-xs">
+                        {(c.ads as unknown as { title: string })?.title || "Anúncio"} • {new Date(c.clicked_at).toLocaleDateString("pt-BR")} às {new Date(c.clicked_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                      </p>
+                    </div>
+                    <span className="text-primary font-semibold text-sm">+{formatBRL(Number(c.earned_value))}</span>
                   </div>
-                  <span className="text-primary font-semibold text-sm">+{formatBRL(Number(c.earned_value))}</span>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         )}
