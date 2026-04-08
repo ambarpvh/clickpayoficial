@@ -165,6 +165,7 @@ export type Database = {
           is_active: boolean
           name: string
           price: number
+          referral_commission: number
         }
         Insert: {
           click_value?: number
@@ -174,6 +175,7 @@ export type Database = {
           is_active?: boolean
           name: string
           price?: number
+          referral_commission?: number
         }
         Update: {
           click_value?: number
@@ -183,6 +185,7 @@ export type Database = {
           is_active?: boolean
           name?: string
           price?: number
+          referral_commission?: number
         }
         Relationships: []
       }
