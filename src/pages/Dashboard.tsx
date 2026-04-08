@@ -31,7 +31,7 @@ const Dashboard = () => {
   const { user, isAdmin, signOut, loading: authLoading } = useAuth();
   const [ads, setAds] = useState<Ad[]>([]);
   const [historyItems, setHistoryItems] = useState<Array<{ id: string; type: string; label: string; sublabel: string; amount: number; date: Date }>>([]);
-  const [clicks, setClicks] = useState<Click[]>([]);
+  
   const [balance, setBalance] = useState(0);
   const [clickValue, setClickValue] = useState(0.001);
   const [planName, setPlanName] = useState("Free");
