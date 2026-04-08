@@ -150,8 +150,12 @@ const Dashboard = () => {
     loadData();
   };
 
+  const referralBaseUrl = window.location.hostname.includes('preview--') 
+    ? window.location.origin.replace('preview--', '') 
+    : window.location.origin;
+
   const copyReferral = () => {
-    const link = `${window.location.origin}/register?ref=${user?.id}`;
+    const link = `${referralBaseUrl}/register?ref=${user?.id}`;
     navigator.clipboard.writeText(link);
     toast.success("Link copiado!");
   };
