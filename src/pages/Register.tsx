@@ -38,14 +38,16 @@ const Register = () => {
   };
 
   const handleSocialLogin = async (provider: "google" | "apple") => {
-    // Store ref in localStorage so we can process it after OAuth callback
     if (refId) {
       localStorage.setItem("clickpay_ref", refId);
     }
-    const { error } = await lovable.auth.signInWithOAuth(provider, {
-      redirect_uri: window.location.origin + "/dashboard",
+    const result = await lovable.auth.signInWithOAuth(provider, {
+      redirect_uri: window.location.origin,
+      extraParams: {
+        prompt: "select_account",
+      },
     });
-    if (error) toast.error(String(error));
+    if (result.error) toast.error(String(result.error));
   };
 
   return (

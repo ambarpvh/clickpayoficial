@@ -29,10 +29,13 @@ const Login = () => {
   };
 
   const handleSocialLogin = async (provider: "google" | "apple") => {
-    const { error } = await lovable.auth.signInWithOAuth(provider, {
-      redirect_uri: window.location.origin + "/dashboard",
+    const result = await lovable.auth.signInWithOAuth(provider, {
+      redirect_uri: window.location.origin,
+      extraParams: {
+        prompt: "select_account",
+      },
     });
-    if (error) toast.error(String(error));
+    if (result.error) toast.error(String(result.error));
   };
 
   return (
