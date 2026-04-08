@@ -165,7 +165,7 @@ const History = () => {
               <p className="p-8 text-muted-foreground text-sm text-center">Nenhum clique registrado ainda</p>
             ) : (
               clicks.map((c) => {
-                const isCommission = Number(c.earned_value) < clickValue;
+                const isCommission = (c as any).referral_commission_paid === true;
                 return (
                   <div key={c.id} className="p-4 flex items-center justify-between">
                     <div>
