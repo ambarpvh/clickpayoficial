@@ -39,9 +39,11 @@ const Admin = () => {
   const [transferPlanId, setTransferPlanId] = useState<string>("");
   const [deletePlanStep, setDeletePlanStep] = useState<"confirm" | "transfer" | null>(null);
 
-  // Balance editing
-  const [editingBalance, setEditingBalance] = useState<string | null>(null);
-  const [balanceAmount, setBalanceAmount] = useState("");
+  // Balance adjustment
+  const [adjustingBalance, setAdjustingBalance] = useState<string | null>(null);
+  const [adjustAmount, setAdjustAmount] = useState("");
+  const [adjustNote, setAdjustNote] = useState("");
+  const [adjustType, setAdjustType] = useState<"add" | "remove">("add");
 
   // Plan change for user
   const [changingPlanUser, setChangingPlanUser] = useState<string | null>(null);
