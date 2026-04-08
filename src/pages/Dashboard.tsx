@@ -138,7 +138,7 @@ const Dashboard = () => {
     items.sort((a, b) => b.date.getTime() - a.date.getTime());
     setHistoryItems(items.slice(0, 10));
 
-    const { count } = await supabase.from("referrals").select("id", { count: "exact", head: true }).eq("referrer_id", user.id);
+    const { count } = await supabase.from("referrals").select("id", { count: "exact", head: true }).eq("referrer_id", targetUserId);
     setReferralCount(count || 0);
   };
 
