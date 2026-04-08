@@ -40,7 +40,14 @@ const Profile = () => {
       setCpf(data.cpf || "");
       setPixKey(data.pix_key || "");
       setPhone(data.phone || "");
+      return;
     }
+
+    setName(user.user_metadata?.full_name || user.user_metadata?.name || "");
+    setEmail(user.email || "");
+    setCpf("");
+    setPixKey("");
+    setPhone("");
   };
 
   const handleSave = async () => {
