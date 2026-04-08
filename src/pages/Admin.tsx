@@ -307,18 +307,38 @@ const Admin = () => {
 
   const handlePaymentAction = async (paymentId: string, action: "approved" | "rejected") => {
     if (action === "approved") {
-      // Get payment details
       const payment = pendingPayments.find((p: any) => p.id === paymentId);
       if (!payment) return;
+
       // Deactivate current plan
       await supabase.from("user_plans").update({ is_active: false }).eq("user_id", payment.user_id).eq("is_active", true);
       // Activate new plan
       const { error: planError } = await supabase.from("user_plans").insert({ user_id: payment.user_id, plan_id: payment.plan_id, is_active: true });
       if (planError) { toast.error("Erro ao ativar plano: " + planError.message); return; }
+
+      // Credit referral commissions for paid plan upgrade
+      const planPrice = Number(payment.amount);
+      const { data: refs } = await supabase
+        .from("referrals")
+        .select("referrer_id, level, commission_rate")
+        .eq("referred_id", payment.user_id)
+        .lte("level", 2);
+
+      if (refs && refs.length > 0) {
+        for (const ref of refs) {
+          const commission = planPrice * ref.commission_rate;
+          await supabase.from("balance_adjustments").insert({
+            user_id: ref.referrer_id,
+            admin_id: user!.id,
+            amount: commission,
+            note: `Comissão Nível ${ref.level} (${(ref.commission_rate * 100).toFixed(0)}%): Upgrade de plano`,
+          });
+        }
+      }
     }
     const { error } = await supabase.from("payments").update({ status: action, updated_at: new Date().toISOString() }).eq("id", paymentId);
     if (error) { toast.error("Erro ao atualizar pagamento"); return; }
-    toast.success(action === "approved" ? "Pagamento aprovado! Plano ativado." : "Pagamento recusado.");
+    toast.success(action === "approved" ? "Pagamento aprovado! Plano ativado e comissões creditadas." : "Pagamento recusado.");
     loadData();
   };
 
