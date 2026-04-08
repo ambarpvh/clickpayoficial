@@ -13,6 +13,7 @@ interface Plan {
   price: number;
   click_value: number;
   daily_click_limit: number;
+  referral_commission: number;
 }
 
 const Plans = () => {
@@ -113,6 +114,7 @@ const Plans = () => {
                 <div className="space-y-3 text-sm text-muted-foreground mb-6">
                   <p className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Ganho por anúncio: <span className="text-primary font-semibold">{formatBRL(plan.click_value)}</span></p>
                   <p className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Limite: <span className="text-foreground font-semibold">{plan.daily_click_limit}/dia</span></p>
+                  <p className="flex items-center gap-2"><Check className="h-4 w-4 text-accent" /> Comissão por indicação: <span className="text-accent font-semibold">{formatBRL(plan.referral_commission)}</span></p>
                 </div>
                 <Button
                   variant={isCurrent ? "outline" : "hero"}
