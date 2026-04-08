@@ -16,7 +16,9 @@ import { formatBRL } from "@/lib/format";
 const Admin = () => {
   const navigate = useNavigate();
   const { user, isAdmin, loading: authLoading, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState<"overview" | "users" | "ads" | "withdrawals" | "plans" | "payments">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "users" | "ads" | "withdrawals" | "plans" | "payments" | "settings">("overview");
+  const [minWithdrawal, setMinWithdrawal] = useState("150");
+  const [savingSettings, setSavingSettings] = useState(false);
   const [showAdForm, setShowAdForm] = useState(false);
   const [editingAd, setEditingAd] = useState<any>(null);
   const [adTitle, setAdTitle] = useState("");
@@ -315,6 +317,7 @@ const Admin = () => {
     { key: "plans" as const, label: "Planos", icon: Settings },
     { key: "payments" as const, label: "Pagamentos", icon: CreditCard },
     { key: "withdrawals" as const, label: "Saques", icon: DollarSign },
+    { key: "settings" as const, label: "Configurações", icon: Settings },
   ];
 
   if (authLoading) return <div className="min-h-screen bg-background flex items-center justify-center"><Zap className="h-8 w-8 text-primary animate-pulse" /></div>;
