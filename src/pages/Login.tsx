@@ -29,12 +29,13 @@ const Login = () => {
   };
 
   const handleSocialLogin = async (provider: "google" | "apple") => {
+    await supabase.auth.signOut();
+
     const result = await lovable.auth.signInWithOAuth(provider, {
       redirect_uri: window.location.origin,
-      extraParams: {
-        prompt: "select_account",
-      },
+      extraParams: provider === "google" ? { prompt: "select_account" } : undefined,
     });
+
     if (result.error) toast.error(String(result.error));
   };
 
