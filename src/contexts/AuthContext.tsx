@@ -84,21 +84,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           level: 2,
           commission_rate: 0.20,
         });
-
-        // Level 3
-        const { data: l3Profile } = await supabase
-          .from("profiles")
-          .select("referred_by")
-          .eq("user_id", l2Profile.referred_by)
-          .maybeSingle();
-        if (l3Profile?.referred_by) {
-          await supabase.from("referrals").insert({
-            referrer_id: l3Profile.referred_by,
-            referred_id: userId,
-            level: 3,
-            commission_rate: 0.10,
-          });
-        }
       }
     };
 
