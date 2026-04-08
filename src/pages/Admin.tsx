@@ -538,6 +538,11 @@ const Admin = () => {
                     <Label>Tempo (s)</Label>
                     <Input type="number" value={adTime} onChange={(e) => setAdTime(Number(e.target.value))} className="bg-secondary border-border" />
                   </div>
+                  <div className="space-y-2">
+                    <Label>Valor por visualização (R$)</Label>
+                    <Input type="number" step="0.01" placeholder="Usar valor do plano" value={adRewardValue} onChange={(e) => setAdRewardValue(e.target.value)} className="bg-secondary border-border" />
+                    <p className="text-xs text-muted-foreground">Deixe vazio para usar o valor do plano do usuário</p>
+                  </div>
                   <div className="flex items-center gap-3 mt-2">
                     <Switch checked={adOpenLink} onCheckedChange={setAdOpenLink} />
                     <Label className="text-sm">{adOpenLink ? "Abrir link do anúncio" : "Somente contagem de tempo"}</Label>
