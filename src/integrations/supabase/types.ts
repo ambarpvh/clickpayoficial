@@ -373,6 +373,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      ensure_user_setup: {
+        Args: {
+          avatar_url_input?: string
+          email_input?: string
+          name_input?: string
+          referrer_id?: string
+        }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { ensureUserSetup } from "@/lib/ensureUserSetup";
 
 interface AuthContextType {
   user: User | null;
@@ -43,8 +44,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     };
 
-    const processOAuthReferral = async (_userId: string) => {
-      // Referral bootstrap now runs centrally after social login.
+    const handleUserLogin = async (u: User) => {
+      checkAdmin(u.id);
+      // Ensure profile, plan, role and referral are set up
+      ensureUserSetup(u).catch(() => {});
     };
 
     // First get the initial session
@@ -53,8 +56,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        checkAdmin(session.user.id);
-        processOAuthReferral(session.user.id);
+        handleUserLogin(session.user);
       }
       setLoading(false);
     });
@@ -66,7 +68,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
-          checkAdmin(session.user.id);
+          handleUserLogin(session.user);
         } else {
           setIsAdmin(false);
         }
