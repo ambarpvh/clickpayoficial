@@ -44,6 +44,33 @@ export type Database = {
         }
         Relationships: []
       }
+      balance_adjustments: {
+        Row: {
+          admin_id: string
+          amount: number
+          created_at: string
+          id: string
+          note: string
+          user_id: string
+        }
+        Insert: {
+          admin_id: string
+          amount: number
+          created_at?: string
+          id?: string
+          note?: string
+          user_id: string
+        }
+        Update: {
+          admin_id?: string
+          amount?: number
+          created_at?: string
+          id?: string
+          note?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       clicks: {
         Row: {
           ad_id: string
