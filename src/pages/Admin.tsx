@@ -16,7 +16,9 @@ import { formatBRL } from "@/lib/format";
 const Admin = () => {
   const navigate = useNavigate();
   const { user, isAdmin, loading: authLoading, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState<"overview" | "users" | "ads" | "withdrawals" | "plans" | "payments">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "users" | "ads" | "withdrawals" | "plans" | "payments" | "settings">("overview");
+  const [minWithdrawal, setMinWithdrawal] = useState("150");
+  const [savingSettings, setSavingSettings] = useState(false);
   const [showAdForm, setShowAdForm] = useState(false);
   const [editingAd, setEditingAd] = useState<any>(null);
   const [adTitle, setAdTitle] = useState("");
@@ -132,10 +134,22 @@ const Admin = () => {
       }
       setClicksPerDay(days);
       setRevenuePerDay(revDays);
+
+      // Load settings
+      const { data: settingsData } = await supabase.from("settings").select("*").eq("key", "min_withdrawal").maybeSingle();
+      if (settingsData) setMinWithdrawal(settingsData.value);
     } catch (error: any) {
       console.error("Exceção ao carregar admin:", error);
       toast.error(`Erro inesperado no painel: ${error.message}`);
     }
+  };
+
+  const saveMinWithdrawal = async () => {
+    setSavingSettings(true);
+    const { error } = await supabase.from("settings").update({ value: minWithdrawal, updated_at: new Date().toISOString() }).eq("key", "min_withdrawal");
+    if (error) { toast.error("Erro ao salvar configuração"); setSavingSettings(false); return; }
+    toast.success("Valor mínimo de saque atualizado!");
+    setSavingSettings(false);
   };
 
   // --- Ad CRUD ---
@@ -315,6 +329,7 @@ const Admin = () => {
     { key: "plans" as const, label: "Planos", icon: Settings },
     { key: "payments" as const, label: "Pagamentos", icon: CreditCard },
     { key: "withdrawals" as const, label: "Saques", icon: DollarSign },
+    { key: "settings" as const, label: "Configurações", icon: Settings },
   ];
 
   if (authLoading) return <div className="min-h-screen bg-background flex items-center justify-center"><Zap className="h-8 w-8 text-primary animate-pulse" /></div>;
@@ -728,6 +743,30 @@ const Admin = () => {
                 </div>
               ))}
               {withdrawals.length === 0 && <p className="p-4 text-muted-foreground text-sm text-center">Nenhum saque pendente</p>}
+            </div>
+          </div>
+        )}
+        {activeTab === "settings" && (
+          <div className="animate-fade-in max-w-md">
+            <h2 className="font-heading text-xl font-bold mb-4">Configurações</h2>
+            <div className="glass-card rounded-xl p-6 space-y-4">
+              <div>
+                <Label className="text-sm font-medium">Valor Mínimo de Saque (R$)</Label>
+                <div className="flex gap-2 mt-2">
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={minWithdrawal}
+                    onChange={(e) => setMinWithdrawal(e.target.value)}
+                    placeholder="150"
+                  />
+                  <Button onClick={saveMinWithdrawal} disabled={savingSettings}>
+                    {savingSettings ? "Salvando..." : "Salvar"}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Valor mínimo que o afiliado precisa ter para solicitar saque.</p>
+              </div>
             </div>
           </div>
         )}

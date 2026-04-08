@@ -38,6 +38,7 @@ const Dashboard = () => {
   const [todayClickedAdIds, setTodayClickedAdIds] = useState<Set<string>>(new Set());
   const [activeAd, setActiveAd] = useState<{ id: string; title: string; url: string; reward: string; view_time: number; open_link: boolean } | null>(null);
   const [referralCount, setReferralCount] = useState(0);
+  const [minWithdrawal, setMinWithdrawal] = useState(150);
 
   useEffect(() => {
     if (!authLoading && !user) { navigate("/login"); return; }
@@ -86,6 +87,10 @@ const Dashboard = () => {
 
     setBalance(totalEarned + totalAdjustments - totalWithdrawn);
 
+    // Load min withdrawal setting
+    const { data: settingData } = await supabase.from("settings").select("value").eq("key", "min_withdrawal").maybeSingle();
+    if (settingData) setMinWithdrawal(Number(settingData.value));
+
     const { data: recentClicks } = await supabase
       .from("clicks")
       .select("*, ads(title)")
@@ -126,7 +131,7 @@ const Dashboard = () => {
 
   const handleWithdrawal = async () => {
     if (!user) return;
-    if (balance < 150) { toast.info("Saque mínimo: R$ 150,00"); return; }
+    if (balance < minWithdrawal) { toast.info(`Saque mínimo: ${formatBRL(minWithdrawal)}`); return; }
     if (!wName || !wCpf || !wPix || !wPhone) { toast.error("Preencha todos os campos"); return; }
     if (wCpf.replace(/\D/g, "").length !== 11) { toast.error("CPF inválido"); return; }
 
