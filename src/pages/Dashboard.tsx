@@ -80,7 +80,11 @@ const Dashboard = () => {
 
     const { data: withdrawals } = await supabase.from("withdrawals").select("amount, status").eq("user_id", user.id).in("status", ["approved", "pending"]);
     const totalWithdrawn = withdrawals?.reduce((sum, w) => sum + Number(w.amount), 0) || 0;
-    setBalance(totalEarned - totalWithdrawn);
+
+    const { data: adjustmentsData } = await supabase.from("balance_adjustments").select("amount").eq("user_id", user.id);
+    const totalAdjustments = adjustmentsData?.reduce((sum, a) => sum + Number(a.amount), 0) || 0;
+
+    setBalance(totalEarned + totalAdjustments - totalWithdrawn);
 
     const { data: recentClicks } = await supabase
       .from("clicks")

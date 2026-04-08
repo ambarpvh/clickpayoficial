@@ -39,9 +39,11 @@ const Admin = () => {
   const [transferPlanId, setTransferPlanId] = useState<string>("");
   const [deletePlanStep, setDeletePlanStep] = useState<"confirm" | "transfer" | null>(null);
 
-  // Balance editing
-  const [editingBalance, setEditingBalance] = useState<string | null>(null);
-  const [balanceAmount, setBalanceAmount] = useState("");
+  // Balance adjustment
+  const [adjustingBalance, setAdjustingBalance] = useState<string | null>(null);
+  const [adjustAmount, setAdjustAmount] = useState("");
+  const [adjustNote, setAdjustNote] = useState("");
+  const [adjustType, setAdjustType] = useState<"add" | "remove">("add");
 
   // Plan change for user
   const [changingPlanUser, setChangingPlanUser] = useState<string | null>(null);
@@ -258,21 +260,21 @@ const Admin = () => {
     loadData();
   };
 
-  const addBalance = async (userId: string) => {
-    const amount = parseFloat(balanceAmount);
+  const adjustBalance = async (userId: string) => {
+    const amount = parseFloat(adjustAmount);
     if (!amount || amount <= 0) { toast.error("Valor inválido"); return; }
-    // Insert a "manual credit" click
-    const { data: anyAd } = await supabase.from("ads").select("id").limit(1).maybeSingle();
-    if (!anyAd) { toast.error("Crie um anúncio primeiro"); return; }
-    const { error } = await supabase.from("clicks").insert({
+    const finalAmount = adjustType === "remove" ? -amount : amount;
+    const { error } = await supabase.from("balance_adjustments").insert({
       user_id: userId,
-      ad_id: anyAd.id,
-      earned_value: amount,
+      admin_id: user!.id,
+      amount: finalAmount,
+      note: adjustNote || (adjustType === "add" ? "Crédito manual" : "Débito manual"),
     });
-    if (error) { toast.error("Erro ao creditar"); return; }
-    toast.success(`${formatBRL(amount)} creditado!`);
-    setEditingBalance(null);
-    setBalanceAmount("");
+    if (error) { toast.error("Erro ao ajustar saldo"); return; }
+    toast.success(adjustType === "add" ? `${formatBRL(amount)} creditado!` : `${formatBRL(amount)} debitado!`);
+    setAdjustingBalance(null);
+    setAdjustAmount("");
+    setAdjustNote("");
     loadData();
   };
 
@@ -422,15 +424,24 @@ const Admin = () => {
                       <td className="p-4 text-muted-foreground hidden sm:table-cell">{u.email}</td>
                       <td className="p-4"><span className="text-primary font-semibold">{u.user_plans?.[0]?.plans?.name || "Free"}</span></td>
                       <td className="p-4">
-                        <div className="flex items-center gap-2">
-                          {editingBalance === u.user_id ? (
-                            <div className="flex items-center gap-1">
-                              <Input type="number" placeholder="$" value={balanceAmount} onChange={(e) => setBalanceAmount(e.target.value)} className="w-20 h-8 bg-secondary border-border text-xs" />
-                              <Button size="sm" className="h-8 text-xs" onClick={() => addBalance(u.user_id)}>OK</Button>
-                              <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => setEditingBalance(null)}>✕</Button>
+                        <div className="flex flex-wrap items-start gap-2">
+                          {adjustingBalance === u.user_id ? (
+                            <div className="flex flex-col gap-1">
+                              <div className="flex items-center gap-1">
+                                <select value={adjustType} onChange={(e) => setAdjustType(e.target.value as "add" | "remove")} className="h-8 text-xs rounded-md bg-secondary border border-border px-1">
+                                  <option value="add">+ Adicionar</option>
+                                  <option value="remove">- Remover</option>
+                                </select>
+                                <Input type="number" placeholder="Valor" value={adjustAmount} onChange={(e) => setAdjustAmount(e.target.value)} className="w-20 h-8 bg-secondary border-border text-xs" />
+                              </div>
+                              <Input placeholder="Observação..." value={adjustNote} onChange={(e) => setAdjustNote(e.target.value)} className="h-8 bg-secondary border-border text-xs" />
+                              <div className="flex gap-1">
+                                <Button size="sm" className="h-7 text-xs" onClick={() => adjustBalance(u.user_id)}>Confirmar</Button>
+                                <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => { setAdjustingBalance(null); setAdjustAmount(""); setAdjustNote(""); }}>✕</Button>
+                              </div>
                             </div>
                           ) : (
-                            <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => setEditingBalance(u.user_id)}>
+                            <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => { setAdjustingBalance(u.user_id); setAdjustType("add"); setAdjustAmount(""); setAdjustNote(""); }}>
                               <DollarSign className="h-3 w-3 mr-1" /> Saldo
                             </Button>
                           )}

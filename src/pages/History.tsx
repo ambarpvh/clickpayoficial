@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Zap, ArrowLeft, TrendingUp, Users, Clock } from "lucide-react";
+import { Zap, ArrowLeft, TrendingUp, Users, Clock, Wallet } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { formatBRL } from "@/lib/format";
@@ -11,6 +11,13 @@ interface ClickRecord {
   earned_value: number;
   clicked_at: string;
   ads?: { title: string } | null;
+}
+
+interface AdjustmentRecord {
+  id: string;
+  amount: number;
+  note: string;
+  created_at: string;
 }
 
 interface ReferralRecord {
@@ -24,8 +31,9 @@ interface ReferralRecord {
 const History = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const [tab, setTab] = useState<"clicks" | "referrals" | "ranking">("clicks");
+  const [tab, setTab] = useState<"clicks" | "adjustments" | "referrals" | "ranking">("clicks");
   const [clicks, setClicks] = useState<ClickRecord[]>([]);
+  const [adjustments, setAdjustments] = useState<AdjustmentRecord[]>([]);
   const [referrals, setReferrals] = useState<ReferralRecord[]>([]);
   const [ranking, setRanking] = useState<{ name: string; total: number }[]>([]);
 
@@ -44,6 +52,14 @@ const History = () => {
       .order("clicked_at", { ascending: false })
       .limit(100);
     setClicks(clicksData || []);
+
+    const { data: adjustmentsData } = await supabase
+      .from("balance_adjustments")
+      .select("id, amount, note, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(100);
+    setAdjustments(adjustmentsData || []);
 
     const { data: referralsData } = await supabase
       .from("referrals")
@@ -91,9 +107,10 @@ const History = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
           {[
-            { key: "clicks" as const, label: "Histórico de Cliques", icon: Clock },
-            { key: "referrals" as const, label: "Minhas Indicações", icon: Users },
-            { key: "ranking" as const, label: "Ranking Afiliados", icon: TrendingUp },
+            { key: "clicks" as const, label: "Cliques", icon: Clock },
+            { key: "adjustments" as const, label: "Ajustes de Saldo", icon: Wallet },
+            { key: "referrals" as const, label: "Indicações", icon: Users },
+            { key: "ranking" as const, label: "Ranking", icon: TrendingUp },
           ].map((t) => (
             <button key={t.key} onClick={() => setTab(t.key)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${tab === t.key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary"}`}>
@@ -110,12 +127,34 @@ const History = () => {
               clicks.map((c) => (
                 <div key={c.id} className="p-4 flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium">{(c.ads as unknown as { title: string })?.title || "Anúncio"}</p>
+                    <p className="text-sm font-medium">Visualização de anúncio</p>
                     <p className="text-muted-foreground text-xs">
-                      {new Date(c.clicked_at).toLocaleDateString("pt-BR")} às {new Date(c.clicked_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                      {(c.ads as unknown as { title: string })?.title || "Anúncio"} • {new Date(c.clicked_at).toLocaleDateString("pt-BR")} às {new Date(c.clicked_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                     </p>
                   </div>
-                  <span className="text-primary font-semibold text-sm">+{formatBRL(Number(c.earned_value), 4)}</span>
+                  <span className="text-primary font-semibold text-sm">+{formatBRL(Number(c.earned_value))}</span>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {tab === "adjustments" && (
+          <div className="glass-card rounded-xl divide-y divide-border/50 animate-fade-in">
+            {adjustments.length === 0 ? (
+              <p className="p-8 text-muted-foreground text-sm text-center">Nenhum ajuste de saldo registrado</p>
+            ) : (
+              adjustments.map((a) => (
+                <div key={a.id} className="p-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium">{a.note || (a.amount >= 0 ? "Crédito manual" : "Débito manual")}</p>
+                    <p className="text-muted-foreground text-xs">
+                      {new Date(a.created_at).toLocaleDateString("pt-BR")} às {new Date(a.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                    </p>
+                  </div>
+                  <span className={`font-semibold text-sm ${a.amount >= 0 ? "text-primary" : "text-destructive"}`}>
+                    {a.amount >= 0 ? "+" : ""}{formatBRL(Number(a.amount))}
+                  </span>
                 </div>
               ))
             )}
