@@ -34,6 +34,7 @@ const Admin = () => {
   const [planPrice, setPlanPrice] = useState(0);
   const [planClickValue, setPlanClickValue] = useState(0.001);
   const [planDailyLimit, setPlanDailyLimit] = useState(10);
+  const [planReferralCommission, setPlanReferralCommission] = useState(1.00);
   const [showPlanForm, setShowPlanForm] = useState(false);
 
   // Plan deletion
