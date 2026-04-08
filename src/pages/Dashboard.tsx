@@ -292,11 +292,8 @@ const Dashboard = () => {
                 ))
               )}
             </div>
-            <Button variant="gold" className="w-full" onClick={() => {
-              if (balance < 150) { toast.info("Saque mínimo: R$ 150,00"); return; }
-              setShowWithdrawForm(true);
-            }}>
-              Solicitar Saque (mín. R$ 150,00)
+            <Button variant="gold" className="w-full" onClick={() => setShowWithdrawForm(true)}>
+              Solicitar Saque
             </Button>
             {showWithdrawForm && (
               <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onClick={() => setShowWithdrawForm(false)}>
