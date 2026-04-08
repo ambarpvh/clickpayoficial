@@ -100,6 +100,10 @@ const Dashboard = () => {
     const { data: settingData } = await supabase.from("settings").select("value").eq("key", "min_withdrawal").maybeSingle();
     if (settingData) setMinWithdrawal(Number(settingData.value));
 
+    // Load all plans for commission display
+    const { data: plansData } = await supabase.from("plans").select("name, referral_commission").eq("is_active", true).order("price", { ascending: true });
+    setAllPlans(plansData || []);
+
     // Load profile data for withdrawal pre-fill
     const { data: profileData } = await supabase.from("profiles").select("name, cpf, pix_key, phone").eq("user_id", targetUserId).maybeSingle();
     if (profileData) {
