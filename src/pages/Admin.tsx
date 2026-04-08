@@ -134,10 +134,22 @@ const Admin = () => {
       }
       setClicksPerDay(days);
       setRevenuePerDay(revDays);
+
+      // Load settings
+      const { data: settingsData } = await supabase.from("settings").select("*").eq("key", "min_withdrawal").maybeSingle();
+      if (settingsData) setMinWithdrawal(settingsData.value);
     } catch (error: any) {
       console.error("Exceção ao carregar admin:", error);
       toast.error(`Erro inesperado no painel: ${error.message}`);
     }
+  };
+
+  const saveMinWithdrawal = async () => {
+    setSavingSettings(true);
+    const { error } = await supabase.from("settings").update({ value: minWithdrawal, updated_at: new Date().toISOString() }).eq("key", "min_withdrawal");
+    if (error) { toast.error("Erro ao salvar configuração"); setSavingSettings(false); return; }
+    toast.success("Valor mínimo de saque atualizado!");
+    setSavingSettings(false);
   };
 
   // --- Ad CRUD ---
