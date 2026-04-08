@@ -424,15 +424,25 @@ const Admin = () => {
                       <td className="p-4 text-muted-foreground hidden sm:table-cell">{u.email}</td>
                       <td className="p-4"><span className="text-primary font-semibold">{u.user_plans?.[0]?.plans?.name || "Free"}</span></td>
                       <td className="p-4">
-                        <div className="flex items-center gap-2">
-                          {editingBalance === u.user_id ? (
-                            <div className="flex items-center gap-1">
-                              <Input type="number" placeholder="$" value={balanceAmount} onChange={(e) => setBalanceAmount(e.target.value)} className="w-20 h-8 bg-secondary border-border text-xs" />
-                              <Button size="sm" className="h-8 text-xs" onClick={() => addBalance(u.user_id)}>OK</Button>
-                              <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => setEditingBalance(null)}>✕</Button>
+                        <div className="flex flex-col gap-2">
+                          <div className="flex items-center gap-2">
+                          {adjustingBalance === u.user_id ? (
+                            <div className="flex flex-col gap-1">
+                              <div className="flex items-center gap-1">
+                                <select value={adjustType} onChange={(e) => setAdjustType(e.target.value as "add" | "remove")} className="h-8 text-xs rounded-md bg-secondary border border-border px-1">
+                                  <option value="add">+ Adicionar</option>
+                                  <option value="remove">- Remover</option>
+                                </select>
+                                <Input type="number" placeholder="Valor" value={adjustAmount} onChange={(e) => setAdjustAmount(e.target.value)} className="w-20 h-8 bg-secondary border-border text-xs" />
+                              </div>
+                              <Input placeholder="Observação..." value={adjustNote} onChange={(e) => setAdjustNote(e.target.value)} className="h-8 bg-secondary border-border text-xs" />
+                              <div className="flex gap-1">
+                                <Button size="sm" className="h-7 text-xs" onClick={() => adjustBalance(u.user_id)}>Confirmar</Button>
+                                <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => { setAdjustingBalance(null); setAdjustAmount(""); setAdjustNote(""); }}>✕</Button>
+                              </div>
                             </div>
                           ) : (
-                            <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => setEditingBalance(u.user_id)}>
+                            <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => { setAdjustingBalance(u.user_id); setAdjustType("add"); setAdjustAmount(""); setAdjustNote(""); }}>
                               <DollarSign className="h-3 w-3 mr-1" /> Saldo
                             </Button>
                           )}
