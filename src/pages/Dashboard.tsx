@@ -308,7 +308,7 @@ const Dashboard = () => {
                       <p className="text-sm font-medium">{(c.ads as unknown as { title: string })?.title || "Anúncio"}</p>
                       <p className="text-muted-foreground text-xs">{new Date(c.clicked_at).toLocaleDateString("pt-BR")}</p>
                     </div>
-                    <span className="text-primary font-semibold text-sm">+{formatBRL(Number(c.earned_value), 4)}</span>
+                    <span className="text-primary font-semibold text-sm">+{formatBRL(Number(c.earned_value))}</span>
                   </div>
                 ))
               )}
