@@ -13,6 +13,7 @@ interface Plan {
   price: number;
   click_value: number;
   daily_click_limit: number;
+  referral_commission: number;
 }
 
 const Plans = () => {
