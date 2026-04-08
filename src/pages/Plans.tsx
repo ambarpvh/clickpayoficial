@@ -93,11 +93,17 @@ const Plans = () => {
           {plans.map((plan) => {
             const isCurrent = plan.id === currentPlanId;
             const color = planColors[plan.name] || "border-border";
+            const isSoldOut = ["Bronze", "Prata", "Ouro"].includes(plan.name);
             return (
-              <div key={plan.id} className={`glass-card rounded-xl p-6 border-2 ${color} relative ${isCurrent ? "glow-primary" : ""} hover:scale-105 transition-transform duration-300`}>
+              <div key={plan.id} className={`glass-card rounded-xl p-6 border-2 ${color} relative ${isCurrent ? "glow-primary" : ""} ${isSoldOut ? "opacity-80" : ""} hover:scale-105 transition-transform duration-300`}>
                 {isCurrent && (
                   <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full">
                     Atual
+                  </span>
+                )}
+                {isSoldOut && !isCurrent && (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-accent-foreground text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap">
+                    Em breve
                   </span>
                 )}
                 <h3 className="font-heading text-2xl font-bold mb-1">{plan.name}</h3>
@@ -111,10 +117,16 @@ const Plans = () => {
                 <Button
                   variant={isCurrent ? "outline" : "hero"}
                   className="w-full"
-                  disabled={isCurrent || upgrading === plan.id}
-                  onClick={() => handleUpgrade(plan.id, plan.price)}
+                  disabled={isCurrent || upgrading === plan.id || isSoldOut}
+                  onClick={() => {
+                    if (isSoldOut) {
+                      toast.info("Este plano esgotou, está disponível em breve! 🚀");
+                      return;
+                    }
+                    handleUpgrade(plan.id, plan.price);
+                  }}
                 >
-                  {isCurrent ? "Plano Atual" : upgrading === plan.id ? "Processando..." : "Selecionar"}
+                  {isCurrent ? "Plano Atual" : isSoldOut ? "Esgotado" : upgrading === plan.id ? "Processando..." : "Selecionar"}
                 </Button>
               </div>
             );
