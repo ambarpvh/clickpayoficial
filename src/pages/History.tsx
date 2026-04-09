@@ -242,8 +242,10 @@ const History = () => {
                 <p className="font-heading text-3xl font-bold text-primary">{directCount}</p>
               </div>
               <div className="glass-card rounded-xl p-5">
-                <p className="text-sm text-muted-foreground mb-1">Cadastros diretos</p>
-                <p className="font-heading text-3xl font-bold text-primary">{directCount}</p>
+                <p className="text-sm text-muted-foreground mb-1">Ganhos por indicação</p>
+                <p className="font-heading text-3xl font-bold text-primary">
+                  {formatBRL(referrals.filter(r => r.level === 1).reduce((sum, r) => sum + (r.commissionValue || 0), 0))}
+                </p>
               </div>
             </div>
 
