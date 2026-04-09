@@ -212,7 +212,28 @@ const Dashboard = () => {
 
   const availableAds = ads.filter((a) => !todayClickedAdIds.has(a.id));
   const canClick = todayClicks < dailyLimit;
+  const allAdsViewed = canClick && availableAds.length === 0 && ads.length > 0;
+  const showCountdown = !canClick || allAdsViewed;
   const progressPercent = Math.min((todayClicks / dailyLimit) * 100, 100);
+
+  // Countdown to next day (midnight)
+  const [countdown, setCountdown] = useState("");
+  useEffect(() => {
+    if (!showCountdown) { setCountdown(""); return; }
+    const tick = () => {
+      const now = new Date();
+      const tomorrow = new Date(now);
+      tomorrow.setHours(24, 0, 0, 0);
+      const diff = tomorrow.getTime() - now.getTime();
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      setCountdown(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [showCountdown]);
 
   if (authLoading) return <div className="min-h-screen bg-background flex items-center justify-center"><Zap className="h-8 w-8 text-primary animate-pulse" /></div>;
 
