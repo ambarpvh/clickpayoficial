@@ -243,7 +243,7 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background">
       {viewAsUserId && (
         <div className="bg-yellow-500/20 border-b border-yellow-500/50 text-yellow-200 text-center py-2 text-sm font-medium">
-          ⚠️ Visualizando painel do usuário (modo admin) — <button className="underline" onClick={() => window.close()}>Fechar</button>
+          ⚠️ Visualizando painel de <span className="font-bold">{viewedUserName || "usuário"}</span> (modo admin) — <button className="underline" onClick={() => window.close()}>Fechar</button>
         </div>
       )}
       <nav className="border-b border-border/50 glass-card">
