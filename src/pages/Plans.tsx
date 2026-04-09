@@ -122,6 +122,16 @@ const Plans = () => {
                       <Check className="h-4 w-4 text-accent" />
                       <span>Comissão por indicação: <span className={`font-semibold ${isBestCommission ? "text-accent text-base" : "text-accent"}`}>{formatBRL(plan.referral_commission)}</span></span>
                       {isBestCommission && <Crown className="h-4 w-4 text-accent animate-pulse" />}
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help shrink-0" />
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-[200px] text-center">
+                            <p>Você recebe esta comissão quando alguém se cadastra pelo seu link de indicação</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
                   </div>
                   <Button
