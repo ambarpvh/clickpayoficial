@@ -291,10 +291,21 @@ const Dashboard = () => {
           <div>
             <p className="text-sm font-semibold mb-1">Seu link de indicação</p>
             <p className="text-muted-foreground text-xs break-all">{referralBaseUrl}/register?ref={user?.id?.slice(0, 8)}...</p>
-            <p className="text-accent text-xs mt-1">
-              Comissões: {allPlans.map((p, i) => (
+            <p className="text-accent text-xs mt-1 flex items-center gap-1 flex-wrap">
+              <span>Comissões:</span>
+              {allPlans.map((p, i) => (
                 <span key={p.name}>{i > 0 ? " | " : ""}{p.name}: <span className="font-semibold">{formatBRL(p.referral_commission)}</span></span>
               ))}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help shrink-0" />
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-[220px] text-center">
+                    <p>Você recebe esta comissão quando alguém se cadastra pelo seu link de indicação</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </p>
           </div>
           <Button variant="outline" size="sm" onClick={copyReferral}>
