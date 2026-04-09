@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { DollarSign, Eye, TrendingUp, Zap, LogOut, Copy, Gift, Clock, ArrowUpRight, Crown, History as HistoryIcon, UserCog, Info } from "lucide-react";
+import { DollarSign, Eye, TrendingUp, Zap, LogOut, Copy, Check, Gift, Clock, ArrowUpRight, Crown, History as HistoryIcon, UserCog, Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import AdTimer from "@/components/AdTimer";
 import { toast } from "sonner";
@@ -201,11 +201,14 @@ const Dashboard = () => {
     ? window.location.origin.replace('preview--', '') 
     : window.location.origin;
 
-  const copyReferral = () => {
+  const [copied, setCopied] = useState(false);
+  const copyReferral = useCallback(() => {
     const link = `${referralBaseUrl}/register?ref=${user?.id}`;
     navigator.clipboard.writeText(link);
     toast.success("Link copiado!");
-  };
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }, [referralBaseUrl, user?.id]);
 
   const availableAds = ads.filter((a) => !todayClickedAdIds.has(a.id));
   const canClick = todayClicks < dailyLimit;
@@ -308,8 +311,17 @@ const Dashboard = () => {
               </TooltipProvider>
             </p>
           </div>
-          <Button variant="hero" size="lg" className="w-full text-base font-bold gap-2" onClick={copyReferral}>
-            <Copy className="h-5 w-5" /> Copiar Link de Indicação
+          <Button
+            variant="hero"
+            size="lg"
+            className={`w-full text-base font-bold gap-2 transition-all duration-300 ${copied ? "bg-green-600 hover:bg-green-600 scale-105" : ""}`}
+            onClick={copyReferral}
+          >
+            {copied ? (
+              <><Check className="h-5 w-5 animate-scale-in" /> Link Copiado!</>
+            ) : (
+              <><Copy className="h-5 w-5" /> Copiar Link de Indicação</>
+            )}
           </Button>
         </div>
 
