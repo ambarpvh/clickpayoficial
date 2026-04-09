@@ -287,7 +287,7 @@ const Dashboard = () => {
         </div>
 
         {/* Referral link */}
-        <div className="glass-card rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="glass-card rounded-xl p-5 flex flex-col gap-3">
           <div>
             <p className="text-sm font-semibold mb-1">Seu link de indicação</p>
             <p className="text-muted-foreground text-xs break-all">{referralBaseUrl}/register?ref={user?.id?.slice(0, 8)}...</p>
@@ -308,8 +308,8 @@ const Dashboard = () => {
               </TooltipProvider>
             </p>
           </div>
-          <Button variant="outline" size="sm" onClick={copyReferral}>
-            <Copy className="h-3.5 w-3.5 mr-1" /> Copiar
+          <Button variant="hero" size="lg" className="w-full text-base font-bold gap-2" onClick={copyReferral}>
+            <Copy className="h-5 w-5" /> Copiar Link de Indicação
           </Button>
         </div>
 
