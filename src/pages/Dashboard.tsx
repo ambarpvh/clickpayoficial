@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { DollarSign, Eye, TrendingUp, Zap, LogOut, Copy, Check, Gift, Clock, ArrowUpRight, Crown, History as HistoryIcon, UserCog, Info } from "lucide-react";
+import { DollarSign, Eye, TrendingUp, Zap, LogOut, Copy, Check, Gift, Clock, ArrowUpRight, Crown, History as HistoryIcon, UserCog, Info, X, Megaphone } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import AdTimer from "@/components/AdTimer";
 import { toast } from "sonner";
