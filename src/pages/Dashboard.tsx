@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { DollarSign, Eye, TrendingUp, Zap, LogOut, Copy, Check, Gift, Clock, ArrowUpRight, Crown, History as HistoryIcon, UserCog, Info } from "lucide-react";
+import { DollarSign, Eye, TrendingUp, Zap, LogOut, Copy, Check, Gift, Clock, ArrowUpRight, Crown, History as HistoryIcon, UserCog, Info, X, Megaphone } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import AdTimer from "@/components/AdTimer";
 import { toast } from "sonner";
@@ -48,6 +48,16 @@ const Dashboard = () => {
   const [minWithdrawal, setMinWithdrawal] = useState(150);
   const [allPlans, setAllPlans] = useState<Array<{ name: string; referral_commission: number }>>([]);
   const [viewedUserName, setViewedUserName] = useState("");
+  const [showFloatingCta, setShowFloatingCta] = useState(true);
+  const [floatingText, setFloatingText] = useState("VER ANÚNCIOS");
+
+  useEffect(() => {
+    if (!showFloatingCta) return;
+    const id = setInterval(() => {
+      setFloatingText(prev => prev === "VER ANÚNCIOS" ? "CLIQUE" : "VER ANÚNCIOS");
+    }, 1500);
+    return () => clearInterval(id);
+  }, [showFloatingCta]);
 
   useEffect(() => {
     if (!authLoading && !user) { navigate("/login"); return; }
@@ -351,7 +361,7 @@ const Dashboard = () => {
         {/* Ads + History */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-4">
-            <h2 className="font-heading text-xl font-bold">Anúncios Disponíveis</h2>
+            <h2 id="anuncios-section" className="font-heading text-xl font-bold">Anúncios Disponíveis</h2>
             {showCountdown ? (
               <div className="glass-card rounded-xl p-8 text-center">
                 <Clock className="h-10 w-10 text-primary mx-auto mb-3 animate-pulse" />
@@ -458,6 +468,31 @@ const Dashboard = () => {
 
       {activeAd && (
         <AdTimer ad={activeAd} onComplete={handleAdComplete} onClose={() => setActiveAd(null)} />
+      )}
+
+      {showFloatingCta && !viewAsUserId && !showCountdown && (
+        <div className="fixed bottom-6 right-6 z-50 animate-fade-in">
+          <div className="relative">
+            <button
+              onClick={() => {
+                document.getElementById("anuncios-section")?.scrollIntoView({ behavior: "smooth" });
+                setShowFloatingCta(false);
+              }}
+              className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-heading font-bold text-lg px-6 py-3 rounded-full shadow-[0_0_20px_hsl(var(--primary)/0.5)] transition-all duration-300 hover:scale-105 animate-pulse"
+            >
+              <Megaphone className="h-5 w-5" />
+              <span key={floatingText} className="inline-block min-w-[140px] text-center animate-fade-in">
+                {floatingText}
+              </span>
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowFloatingCta(false); }}
+              className="absolute -top-2 -right-2 bg-background border border-border rounded-full p-0.5 hover:bg-muted transition-colors"
+            >
+              <X className="h-4 w-4 text-muted-foreground" />
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
