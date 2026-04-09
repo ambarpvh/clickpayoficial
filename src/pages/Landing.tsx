@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ArrowRight, Eye, DollarSign, Shield, Users, Zap, Star, TrendingUp, ChevronLeft, ChevronRight, Quote } from "lucide-react";
+import { ArrowRight, Eye, DollarSign, Shield, Users, Zap, Star, TrendingUp, ChevronLeft, ChevronRight, Quote, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -264,6 +264,37 @@ const Landing = () => {
             Nosso sistema possui verificação por IP, limite de cliques diários, CAPTCHA e detecção
             de múltiplas contas para garantir a integridade da plataforma.
           </p>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-20 px-4 bg-secondary/20">
+        <div className="container mx-auto max-w-3xl">
+          <div className="text-center mb-12">
+            <HelpCircle className="h-12 w-12 text-primary mx-auto mb-4" />
+            <h2 className="font-heading text-3xl md:text-4xl font-bold mb-4">Perguntas Frequentes</h2>
+            <p className="text-muted-foreground">Tire suas dúvidas sobre a plataforma</p>
+          </div>
+          <div className="space-y-4">
+            {[
+              { q: "O ClickPay é realmente gratuito?", a: "Sim! Você pode se cadastrar no plano gratuito e começar a ganhar dinheiro assistindo anúncios sem investir nada." },
+              { q: "Como eu recebo meus ganhos?", a: "Você pode solicitar o saque dos seus ganhos a qualquer momento diretamente pelo painel. O pagamento é feito via PIX." },
+              { q: "Quantos anúncios posso assistir por dia?", a: "O limite diário depende do seu plano. No plano gratuito, você tem um limite que pode ser aumentado fazendo upgrade para planos superiores." },
+              { q: "Como funciona o programa de indicação?", a: "Ao indicar amigos pelo seu link exclusivo, você recebe uma comissão toda vez que alguém se cadastra através do seu link. O valor da comissão varia conforme o plano escolhido pelo indicado." },
+              { q: "Posso fazer upgrade do meu plano depois?", a: "Sim! Você pode começar no plano gratuito e fazer upgrade a qualquer momento para aumentar seus ganhos por anúncio e o limite diário de cliques." },
+              { q: "É seguro usar a plataforma?", a: "Sim! Utilizamos criptografia, verificação por IP e sistemas anti-fraude para garantir a segurança de todos os usuários." },
+            ].map((faq, i) => (
+              <details key={i} className="glass-card rounded-xl group">
+                <summary className="flex items-center justify-between cursor-pointer p-5 font-semibold text-foreground list-none">
+                  <span>{faq.q}</span>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground transition-transform duration-200 group-open:rotate-90" />
+                </summary>
+                <div className="px-5 pb-5 text-muted-foreground text-sm leading-relaxed border-t border-border/50 pt-4">
+                  {faq.a}
+                </div>
+              </details>
+            ))}
+          </div>
         </div>
       </section>
 
