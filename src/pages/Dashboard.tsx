@@ -107,12 +107,13 @@ const Dashboard = () => {
     setAllPlans(plansData || []);
 
     // Load profile data for withdrawal pre-fill
-    const { data: profileData } = await supabase.from("profiles").select("name, cpf, pix_key, phone").eq("user_id", targetUserId).maybeSingle();
+    const { data: profileData } = await supabase.from("profiles").select("name, cpf, pix_key, phone, email").eq("user_id", targetUserId).maybeSingle();
     if (profileData) {
       setWName(profileData.name || "");
       setWCpf(profileData.cpf || "");
       setWPix(profileData.pix_key || "");
       setWPhone(profileData.phone || "");
+      if (viewAsUserId) setViewedUserName(profileData.name || profileData.email || "");
     }
 
     const [{ data: recentClicks }, { data: recentAdjustments }] = await Promise.all([
