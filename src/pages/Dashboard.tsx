@@ -50,8 +50,8 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (!authLoading && !user) { navigate("/login"); return; }
-    if (user) loadData();
-  }, [user, authLoading]);
+    if (user && targetUserId) loadData();
+  }, [user, authLoading, targetUserId]);
 
   const loadData = async () => {
     if (!user || !targetUserId) return;
