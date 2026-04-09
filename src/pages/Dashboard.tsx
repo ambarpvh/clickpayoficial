@@ -47,6 +47,7 @@ const Dashboard = () => {
   const [referralCount, setReferralCount] = useState(0);
   const [minWithdrawal, setMinWithdrawal] = useState(150);
   const [allPlans, setAllPlans] = useState<Array<{ name: string; referral_commission: number }>>([]);
+  const [viewedUserName, setViewedUserName] = useState("");
 
   useEffect(() => {
     if (!authLoading && !user) { navigate("/login"); return; }
