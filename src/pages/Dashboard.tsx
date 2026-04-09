@@ -350,19 +350,20 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-4">
             <h2 className="font-heading text-xl font-bold">Anúncios Disponíveis</h2>
-            {!canClick ? (
+            {showCountdown ? (
               <div className="glass-card rounded-xl p-8 text-center">
-                <Clock className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                <p className="text-muted-foreground">Limite diário atingido!</p>
-                <p className="text-muted-foreground text-sm mt-1">Volte amanhã ou faça upgrade do plano.</p>
-                <Button variant="gold" size="sm" className="mt-4" onClick={() => navigate("/plans")}>
+                <Clock className="h-10 w-10 text-primary mx-auto mb-3 animate-pulse" />
+                <p className="text-foreground font-semibold text-lg mb-1">
+                  {!canClick ? "Limite diário atingido!" : "Todos os anúncios foram visualizados!"}
+                </p>
+                <p className="text-muted-foreground text-sm mb-4">Próximos anúncios disponíveis em:</p>
+                <div className="inline-flex items-center gap-1 bg-primary/10 border border-primary/30 rounded-xl px-6 py-3">
+                  <span className="font-heading text-3xl font-bold text-primary tracking-widest">{countdown || "--:--:--"}</span>
+                </div>
+                <p className="text-muted-foreground text-xs mt-4">Ou faça upgrade para aumentar seu limite diário</p>
+                <Button variant="gold" size="sm" className="mt-3" onClick={() => navigate("/plans")}>
                   <Crown className="h-4 w-4 mr-1" /> Fazer Upgrade
                 </Button>
-              </div>
-            ) : availableAds.length === 0 ? (
-              <div className="glass-card rounded-xl p-8 text-center">
-                <Clock className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                <p className="text-muted-foreground">Nenhum anúncio disponível no momento.</p>
               </div>
             ) : (
               availableAds.map((ad) => {
