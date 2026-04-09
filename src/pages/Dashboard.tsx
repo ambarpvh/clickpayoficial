@@ -471,7 +471,7 @@ const Dashboard = () => {
       )}
 
       {showFloatingCta && !viewAsUserId && !showCountdown && (
-        <div className="fixed bottom-6 right-6 z-50 animate-fade-in">
+        <div className="fixed top-1/2 right-6 -translate-y-1/2 z-50 animate-fade-in">
           <div className="relative">
             <button
               onClick={() => {
