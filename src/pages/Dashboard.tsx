@@ -361,7 +361,7 @@ const Dashboard = () => {
         {/* Ads + History */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-4">
-            <h2 className="font-heading text-xl font-bold">Anúncios Disponíveis</h2>
+            <h2 id="anuncios-section" className="font-heading text-xl font-bold">Anúncios Disponíveis</h2>
             {showCountdown ? (
               <div className="glass-card rounded-xl p-8 text-center">
                 <Clock className="h-10 w-10 text-primary mx-auto mb-3 animate-pulse" />
