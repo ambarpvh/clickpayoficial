@@ -48,6 +48,16 @@ const Dashboard = () => {
   const [minWithdrawal, setMinWithdrawal] = useState(150);
   const [allPlans, setAllPlans] = useState<Array<{ name: string; referral_commission: number }>>([]);
   const [viewedUserName, setViewedUserName] = useState("");
+  const [showFloatingCta, setShowFloatingCta] = useState(true);
+  const [floatingText, setFloatingText] = useState("VER ANÚNCIOS");
+
+  useEffect(() => {
+    if (!showFloatingCta) return;
+    const id = setInterval(() => {
+      setFloatingText(prev => prev === "VER ANÚNCIOS" ? "CLIQUE" : "VER ANÚNCIOS");
+    }, 1500);
+    return () => clearInterval(id);
+  }, [showFloatingCta]);
 
   useEffect(() => {
     if (!authLoading && !user) { navigate("/login"); return; }
