@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Zap, Crown, ArrowLeft, Check } from "lucide-react";
+import { Zap, Crown, ArrowLeft, Check, Info } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { formatBRL } from "@/lib/format";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Plan {
   id: string;
@@ -121,6 +122,16 @@ const Plans = () => {
                       <Check className="h-4 w-4 text-accent" />
                       <span>Comissão por indicação: <span className={`font-semibold ${isBestCommission ? "text-accent text-base" : "text-accent"}`}>{formatBRL(plan.referral_commission)}</span></span>
                       {isBestCommission && <Crown className="h-4 w-4 text-accent animate-pulse" />}
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help shrink-0" />
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-[200px] text-center">
+                            <p>Você recebe esta comissão quando alguém se cadastra pelo seu link de indicação</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
                   </div>
                   <Button
