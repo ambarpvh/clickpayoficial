@@ -212,7 +212,28 @@ const Dashboard = () => {
 
   const availableAds = ads.filter((a) => !todayClickedAdIds.has(a.id));
   const canClick = todayClicks < dailyLimit;
+  const allAdsViewed = canClick && availableAds.length === 0 && ads.length > 0;
+  const showCountdown = !canClick || allAdsViewed;
   const progressPercent = Math.min((todayClicks / dailyLimit) * 100, 100);
+
+  // Countdown to next day (midnight)
+  const [countdown, setCountdown] = useState("");
+  useEffect(() => {
+    if (!showCountdown) { setCountdown(""); return; }
+    const tick = () => {
+      const now = new Date();
+      const tomorrow = new Date(now);
+      tomorrow.setHours(24, 0, 0, 0);
+      const diff = tomorrow.getTime() - now.getTime();
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      setCountdown(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [showCountdown]);
 
   if (authLoading) return <div className="min-h-screen bg-background flex items-center justify-center"><Zap className="h-8 w-8 text-primary animate-pulse" /></div>;
 
@@ -329,19 +350,20 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-4">
             <h2 className="font-heading text-xl font-bold">Anúncios Disponíveis</h2>
-            {!canClick ? (
+            {showCountdown ? (
               <div className="glass-card rounded-xl p-8 text-center">
-                <Clock className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                <p className="text-muted-foreground">Limite diário atingido!</p>
-                <p className="text-muted-foreground text-sm mt-1">Volte amanhã ou faça upgrade do plano.</p>
-                <Button variant="gold" size="sm" className="mt-4" onClick={() => navigate("/plans")}>
+                <Clock className="h-10 w-10 text-primary mx-auto mb-3 animate-pulse" />
+                <p className="text-foreground font-semibold text-lg mb-1">
+                  {!canClick ? "Limite diário atingido!" : "Todos os anúncios foram visualizados!"}
+                </p>
+                <p className="text-muted-foreground text-sm mb-4">Próximos anúncios disponíveis em:</p>
+                <div className="inline-flex items-center gap-1 bg-primary/10 border border-primary/30 rounded-xl px-6 py-3">
+                  <span className="font-heading text-3xl font-bold text-primary tracking-widest">{countdown || "--:--:--"}</span>
+                </div>
+                <p className="text-muted-foreground text-xs mt-4">Ou faça upgrade para aumentar seu limite diário</p>
+                <Button variant="gold" size="sm" className="mt-3" onClick={() => navigate("/plans")}>
                   <Crown className="h-4 w-4 mr-1" /> Fazer Upgrade
                 </Button>
-              </div>
-            ) : availableAds.length === 0 ? (
-              <div className="glass-card rounded-xl p-8 text-center">
-                <Clock className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                <p className="text-muted-foreground">Nenhum anúncio disponível no momento.</p>
               </div>
             ) : (
               availableAds.map((ad) => {
