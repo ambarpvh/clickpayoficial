@@ -259,7 +259,7 @@ const History = () => {
                     <div>
                       <p className="text-sm font-medium">{r.profile?.name || "Afiliado"}</p>
                       <p className="text-muted-foreground text-xs">
-                        {new Date(r.created_at).toLocaleDateString("pt-BR")} • {r.planName || "Free"} • {formatBRL(r.commissionValue || 0)}
+                        {new Date(r.created_at).toLocaleDateString("pt-BR")} às {new Date(r.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })} | {r.planName || "Free"} | {formatBRL(r.commissionValue || 0)}
                       </p>
                     </div>
                     <span className="text-primary font-semibold text-sm">{formatBRL(r.commissionValue || 0)}</span>
