@@ -55,6 +55,9 @@ const Admin = () => {
 
   // Data
   const [users, setUsers] = useState<any[]>([]);
+  const [usersTotal, setUsersTotal] = useState(0);
+  const [usersPage, setUsersPage] = useState(0);
+  const USERS_PER_PAGE = 20;
   const [ads, setAds] = useState<any[]>([]);
   const [plans, setPlans] = useState<any[]>([]);
   const [withdrawals, setWithdrawals] = useState<any[]>([]);
@@ -67,7 +70,7 @@ const Admin = () => {
   useEffect(() => {
     if (!authLoading && (!user || !isAdmin)) { navigate("/dashboard"); return; }
     if (user && isAdmin) loadData();
-  }, [user, isAdmin, authLoading]);
+  }, [user, isAdmin, authLoading, usersPage]);
 
   const loadData = async () => {
     try {
@@ -88,7 +91,7 @@ const Admin = () => {
         supabase.from("withdrawals").select("id", { count: "exact", head: true }).eq("status", "pending"),
         supabase.from("ads").select("id", { count: "exact", head: true }).eq("is_active", true),
         supabase.from("withdrawals").select("amount").eq("status", "approved"),
-        supabase.from("profiles").select("*").limit(100),
+        supabase.from("profiles").select("*", { count: "exact" }).order("created_at", { ascending: false }).range(usersPage * 20, usersPage * 20 + 19),
         supabase.from("ads").select("*").order("created_at", { ascending: false }),
         supabase.from("plans").select("*").order("price", { ascending: true }),
         supabase.from("withdrawals").select("*").eq("status", "pending").order("requested_at", { ascending: false }),
@@ -135,6 +138,7 @@ const Admin = () => {
       }));
 
       setUsers(enrichedUsers);
+      setUsersTotal(userCount || 0);
       setAds(adsData || []);
       setPlans(plansData || []);
       setWithdrawals(withdrawalsData || []);
@@ -547,6 +551,18 @@ const Admin = () => {
                 </tbody>
               </table>
             </div>
+            {/* Pagination */}
+            {usersTotal > USERS_PER_PAGE && (
+              <div className="flex items-center justify-between p-4 border-t border-border/50">
+                <span className="text-xs text-muted-foreground">
+                  Mostrando {usersPage * USERS_PER_PAGE + 1}–{Math.min((usersPage + 1) * USERS_PER_PAGE, usersTotal)} de {usersTotal}
+                </span>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" disabled={usersPage === 0} onClick={() => setUsersPage(p => p - 1)}>Anterior</Button>
+                  <Button size="sm" variant="outline" disabled={(usersPage + 1) * USERS_PER_PAGE >= usersTotal} onClick={() => setUsersPage(p => p + 1)}>Próximo</Button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
