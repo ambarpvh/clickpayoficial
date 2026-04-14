@@ -106,7 +106,35 @@ const Admin = () => {
       const totalPaid = approvedW?.reduce((s, w) => s + Number(w.amount), 0) || 0;
 
       setStats({ users: userCount || 0, clicks: clickCount || 0, pendingWithdrawals: pendingCount || 0, activeAds: activeAdsCount || 0, totalPaid });
-      setUsers(profilesData || []);
+      // Fetch balances for each user
+      const userIds = (profilesData || []).map((p: any) => p.user_id);
+      const [
+        { data: allClicks },
+        { data: allAdjustments },
+        { data: allWithdrawalsAll },
+        { data: allUserPlans },
+      ] = await Promise.all([
+        supabase.from("clicks").select("user_id, earned_value").in("user_id", userIds),
+        supabase.from("balance_adjustments").select("user_id, amount").in("user_id", userIds),
+        supabase.from("withdrawals").select("user_id, amount, status").in("user_id", userIds),
+        supabase.from("user_plans").select("user_id, plan_id, is_active").eq("is_active", true).in("user_id", userIds),
+      ]);
+
+      const balanceMap: Record<string, number> = {};
+      (allClicks || []).forEach((c: any) => { balanceMap[c.user_id] = (balanceMap[c.user_id] || 0) + Number(c.earned_value); });
+      (allAdjustments || []).forEach((a: any) => { balanceMap[a.user_id] = (balanceMap[a.user_id] || 0) + Number(a.amount); });
+      (allWithdrawalsAll || []).forEach((w: any) => { if (w.status === "approved" || w.status === "pending") { balanceMap[w.user_id] = (balanceMap[w.user_id] || 0) - Number(w.amount); } });
+
+      const planMap: Record<string, string> = {};
+      (allUserPlans || []).forEach((up: any) => { planMap[up.user_id] = up.plan_id; });
+
+      const enrichedUsers = (profilesData || []).map((p: any) => ({
+        ...p,
+        balance: balanceMap[p.user_id] || 0,
+        activePlanId: planMap[p.user_id] || null,
+      }));
+
+      setUsers(enrichedUsers);
       setAds(adsData || []);
       setPlans(plansData || []);
       setWithdrawals(withdrawalsData || []);
@@ -451,18 +479,22 @@ const Admin = () => {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border/50">
+                    <th className="text-left p-4 text-muted-foreground font-medium">Data</th>
                     <th className="text-left p-4 text-muted-foreground font-medium">Nome</th>
                     <th className="text-left p-4 text-muted-foreground font-medium hidden sm:table-cell">Email</th>
                     <th className="text-left p-4 text-muted-foreground font-medium">Plano</th>
+                    <th className="text-left p-4 text-muted-foreground font-medium">Valor Geral</th>
                     <th className="text-left p-4 text-muted-foreground font-medium">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   {users.map((u: any) => (
                     <tr key={u.id} className="border-b border-border/30 hover:bg-secondary/30">
+                      <td className="p-4 text-muted-foreground text-xs whitespace-nowrap">{new Date(u.created_at).toLocaleDateString("pt-BR")}</td>
                       <td className="p-4 font-medium">{u.name || "Sem nome"}</td>
                       <td className="p-4 text-muted-foreground hidden sm:table-cell">{u.email}</td>
-                      <td className="p-4"><span className="text-primary font-semibold">{u.user_plans?.[0]?.plans?.name || "Free"}</span></td>
+                      <td className="p-4"><span className="text-primary font-semibold">{plans.find((p: any) => p.id === u.activePlanId)?.name || "Free"}</span></td>
+                      <td className="p-4 font-semibold">{formatBRL(u.balance || 0)}</td>
                       <td className="p-4">
                         <div className="flex flex-wrap items-start gap-2">
                           {adjustingBalance === u.user_id ? (
