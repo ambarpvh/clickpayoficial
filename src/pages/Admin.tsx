@@ -486,13 +486,13 @@ const Admin = () => {
                 <thead>
                   <tr className="border-b border-border/50">
                     {([
-                      { key: "date" as const, label: "Data" },
-                      { key: "name" as const, label: "Nome" },
-                      { key: null, label: "Email", hiddenSm: true },
-                      { key: "plan" as const, label: "Plano" },
-                      { key: "balance" as const, label: "Valor Geral" },
-                      { key: null, label: "Ações" },
-                    ] as const).map((col, i) => (
+                      { key: "date" as const, label: "Data", hiddenSm: false },
+                      { key: "name" as const, label: "Nome", hiddenSm: false },
+                      { key: null as null, label: "Email", hiddenSm: true },
+                      { key: "plan" as const, label: "Plano", hiddenSm: false },
+                      { key: "balance" as const, label: "Valor Geral", hiddenSm: false },
+                      { key: null as null, label: "Ações", hiddenSm: false },
+                    ]).map((col, i) => (
                       <th
                         key={i}
                         className={`text-left p-4 text-muted-foreground font-medium ${col.hiddenSm ? "hidden sm:table-cell" : ""} ${col.key ? "cursor-pointer select-none hover:text-foreground transition-colors" : ""}`}
