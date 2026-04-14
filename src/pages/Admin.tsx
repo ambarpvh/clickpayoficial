@@ -70,7 +70,7 @@ const Admin = () => {
   useEffect(() => {
     if (!authLoading && (!user || !isAdmin)) { navigate("/dashboard"); return; }
     if (user && isAdmin) loadData();
-  }, [user, isAdmin, authLoading]);
+  }, [user, isAdmin, authLoading, usersPage]);
 
   const loadData = async () => {
     try {
@@ -99,7 +99,6 @@ const Admin = () => {
       ]);
 
       const firstError = userCountError || clickCountError || pendingCountError || activeAdsCountError || approvedWError || profilesError || adsError || plansError || withdrawalsError || paymentsError;
-      const profilesCount = (profilesData as any)?.length !== undefined ? ((await supabase.from("profiles").select("id", { count: "exact", head: true })).count || 0) : 0;
 
       if (firstError) {
         console.error("Erro ao carregar dados do admin:", firstError);
@@ -139,6 +138,7 @@ const Admin = () => {
       }));
 
       setUsers(enrichedUsers);
+      setUsersTotal(userCount || 0);
       setAds(adsData || []);
       setPlans(plansData || []);
       setWithdrawals(withdrawalsData || []);
@@ -551,6 +551,18 @@ const Admin = () => {
                 </tbody>
               </table>
             </div>
+            {/* Pagination */}
+            {usersTotal > USERS_PER_PAGE && (
+              <div className="flex items-center justify-between p-4 border-t border-border/50">
+                <span className="text-xs text-muted-foreground">
+                  Mostrando {usersPage * USERS_PER_PAGE + 1}–{Math.min((usersPage + 1) * USERS_PER_PAGE, usersTotal)} de {usersTotal}
+                </span>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" disabled={usersPage === 0} onClick={() => setUsersPage(p => p - 1)}>Anterior</Button>
+                  <Button size="sm" variant="outline" disabled={(usersPage + 1) * USERS_PER_PAGE >= usersTotal} onClick={() => setUsersPage(p => p + 1)}>Próximo</Button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
