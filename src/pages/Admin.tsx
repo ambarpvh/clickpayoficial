@@ -485,16 +485,50 @@ const Admin = () => {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border/50">
-                    <th className="text-left p-4 text-muted-foreground font-medium">Data</th>
-                    <th className="text-left p-4 text-muted-foreground font-medium">Nome</th>
-                    <th className="text-left p-4 text-muted-foreground font-medium hidden sm:table-cell">Email</th>
-                    <th className="text-left p-4 text-muted-foreground font-medium">Plano</th>
-                    <th className="text-left p-4 text-muted-foreground font-medium">Valor Geral</th>
-                    <th className="text-left p-4 text-muted-foreground font-medium">Ações</th>
+                    {([
+                      { key: "date" as const, label: "Data" },
+                      { key: "name" as const, label: "Nome" },
+                      { key: null, label: "Email", hiddenSm: true },
+                      { key: "plan" as const, label: "Plano" },
+                      { key: "balance" as const, label: "Valor Geral" },
+                      { key: null, label: "Ações" },
+                    ] as const).map((col, i) => (
+                      <th
+                        key={i}
+                        className={`text-left p-4 text-muted-foreground font-medium ${col.hiddenSm ? "hidden sm:table-cell" : ""} ${col.key ? "cursor-pointer select-none hover:text-foreground transition-colors" : ""}`}
+                        onClick={() => {
+                          if (!col.key) return;
+                          if (usersSortKey === col.key) setUsersSortAsc(!usersSortAsc);
+                          else { setUsersSortKey(col.key); setUsersSortAsc(col.key === "name"); }
+                        }}
+                      >
+                        <span className="inline-flex items-center gap-1">
+                          {col.label}
+                          {col.key && (
+                            usersSortKey === col.key
+                              ? (usersSortAsc ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />)
+                              : <ArrowUpDown className="h-3 w-3 opacity-40" />
+                          )}
+                        </span>
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map((u: any) => (
+                  {[...users].sort((a, b) => {
+                    const dir = usersSortAsc ? 1 : -1;
+                    switch (usersSortKey) {
+                      case "date": return dir * (new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+                      case "name": return dir * (a.name || "").localeCompare(b.name || "", "pt-BR");
+                      case "plan": {
+                        const pa = plans.find((p: any) => p.id === a.activePlanId);
+                        const pb = plans.find((p: any) => p.id === b.activePlanId);
+                        return dir * ((pa?.price || 0) - (pb?.price || 0));
+                      }
+                      case "balance": return dir * ((a.balance || 0) - (b.balance || 0));
+                      default: return 0;
+                    }
+                  }).map((u: any) => (
                     <tr key={u.id} className="border-b border-border/30 hover:bg-secondary/30">
                       <td className="p-4 text-muted-foreground text-xs whitespace-nowrap">{new Date(u.created_at).toLocaleDateString("pt-BR")}</td>
                       <td className="p-4 font-medium">{u.name || "Sem nome"}</td>
