@@ -55,6 +55,9 @@ const Admin = () => {
 
   // Data
   const [users, setUsers] = useState<any[]>([]);
+  const [usersTotal, setUsersTotal] = useState(0);
+  const [usersPage, setUsersPage] = useState(0);
+  const USERS_PER_PAGE = 20;
   const [ads, setAds] = useState<any[]>([]);
   const [plans, setPlans] = useState<any[]>([]);
   const [withdrawals, setWithdrawals] = useState<any[]>([]);
@@ -88,7 +91,7 @@ const Admin = () => {
         supabase.from("withdrawals").select("id", { count: "exact", head: true }).eq("status", "pending"),
         supabase.from("ads").select("id", { count: "exact", head: true }).eq("is_active", true),
         supabase.from("withdrawals").select("amount").eq("status", "approved"),
-        supabase.from("profiles").select("*").limit(100),
+        supabase.from("profiles").select("*", { count: "exact" }).order("created_at", { ascending: false }).range(usersPage * 20, usersPage * 20 + 19),
         supabase.from("ads").select("*").order("created_at", { ascending: false }),
         supabase.from("plans").select("*").order("price", { ascending: true }),
         supabase.from("withdrawals").select("*").eq("status", "pending").order("requested_at", { ascending: false }),
@@ -96,6 +99,7 @@ const Admin = () => {
       ]);
 
       const firstError = userCountError || clickCountError || pendingCountError || activeAdsCountError || approvedWError || profilesError || adsError || plansError || withdrawalsError || paymentsError;
+      const profilesCount = (profilesData as any)?.length !== undefined ? ((await supabase.from("profiles").select("id", { count: "exact", head: true })).count || 0) : 0;
 
       if (firstError) {
         console.error("Erro ao carregar dados do admin:", firstError);
