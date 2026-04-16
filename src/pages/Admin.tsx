@@ -72,7 +72,7 @@ const Admin = () => {
   useEffect(() => {
     if (!authLoading && (!user || !isAdmin)) { navigate("/dashboard"); return; }
     if (user && isAdmin) loadData();
-  }, [user, isAdmin, authLoading, usersPage]);
+  }, [user, isAdmin, authLoading]);
 
   const loadData = async () => {
     try {
@@ -93,7 +93,7 @@ const Admin = () => {
         supabase.from("withdrawals").select("id", { count: "exact", head: true }).eq("status", "pending"),
         supabase.from("ads").select("id", { count: "exact", head: true }).eq("is_active", true),
         supabase.from("withdrawals").select("amount").eq("status", "approved"),
-        supabase.from("profiles").select("*", { count: "exact" }).order("created_at", { ascending: false }).range(usersPage * 20, usersPage * 20 + 19),
+        supabase.from("profiles").select("*", { count: "exact" }).order("created_at", { ascending: false }).range(0, 9999),
         supabase.from("ads").select("*").order("created_at", { ascending: false }),
         supabase.from("plans").select("*").order("price", { ascending: true }),
         supabase.from("withdrawals").select("*").eq("status", "pending").order("requested_at", { ascending: false }),
@@ -528,7 +528,7 @@ const Admin = () => {
                       case "balance": return dir * ((a.balance || 0) - (b.balance || 0));
                       default: return 0;
                     }
-                  }).map((u: any) => (
+                  }).slice(usersPage * USERS_PER_PAGE, (usersPage + 1) * USERS_PER_PAGE).map((u: any) => (
                     <tr key={u.id} className="border-b border-border/30 hover:bg-secondary/30">
                       <td className="p-4 text-muted-foreground text-xs whitespace-nowrap">{new Date(u.created_at).toLocaleDateString("pt-BR")}</td>
                       <td className="p-4 font-medium">{u.name || "Sem nome"}</td>
