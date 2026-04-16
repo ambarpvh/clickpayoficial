@@ -20,8 +20,8 @@ const getActiveUsers = () => {
   const baseDate = new Date('2026-04-08T00:00:00Z');
   const now = new Date();
   const diffMs = now.getTime() - baseDate.getTime();
-  const intervals = Math.floor(diffMs / (30 * 60 * 1000)); // every 30min
-  const count = 2 + (intervals * 2);
+  const intervals = Math.floor(diffMs / (60 * 60 * 1000)); // every 60min
+  const count = 2 + intervals;
   return count.toLocaleString('pt-BR') + '+';
 };
 
