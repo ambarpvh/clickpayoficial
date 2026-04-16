@@ -500,6 +500,7 @@ const Admin = () => {
                           if (!col.key) return;
                           if (usersSortKey === col.key) setUsersSortAsc(!usersSortAsc);
                           else { setUsersSortKey(col.key); setUsersSortAsc(col.key === "name"); }
+                          setUsersPage(0);
                         }}
                       >
                         <span className="inline-flex items-center gap-1">
