@@ -482,6 +482,15 @@ const Admin = () => {
         {/* Users */}
         {activeTab === "users" && (
           <div className="animate-fade-in glass-card rounded-xl overflow-hidden">
+            <div className="p-4 border-b border-border/50">
+              <Input
+                type="search"
+                placeholder="Buscar por nome ou email..."
+                value={usersSearch}
+                onChange={(e) => { setUsersSearch(e.target.value); setUsersPage(0); }}
+                className="bg-secondary border-border max-w-md"
+              />
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -517,20 +526,35 @@ const Admin = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {[...users].sort((a, b) => {
-                    const dir = usersSortAsc ? 1 : -1;
-                    switch (usersSortKey) {
-                      case "date": return dir * (new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-                      case "name": return dir * (a.name || "").localeCompare(b.name || "", "pt-BR");
-                      case "plan": {
-                        const pa = plans.find((p: any) => p.id === a.activePlanId);
-                        const pb = plans.find((p: any) => p.id === b.activePlanId);
-                        return dir * ((pa?.price || 0) - (pb?.price || 0));
+                  {(() => {
+                    const q = usersSearch.trim().toLowerCase();
+                    const filtered = q
+                      ? users.filter((u: any) =>
+                          (u.name || "").toLowerCase().includes(q) ||
+                          (u.email || "").toLowerCase().includes(q)
+                        )
+                      : users;
+                    const sorted = [...filtered].sort((a, b) => {
+                      const dir = usersSortAsc ? 1 : -1;
+                      switch (usersSortKey) {
+                        case "date": return dir * (new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+                        case "name": return dir * (a.name || "").localeCompare(b.name || "", "pt-BR");
+                        case "plan": {
+                          const pa = plans.find((p: any) => p.id === a.activePlanId);
+                          const pb = plans.find((p: any) => p.id === b.activePlanId);
+                          return dir * ((pa?.price || 0) - (pb?.price || 0));
+                        }
+                        case "balance": return dir * ((a.balance || 0) - (b.balance || 0));
+                        default: return 0;
                       }
-                      case "balance": return dir * ((a.balance || 0) - (b.balance || 0));
-                      default: return 0;
+                    });
+                    const paged = sorted.slice(usersPage * USERS_PER_PAGE, (usersPage + 1) * USERS_PER_PAGE);
+                    if (paged.length === 0) {
+                      return (
+                        <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">Nenhum usuário encontrado</td></tr>
+                      );
                     }
-                  }).slice(usersPage * USERS_PER_PAGE, (usersPage + 1) * USERS_PER_PAGE).map((u: any) => (
+                    return paged.map((u: any) => (
                     <tr key={u.id} className="border-b border-border/30 hover:bg-secondary/30">
                       <td className="p-4 text-muted-foreground text-xs whitespace-nowrap">{new Date(u.created_at).toLocaleDateString("pt-BR")}</td>
                       <td className="p-4 font-medium">{u.name || "Sem nome"}</td>
