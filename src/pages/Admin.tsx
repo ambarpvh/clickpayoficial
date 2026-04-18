@@ -482,7 +482,7 @@ const Admin = () => {
         {/* Users */}
         {activeTab === "users" && (
           <div className="animate-fade-in glass-card rounded-xl overflow-hidden">
-            <div className="p-4 border-b border-border/50">
+            <div className="p-4 border-b border-border/50 flex flex-col sm:flex-row sm:items-center gap-2 sm:justify-between">
               <Input
                 type="search"
                 placeholder="Buscar por nome ou email..."
@@ -490,6 +490,66 @@ const Admin = () => {
                 onChange={(e) => { setUsersSearch(e.target.value); setUsersPage(0); }}
                 className="bg-secondary border-border max-w-md"
               />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const q = usersSearch.trim().toLowerCase();
+                  const filtered = q
+                    ? users.filter((u: any) =>
+                        (u.name || "").toLowerCase().includes(q) ||
+                        (u.email || "").toLowerCase().includes(q)
+                      )
+                    : users;
+                  const sorted = [...filtered].sort((a, b) => {
+                    const dir = usersSortAsc ? 1 : -1;
+                    switch (usersSortKey) {
+                      case "date": return dir * (new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+                      case "name": return dir * (a.name || "").localeCompare(b.name || "", "pt-BR");
+                      case "plan": {
+                        const pa = plans.find((p: any) => p.id === a.activePlanId);
+                        const pb = plans.find((p: any) => p.id === b.activePlanId);
+                        return dir * ((pa?.price || 0) - (pb?.price || 0));
+                      }
+                      case "balance": return dir * ((a.balance || 0) - (b.balance || 0));
+                      default: return 0;
+                    }
+                  });
+                  if (sorted.length === 0) {
+                    toast({ title: "Nada para exportar", description: "Nenhum usuário no filtro atual." });
+                    return;
+                  }
+                  const escape = (v: any) => {
+                    const s = v == null ? "" : String(v);
+                    return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+                  };
+                  const headers = ["Data de Cadastro", "Nome", "Email", "Telefone", "CPF", "Chave PIX", "Plano", "Valor Geral (R$)"];
+                  const rows = sorted.map((u: any) => [
+                    new Date(u.created_at).toLocaleDateString("pt-BR"),
+                    u.name || "",
+                    u.email || "",
+                    u.phone || "",
+                    u.cpf || "",
+                    u.pix_key || "",
+                    plans.find((p: any) => p.id === u.activePlanId)?.name || "Free",
+                    (u.balance || 0).toFixed(2).replace(".", ","),
+                  ]);
+                  const csv = "\uFEFF" + [headers, ...rows].map((r) => r.map(escape).join(";")).join("\n");
+                  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  const stamp = new Date().toISOString().slice(0, 10);
+                  a.download = `usuarios_${stamp}.csv`;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  URL.revokeObjectURL(url);
+                  toast({ title: "Exportação concluída", description: `${sorted.length} usuário(s) exportado(s).` });
+                }}
+              >
+                <Download className="h-4 w-4 mr-1" /> Exportar CSV
+              </Button>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
