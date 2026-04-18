@@ -609,22 +609,33 @@ const Admin = () => {
                         </div>
                       </td>
                     </tr>
-                  ))}
+                  ));
+                  })()}
                 </tbody>
               </table>
             </div>
             {/* Pagination */}
-            {usersTotal > USERS_PER_PAGE && (
-              <div className="flex items-center justify-between p-4 border-t border-border/50">
-                <span className="text-xs text-muted-foreground">
-                  Mostrando {usersPage * USERS_PER_PAGE + 1}–{Math.min((usersPage + 1) * USERS_PER_PAGE, usersTotal)} de {usersTotal}
-                </span>
-                <div className="flex gap-2">
-                  <Button size="sm" variant="outline" disabled={usersPage === 0} onClick={() => setUsersPage(p => p - 1)}>Anterior</Button>
-                  <Button size="sm" variant="outline" disabled={(usersPage + 1) * USERS_PER_PAGE >= usersTotal} onClick={() => setUsersPage(p => p + 1)}>Próximo</Button>
+            {(() => {
+              const q = usersSearch.trim().toLowerCase();
+              const filteredTotal = q
+                ? users.filter((u: any) =>
+                    (u.name || "").toLowerCase().includes(q) ||
+                    (u.email || "").toLowerCase().includes(q)
+                  ).length
+                : usersTotal;
+              if (filteredTotal <= USERS_PER_PAGE) return null;
+              return (
+                <div className="flex items-center justify-between p-4 border-t border-border/50">
+                  <span className="text-xs text-muted-foreground">
+                    Mostrando {usersPage * USERS_PER_PAGE + 1}–{Math.min((usersPage + 1) * USERS_PER_PAGE, filteredTotal)} de {filteredTotal}
+                  </span>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" disabled={usersPage === 0} onClick={() => setUsersPage(p => p - 1)}>Anterior</Button>
+                    <Button size="sm" variant="outline" disabled={(usersPage + 1) * USERS_PER_PAGE >= filteredTotal} onClick={() => setUsersPage(p => p + 1)}>Próximo</Button>
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
           </div>
         )}
 
