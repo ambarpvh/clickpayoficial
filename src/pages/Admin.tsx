@@ -59,6 +59,7 @@ const Admin = () => {
   const [usersPage, setUsersPage] = useState(0);
   const [usersSortKey, setUsersSortKey] = useState<"date" | "name" | "plan" | "balance">("date");
   const [usersSortAsc, setUsersSortAsc] = useState(false);
+  const [usersSearch, setUsersSearch] = useState("");
   const USERS_PER_PAGE = 20;
   const [ads, setAds] = useState<any[]>([]);
   const [plans, setPlans] = useState<any[]>([]);
