@@ -516,7 +516,7 @@ const Admin = () => {
                     }
                   });
                   if (sorted.length === 0) {
-                    toast({ title: "Nada para exportar", description: "Nenhum usuário no filtro atual." });
+                    toast.info("Nenhum usuário no filtro atual para exportar.");
                     return;
                   }
                   const escape = (v: any) => {
@@ -545,7 +545,7 @@ const Admin = () => {
                   a.click();
                   document.body.removeChild(a);
                   URL.revokeObjectURL(url);
-                  toast({ title: "Exportação concluída", description: `${sorted.length} usuário(s) exportado(s).` });
+                  toast.success(`${sorted.length} usuário(s) exportado(s) em CSV.`);
                 }}
               >
                 <Download className="h-4 w-4 mr-1" /> Exportar CSV
