@@ -70,6 +70,82 @@ const Admin = () => {
   const [revenuePerDay, setRevenuePerDay] = useState<{ date: string; revenue: number }[]>([]);
   const [stats, setStats] = useState({ users: 0, clicks: 0, pendingWithdrawals: 0, activeAds: 0, totalPaid: 0 });
 
+  // Support tickets
+  const [tickets, setTickets] = useState<any[]>([]);
+  const [ticketsLoading, setTicketsLoading] = useState(false);
+  const [ticketsSearch, setTicketsSearch] = useState("");
+  const [ticketsFilter, setTicketsFilter] = useState<"all" | "open" | "answered" | "closed">("all");
+  const [respondingTicket, setRespondingTicket] = useState<string | null>(null);
+  const [responseText, setResponseText] = useState("");
+  const [responseSubmitting, setResponseSubmitting] = useState(false);
+  const [ticketUserMap, setTicketUserMap] = useState<Record<string, { name: string; email: string }>>({});
+
+  const loadTickets = async () => {
+    setTicketsLoading(true);
+    const { data, error } = await supabase
+      .from("support_tickets")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) {
+      toast.error("Erro ao carregar tickets");
+      setTicketsLoading(false);
+      return;
+    }
+    setTickets(data || []);
+    const userIds = Array.from(new Set((data || []).map((t: any) => t.user_id)));
+    if (userIds.length) {
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("user_id, name, email")
+        .in("user_id", userIds);
+      const map: Record<string, { name: string; email: string }> = {};
+      (profs || []).forEach((p: any) => { map[p.user_id] = { name: p.name || "", email: p.email || "" }; });
+      setTicketUserMap(map);
+    }
+    setTicketsLoading(false);
+  };
+
+  useEffect(() => {
+    if (activeTab === "support" && user && isAdmin) loadTickets();
+  }, [activeTab, user, isAdmin]);
+
+  const submitTicketResponse = async (ticketId: string) => {
+    const txt = responseText.trim();
+    if (!txt || txt.length < 3) { toast.error("Digite uma resposta válida"); return; }
+    if (txt.length > 2000) { toast.error("Resposta muito longa (máx. 2000 caracteres)"); return; }
+    setResponseSubmitting(true);
+    const { error } = await supabase
+      .from("support_tickets")
+      .update({
+        admin_response: txt,
+        status: "answered",
+        responded_at: new Date().toISOString(),
+        responded_by: user?.id,
+      })
+      .eq("id", ticketId);
+    setResponseSubmitting(false);
+    if (error) { toast.error("Erro ao enviar resposta"); return; }
+    toast.success("Resposta enviada!");
+    setRespondingTicket(null);
+    setResponseText("");
+    loadTickets();
+  };
+
+  const closeTicket = async (ticketId: string) => {
+    const { error } = await supabase.from("support_tickets").update({ status: "closed" }).eq("id", ticketId);
+    if (error) { toast.error("Erro ao fechar ticket"); return; }
+    toast.success("Ticket fechado");
+    loadTickets();
+  };
+
+  const deleteTicket = async (ticketId: string) => {
+    if (!confirm("Excluir este ticket permanentemente?")) return;
+    const { error } = await supabase.from("support_tickets").delete().eq("id", ticketId);
+    if (error) { toast.error("Erro ao excluir"); return; }
+    toast.success("Ticket excluído");
+    loadTickets();
+  };
+
   useEffect(() => {
     if (!authLoading && (!user || !isAdmin)) { navigate("/dashboard"); return; }
     if (user && isAdmin) loadData();
