@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Zap, Users, Eye, DollarSign, AlertCircle, LogOut, Plus, BarChart3, Pencil, Trash2, Ban, ShieldCheck, Settings, Link2, Link2Off, CreditCard, CheckCircle, XCircle, Image, ExternalLink, ArrowUpDown, ArrowUp, ArrowDown, Download, LifeBuoy, Send, MessageSquare, AlertTriangle } from "lucide-react";
 import AuditPanel from "@/components/AuditPanel";
+import UserHealthReport from "@/components/UserHealthReport";
 import { Switch } from "@/components/ui/switch";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
@@ -593,7 +594,9 @@ const Admin = () => {
 
         {/* Users */}
         {activeTab === "users" && (
-          <div className="animate-fade-in glass-card rounded-xl overflow-hidden">
+          <div className="animate-fade-in space-y-4">
+            <UserHealthReport />
+            <div className="glass-card rounded-xl overflow-hidden">
             <div className="p-4 border-b border-border/50 flex flex-col sm:flex-row sm:items-center gap-2 sm:justify-between">
               <Input
                 type="search"
