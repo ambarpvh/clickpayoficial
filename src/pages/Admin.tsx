@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Zap, Users, Eye, DollarSign, AlertCircle, LogOut, Plus, BarChart3, Pencil, Trash2, Ban, ShieldCheck, Settings, Link2, Link2Off, CreditCard, CheckCircle, XCircle, Image, ExternalLink, ArrowUpDown, ArrowUp, ArrowDown, Download } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Zap, Users, Eye, DollarSign, AlertCircle, LogOut, Plus, BarChart3, Pencil, Trash2, Ban, ShieldCheck, Settings, Link2, Link2Off, CreditCard, CheckCircle, XCircle, Image, ExternalLink, ArrowUpDown, ArrowUp, ArrowDown, Download, LifeBuoy, Send, MessageSquare } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
@@ -16,7 +17,7 @@ import { formatBRL } from "@/lib/format";
 const Admin = () => {
   const navigate = useNavigate();
   const { user, isAdmin, loading: authLoading, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState<"overview" | "users" | "ads" | "withdrawals" | "plans" | "payments" | "settings">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "users" | "ads" | "withdrawals" | "plans" | "payments" | "support" | "settings">("overview");
   const [minWithdrawal, setMinWithdrawal] = useState("150");
   const [savingSettings, setSavingSettings] = useState(false);
   const [showAdForm, setShowAdForm] = useState(false);
@@ -69,6 +70,82 @@ const Admin = () => {
   const [clicksPerDay, setClicksPerDay] = useState<{ date: string; clicks: number }[]>([]);
   const [revenuePerDay, setRevenuePerDay] = useState<{ date: string; revenue: number }[]>([]);
   const [stats, setStats] = useState({ users: 0, clicks: 0, pendingWithdrawals: 0, activeAds: 0, totalPaid: 0 });
+
+  // Support tickets
+  const [tickets, setTickets] = useState<any[]>([]);
+  const [ticketsLoading, setTicketsLoading] = useState(false);
+  const [ticketsSearch, setTicketsSearch] = useState("");
+  const [ticketsFilter, setTicketsFilter] = useState<"all" | "open" | "answered" | "closed">("all");
+  const [respondingTicket, setRespondingTicket] = useState<string | null>(null);
+  const [responseText, setResponseText] = useState("");
+  const [responseSubmitting, setResponseSubmitting] = useState(false);
+  const [ticketUserMap, setTicketUserMap] = useState<Record<string, { name: string; email: string }>>({});
+
+  const loadTickets = async () => {
+    setTicketsLoading(true);
+    const { data, error } = await supabase
+      .from("support_tickets")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) {
+      toast.error("Erro ao carregar tickets");
+      setTicketsLoading(false);
+      return;
+    }
+    setTickets(data || []);
+    const userIds = Array.from(new Set((data || []).map((t: any) => t.user_id)));
+    if (userIds.length) {
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("user_id, name, email")
+        .in("user_id", userIds);
+      const map: Record<string, { name: string; email: string }> = {};
+      (profs || []).forEach((p: any) => { map[p.user_id] = { name: p.name || "", email: p.email || "" }; });
+      setTicketUserMap(map);
+    }
+    setTicketsLoading(false);
+  };
+
+  useEffect(() => {
+    if (activeTab === "support" && user && isAdmin) loadTickets();
+  }, [activeTab, user, isAdmin]);
+
+  const submitTicketResponse = async (ticketId: string) => {
+    const txt = responseText.trim();
+    if (!txt || txt.length < 3) { toast.error("Digite uma resposta válida"); return; }
+    if (txt.length > 2000) { toast.error("Resposta muito longa (máx. 2000 caracteres)"); return; }
+    setResponseSubmitting(true);
+    const { error } = await supabase
+      .from("support_tickets")
+      .update({
+        admin_response: txt,
+        status: "answered",
+        responded_at: new Date().toISOString(),
+        responded_by: user?.id,
+      })
+      .eq("id", ticketId);
+    setResponseSubmitting(false);
+    if (error) { toast.error("Erro ao enviar resposta"); return; }
+    toast.success("Resposta enviada!");
+    setRespondingTicket(null);
+    setResponseText("");
+    loadTickets();
+  };
+
+  const closeTicket = async (ticketId: string) => {
+    const { error } = await supabase.from("support_tickets").update({ status: "closed" }).eq("id", ticketId);
+    if (error) { toast.error("Erro ao fechar ticket"); return; }
+    toast.success("Ticket fechado");
+    loadTickets();
+  };
+
+  const deleteTicket = async (ticketId: string) => {
+    if (!confirm("Excluir este ticket permanentemente?")) return;
+    const { error } = await supabase.from("support_tickets").delete().eq("id", ticketId);
+    if (error) { toast.error("Erro ao excluir"); return; }
+    toast.success("Ticket excluído");
+    loadTickets();
+  };
 
   useEffect(() => {
     if (!authLoading && (!user || !isAdmin)) { navigate("/dashboard"); return; }
@@ -389,6 +466,7 @@ const Admin = () => {
     { key: "plans" as const, label: "Planos", icon: Settings },
     { key: "payments" as const, label: "Pagamentos", icon: CreditCard },
     { key: "withdrawals" as const, label: "Saques", icon: DollarSign },
+    { key: "support" as const, label: "Suporte", icon: LifeBuoy },
     { key: "settings" as const, label: "Configurações", icon: Settings },
   ];
 
@@ -963,6 +1041,141 @@ const Admin = () => {
               ))}
               {withdrawals.length === 0 && <p className="p-4 text-muted-foreground text-sm text-center">Nenhum saque pendente</p>}
             </div>
+          </div>
+        )}
+        {activeTab === "support" && (
+          <div className="animate-fade-in space-y-4">
+            <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+              <h2 className="font-heading text-xl font-bold">Tickets de Suporte</h2>
+              <div className="flex gap-2 w-full sm:w-auto">
+                <Input
+                  placeholder="Buscar por assunto, nome ou email..."
+                  value={ticketsSearch}
+                  onChange={(e) => setTicketsSearch(e.target.value)}
+                  className="w-full sm:w-72"
+                />
+                <select
+                  value={ticketsFilter}
+                  onChange={(e) => setTicketsFilter(e.target.value as any)}
+                  className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  <option value="all">Todos</option>
+                  <option value="open">Aguardando</option>
+                  <option value="answered">Respondidos</option>
+                  <option value="closed">Fechados</option>
+                </select>
+              </div>
+            </div>
+
+            {ticketsLoading ? (
+              <p className="text-sm text-muted-foreground text-center py-8">Carregando tickets...</p>
+            ) : (
+              (() => {
+                const q = ticketsSearch.trim().toLowerCase();
+                const filtered = tickets.filter((t: any) => {
+                  if (ticketsFilter !== "all" && t.status !== ticketsFilter) return false;
+                  if (!q) return true;
+                  const u = ticketUserMap[t.user_id] || { name: "", email: "" };
+                  return (
+                    (t.subject || "").toLowerCase().includes(q) ||
+                    (t.message || "").toLowerCase().includes(q) ||
+                    u.name.toLowerCase().includes(q) ||
+                    u.email.toLowerCase().includes(q)
+                  );
+                });
+                if (filtered.length === 0) {
+                  return <p className="text-sm text-muted-foreground text-center py-8 glass-card rounded-xl">Nenhum ticket encontrado.</p>;
+                }
+                return (
+                  <div className="space-y-3">
+                    {filtered.map((t: any) => {
+                      const u = ticketUserMap[t.user_id] || { name: "Usuário", email: "" };
+                      const isResponding = respondingTicket === t.id;
+                      return (
+                        <div key={t.id} className="glass-card rounded-xl p-4 space-y-3">
+                          <div className="flex items-start justify-between gap-2 flex-wrap">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h3 className="font-semibold text-sm">{t.subject}</h3>
+                                {t.status === "answered" ? (
+                                  <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">Respondido</span>
+                                ) : t.status === "closed" ? (
+                                  <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full font-medium">Fechado</span>
+                                ) : (
+                                  <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded-full font-medium">Aguardando</span>
+                                )}
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                <strong>{u.name || "Usuário"}</strong> • {u.email} • {new Date(t.created_at).toLocaleString("pt-BR")}
+                              </p>
+                            </div>
+                            <div className="flex gap-2">
+                              {t.status !== "closed" && (
+                                <Button size="sm" variant="ghost" onClick={() => closeTicket(t.id)} title="Fechar ticket">
+                                  <CheckCircle className="h-4 w-4" />
+                                </Button>
+                              )}
+                              <Button size="sm" variant="ghost" onClick={() => deleteTicket(t.id)} title="Excluir">
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
+                          </div>
+
+                          <div className="bg-secondary/30 rounded-lg p-3">
+                            <p className="text-xs font-semibold mb-1 flex items-center gap-1">
+                              <MessageSquare className="h-3 w-3" /> Mensagem
+                            </p>
+                            <p className="text-sm whitespace-pre-wrap">{t.message}</p>
+                          </div>
+
+                          {t.admin_response && (
+                            <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
+                              <p className="text-xs font-semibold text-primary mb-1">
+                                Resposta enviada
+                                {t.responded_at && (
+                                  <span className="text-muted-foreground font-normal ml-2">
+                                    • {new Date(t.responded_at).toLocaleString("pt-BR")}
+                                  </span>
+                                )}
+                              </p>
+                              <p className="text-sm whitespace-pre-wrap">{t.admin_response}</p>
+                            </div>
+                          )}
+
+                          {!t.admin_response && t.status !== "closed" && (
+                            <>
+                              {!isResponding ? (
+                                <Button size="sm" variant="hero" onClick={() => { setRespondingTicket(t.id); setResponseText(""); }}>
+                                  <Send className="h-4 w-4 mr-1" /> Responder
+                                </Button>
+                              ) : (
+                                <div className="space-y-2">
+                                  <Textarea
+                                    value={responseText}
+                                    onChange={(e) => setResponseText(e.target.value)}
+                                    placeholder="Escreva sua resposta..."
+                                    rows={4}
+                                    maxLength={2000}
+                                  />
+                                  <div className="flex gap-2 justify-end">
+                                    <Button size="sm" variant="ghost" onClick={() => { setRespondingTicket(null); setResponseText(""); }} disabled={responseSubmitting}>
+                                      Cancelar
+                                    </Button>
+                                    <Button size="sm" variant="hero" onClick={() => submitTicketResponse(t.id)} disabled={responseSubmitting}>
+                                      <Send className="h-4 w-4 mr-1" /> {responseSubmitting ? "Enviando..." : "Enviar Resposta"}
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()
+            )}
           </div>
         )}
         {activeTab === "settings" && (
