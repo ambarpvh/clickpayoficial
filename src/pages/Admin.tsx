@@ -8,6 +8,7 @@ import { Zap, Users, Eye, DollarSign, AlertCircle, LogOut, Plus, BarChart3, Penc
 import AuditPanel from "@/components/AuditPanel";
 import UserHealthReport from "@/components/UserHealthReport";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { format, subDays, parseISO } from "date-fns";
@@ -526,7 +527,40 @@ const Admin = () => {
       </nav>
 
       <div className="container mx-auto px-4 py-8">
-        <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
+        {/* Mobile: dropdown selector */}
+        <div className="md:hidden mb-6">
+          <Select value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
+            <SelectTrigger className="w-full bg-secondary/60 border-border/50 h-11">
+              <SelectValue>
+                {(() => {
+                  const current = tabs.find((t) => t.key === activeTab);
+                  if (!current) return null;
+                  const Icon = current.icon;
+                  return (
+                    <span className="flex items-center gap-2 font-medium">
+                      <Icon className="h-4 w-4 text-primary" /> {current.label}
+                    </span>
+                  );
+                })()}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <SelectItem key={tab.key} value={tab.key}>
+                    <span className="flex items-center gap-2">
+                      <Icon className="h-4 w-4 text-primary" /> {tab.label}
+                    </span>
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Desktop: horizontal tabs */}
+        <div className="hidden md:flex gap-2 mb-8 overflow-x-auto pb-2">
           {tabs.map((tab) => (
             <button key={tab.key} onClick={() => setActiveTab(tab.key)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${activeTab === tab.key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary"}`}>
