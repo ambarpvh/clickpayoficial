@@ -55,6 +55,11 @@ const Admin = () => {
   const [changingPlanUser, setChangingPlanUser] = useState<string | null>(null);
   const [selectedNewPlan, setSelectedNewPlan] = useState<string>("");
 
+  // Block user
+  const [blockingUser, setBlockingUser] = useState<string | null>(null);
+  const [blockMessage, setBlockMessage] = useState("");
+  const [blockSubmitting, setBlockSubmitting] = useState(false);
+
   // Data
   const [users, setUsers] = useState<any[]>([]);
   const [usersTotal, setUsersTotal] = useState(0);
@@ -457,6 +462,33 @@ const Admin = () => {
     const { error } = await supabase.from("payments").update({ status: action, updated_at: new Date().toISOString() }).eq("id", paymentId);
     if (error) { toast.error("Erro ao atualizar pagamento"); return; }
     toast.success(action === "approved" ? "Pagamento aprovado! Plano ativado e comissões creditadas." : "Pagamento recusado.");
+    loadData();
+  };
+
+  const blockUser = async (userId: string) => {
+    const msg = blockMessage.trim();
+    if (!msg) { toast.error("Digite a mensagem que o usuário verá"); return; }
+    setBlockSubmitting(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ is_blocked: true, block_message: msg })
+      .eq("user_id", userId);
+    setBlockSubmitting(false);
+    if (error) { toast.error("Erro ao bloquear: " + error.message); return; }
+    toast.success("Usuário bloqueado");
+    setBlockingUser(null);
+    setBlockMessage("");
+    loadData();
+  };
+
+  const unblockUser = async (userId: string) => {
+    if (!window.confirm("Desbloquear este usuário?")) return;
+    const { error } = await supabase
+      .from("profiles")
+      .update({ is_blocked: false, block_message: null })
+      .eq("user_id", userId);
+    if (error) { toast.error("Erro ao desbloquear"); return; }
+    toast.success("Usuário desbloqueado");
     loadData();
   };
 
