@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Zap, Users, Eye, DollarSign, AlertCircle, LogOut, Plus, BarChart3, Pencil, Trash2, Ban, ShieldCheck, Settings, Link2, Link2Off, CreditCard, CheckCircle, XCircle, Image, ExternalLink, ArrowUpDown, ArrowUp, ArrowDown, Download } from "lucide-react";
+import { Zap, Users, Eye, DollarSign, AlertCircle, LogOut, Plus, BarChart3, Pencil, Trash2, Ban, ShieldCheck, Settings, Link2, Link2Off, CreditCard, CheckCircle, XCircle, Image, ExternalLink, ArrowUpDown, ArrowUp, ArrowDown, Download, LifeBuoy, Send, MessageSquare } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
@@ -389,6 +389,7 @@ const Admin = () => {
     { key: "plans" as const, label: "Planos", icon: Settings },
     { key: "payments" as const, label: "Pagamentos", icon: CreditCard },
     { key: "withdrawals" as const, label: "Saques", icon: DollarSign },
+    { key: "support" as const, label: "Suporte", icon: LifeBuoy },
     { key: "settings" as const, label: "Configurações", icon: Settings },
   ];
 
