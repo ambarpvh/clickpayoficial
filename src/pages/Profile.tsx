@@ -3,14 +3,16 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Zap, ArrowLeft, Save, KeyRound } from "lucide-react";
+import { Zap, ArrowLeft, Save, KeyRound, User as UserIcon, LifeBuoy } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { SupportTickets } from "@/components/SupportTickets";
 
 const Profile = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
+  const [activeTab, setActiveTab] = useState<"profile" | "support">("profile");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [cpf, setCpf] = useState("");
@@ -102,58 +104,83 @@ const Profile = () => {
         </div>
       </nav>
 
-      <div className="container mx-auto px-4 py-8 max-w-lg space-y-8">
+      <div className="container mx-auto px-4 py-8 max-w-lg space-y-6">
         <h1 className="font-heading text-2xl font-bold">Meu Cadastro</h1>
 
-        <div className="glass-card rounded-xl p-6 space-y-4">
-          <h2 className="font-heading text-lg font-semibold">Dados Pessoais</h2>
-          <div className="space-y-3">
-            <div className="space-y-1">
-              <Label>Nome completo</Label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Seu nome completo" />
-            </div>
-            <div className="space-y-1">
-              <Label>Email</Label>
-              <Input value={email} disabled className="opacity-60" />
-              <p className="text-xs text-muted-foreground">O email não pode ser alterado</p>
-            </div>
-            <div className="space-y-1">
-              <Label>CPF</Label>
-              <Input value={cpf} onChange={(e) => setCpf(e.target.value)} placeholder="000.000.000-00" />
-            </div>
-            <div className="space-y-1">
-              <Label>Chave PIX</Label>
-              <Input value={pixKey} onChange={(e) => setPixKey(e.target.value)} placeholder="CPF, e-mail, celular ou chave aleatória" />
-            </div>
-            <div className="space-y-1">
-              <Label>Telefone</Label>
-              <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(00) 00000-0000" />
-            </div>
-          </div>
-          <Button variant="hero" className="w-full" onClick={handleSave} disabled={saving}>
-            <Save className="h-4 w-4 mr-1" />
-            {saving ? "Salvando..." : "Salvar Dados"}
-          </Button>
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          <button
+            onClick={() => setActiveTab("profile")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${activeTab === "profile" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary"}`}
+          >
+            <UserIcon className="h-4 w-4" /> Perfil
+          </button>
+          <button
+            onClick={() => setActiveTab("support")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${activeTab === "support" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary"}`}
+          >
+            <LifeBuoy className="h-4 w-4" /> Suporte
+          </button>
         </div>
 
-        <div className="glass-card rounded-xl p-6 space-y-4">
-          <h2 className="font-heading text-lg font-semibold flex items-center gap-2">
-            <KeyRound className="h-5 w-5 text-primary" /> Alterar Senha
-          </h2>
-          <div className="space-y-3">
-            <div className="space-y-1">
-              <Label>Nova senha</Label>
-              <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Mínimo 6 caracteres" />
+        {activeTab === "profile" && (
+          <div className="space-y-8 animate-fade-in">
+            <div className="glass-card rounded-xl p-6 space-y-4">
+              <h2 className="font-heading text-lg font-semibold">Dados Pessoais</h2>
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <Label>Nome completo</Label>
+                  <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Seu nome completo" />
+                </div>
+                <div className="space-y-1">
+                  <Label>Email</Label>
+                  <Input value={email} disabled className="opacity-60" />
+                  <p className="text-xs text-muted-foreground">O email não pode ser alterado</p>
+                </div>
+                <div className="space-y-1">
+                  <Label>CPF</Label>
+                  <Input value={cpf} onChange={(e) => setCpf(e.target.value)} placeholder="000.000.000-00" />
+                </div>
+                <div className="space-y-1">
+                  <Label>Chave PIX</Label>
+                  <Input value={pixKey} onChange={(e) => setPixKey(e.target.value)} placeholder="CPF, e-mail, celular ou chave aleatória" />
+                </div>
+                <div className="space-y-1">
+                  <Label>Telefone</Label>
+                  <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(00) 00000-0000" />
+                </div>
+              </div>
+              <Button variant="hero" className="w-full" onClick={handleSave} disabled={saving}>
+                <Save className="h-4 w-4 mr-1" />
+                {saving ? "Salvando..." : "Salvar Dados"}
+              </Button>
             </div>
-            <div className="space-y-1">
-              <Label>Confirmar nova senha</Label>
-              <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Repita a nova senha" />
+
+            <div className="glass-card rounded-xl p-6 space-y-4">
+              <h2 className="font-heading text-lg font-semibold flex items-center gap-2">
+                <KeyRound className="h-5 w-5 text-primary" /> Alterar Senha
+              </h2>
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <Label>Nova senha</Label>
+                  <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Mínimo 6 caracteres" />
+                </div>
+                <div className="space-y-1">
+                  <Label>Confirmar nova senha</Label>
+                  <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Repita a nova senha" />
+                </div>
+              </div>
+              <Button variant="outline" className="w-full" onClick={handleChangePassword} disabled={changingPassword}>
+                {changingPassword ? "Alterando..." : "Alterar Senha"}
+              </Button>
             </div>
           </div>
-          <Button variant="outline" className="w-full" onClick={handleChangePassword} disabled={changingPassword}>
-            {changingPassword ? "Alterando..." : "Alterar Senha"}
-          </Button>
-        </div>
+        )}
+
+        {activeTab === "support" && (
+          <div className="animate-fade-in">
+            <SupportTickets />
+          </div>
+        )}
       </div>
     </div>
   );
