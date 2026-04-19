@@ -18,7 +18,7 @@ import { formatBRL } from "@/lib/format";
 const Admin = () => {
   const navigate = useNavigate();
   const { user, isAdmin, loading: authLoading, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState<"overview" | "users" | "ads" | "withdrawals" | "plans" | "payments" | "support" | "settings">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "users" | "ads" | "withdrawals" | "plans" | "payments" | "support" | "audit" | "settings">("overview");
   const [minWithdrawal, setMinWithdrawal] = useState("150");
   const [savingSettings, setSavingSettings] = useState(false);
   const [showAdForm, setShowAdForm] = useState(false);
@@ -468,6 +468,7 @@ const Admin = () => {
     { key: "payments" as const, label: "Pagamentos", icon: CreditCard },
     { key: "withdrawals" as const, label: "Saques", icon: DollarSign },
     { key: "support" as const, label: "Suporte", icon: LifeBuoy },
+    { key: "audit" as const, label: "Auditoria", icon: AlertTriangle },
     { key: "settings" as const, label: "Configurações", icon: Settings },
   ];
 
@@ -1178,6 +1179,9 @@ const Admin = () => {
               })()
             )}
           </div>
+        )}
+        {activeTab === "audit" && user && (
+          <AuditPanel adminId={user.id} />
         )}
         {activeTab === "settings" && (
           <div className="animate-fade-in max-w-md">
