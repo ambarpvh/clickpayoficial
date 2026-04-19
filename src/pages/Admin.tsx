@@ -55,6 +55,11 @@ const Admin = () => {
   const [changingPlanUser, setChangingPlanUser] = useState<string | null>(null);
   const [selectedNewPlan, setSelectedNewPlan] = useState<string>("");
 
+  // Block user
+  const [blockingUser, setBlockingUser] = useState<string | null>(null);
+  const [blockMessage, setBlockMessage] = useState("");
+  const [blockSubmitting, setBlockSubmitting] = useState(false);
+
   // Data
   const [users, setUsers] = useState<any[]>([]);
   const [usersTotal, setUsersTotal] = useState(0);
@@ -460,6 +465,33 @@ const Admin = () => {
     loadData();
   };
 
+  const blockUser = async (userId: string) => {
+    const msg = blockMessage.trim();
+    if (!msg) { toast.error("Digite a mensagem que o usuário verá"); return; }
+    setBlockSubmitting(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ is_blocked: true, block_message: msg })
+      .eq("user_id", userId);
+    setBlockSubmitting(false);
+    if (error) { toast.error("Erro ao bloquear: " + error.message); return; }
+    toast.success("Usuário bloqueado");
+    setBlockingUser(null);
+    setBlockMessage("");
+    loadData();
+  };
+
+  const unblockUser = async (userId: string) => {
+    if (!window.confirm("Desbloquear este usuário?")) return;
+    const { error } = await supabase
+      .from("profiles")
+      .update({ is_blocked: false, block_message: null })
+      .eq("user_id", userId);
+    if (error) { toast.error("Erro ao desbloquear"); return; }
+    toast.success("Usuário desbloqueado");
+    loadData();
+  };
+
   const tabs = [
     { key: "overview" as const, label: "Visão Geral", icon: BarChart3 },
     { key: "users" as const, label: "Usuários", icon: Users },
@@ -746,6 +778,32 @@ const Admin = () => {
                           <Button size="sm" variant="default" className="h-8 text-xs" onClick={() => window.open(`/dashboard?view_as=${u.user_id}`, '_blank')} title="Ver painel do usuário">
                             <Eye className="h-4 w-4 mr-1" /> Ver Painel
                           </Button>
+                          {blockingUser === u.user_id ? (
+                            <div className="flex flex-col gap-1 w-full sm:w-72 mt-1">
+                              <Textarea
+                                value={blockMessage}
+                                onChange={(e) => setBlockMessage(e.target.value)}
+                                placeholder="Mensagem que o usuário verá ao tentar entrar..."
+                                rows={3}
+                                maxLength={500}
+                                className="text-xs"
+                              />
+                              <div className="flex gap-1">
+                                <Button size="sm" variant="destructive" className="h-7 text-xs" disabled={blockSubmitting} onClick={() => blockUser(u.user_id)}>
+                                  {blockSubmitting ? "Bloqueando..." : "Confirmar bloqueio"}
+                                </Button>
+                                <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => { setBlockingUser(null); setBlockMessage(""); }}>✕</Button>
+                              </div>
+                            </div>
+                          ) : u.is_blocked ? (
+                            <Button size="sm" variant="outline" className="h-8 text-xs border-primary/40 text-primary" onClick={() => unblockUser(u.user_id)} title={u.block_message || ""}>
+                              <ShieldCheck className="h-3 w-3 mr-1" /> Desbloquear
+                            </Button>
+                          ) : (
+                            <Button size="sm" variant="outline" className="h-8 text-xs border-destructive/40 text-destructive hover:bg-destructive/10" onClick={() => { setBlockingUser(u.user_id); setBlockMessage(""); }}>
+                              <Ban className="h-3 w-3 mr-1" /> Bloquear
+                            </Button>
+                          )}
                         </div>
                       </td>
                     </tr>
