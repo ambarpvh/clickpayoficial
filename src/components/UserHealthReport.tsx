@@ -16,6 +16,7 @@ type Stats = {
   totalBalance: number;
   byPlan: { name: string; count: number }[];
   signupsPerDay: { date: string; count: number }[];
+  topReferrers: { user_id: string; name: string; email: string; count: number }[];
 };
 
 const COLORS = {
@@ -57,8 +58,24 @@ const UserHealthReport = () => {
         const active7d = profiles.filter((p: any) => !p.is_blocked && activeUserIds.has(p.user_id)).length;
         const inactive = total - active7d - blocked;
 
-        const referrerSet = new Set(referrals.map((r: any) => r.referrer_id));
+        const referrerCounts: Record<string, number> = {};
+        referrals.forEach((r: any) => {
+          referrerCounts[r.referrer_id] = (referrerCounts[r.referrer_id] || 0) + 1;
+        });
+        const referrerSet = new Set(Object.keys(referrerCounts));
         const withReferrals = profiles.filter((p: any) => referrerSet.has(p.user_id)).length;
+
+        const profileMap: Record<string, any> = {};
+        profiles.forEach((p: any) => { profileMap[p.user_id] = p; });
+        const topReferrers = Object.entries(referrerCounts)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 10)
+          .map(([user_id, count]) => ({
+            user_id,
+            name: profileMap[user_id]?.name || "—",
+            email: profileMap[user_id]?.email || "—",
+            count,
+          }));
 
         const newLast30d = profiles.filter((p: any) => p.created_at >= since30).length;
 
@@ -97,6 +114,7 @@ const UserHealthReport = () => {
           totalBalance,
           byPlan,
           signupsPerDay,
+          topReferrers,
         });
       } finally {
         setLoading(false);
