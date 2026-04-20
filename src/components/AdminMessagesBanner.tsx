@@ -19,11 +19,11 @@ const styleByColor: Record<Color, { wrap: string; icon: JSX.Element }> = {
   },
   warning: {
     wrap: "bg-yellow-500/15 border-yellow-500/60 text-yellow-100",
-    icon: <AlertTriangle className="h-5 w-5 text-yellow-300" />,
+    icon: <AlertTriangle className="h-5 w-5 text-yellow-300 animate-pulse" />,
   },
   danger: {
     wrap: "bg-red-500/15 border-red-500/70 text-red-100",
-    icon: <AlertOctagon className="h-5 w-5 text-red-300" />,
+    icon: <AlertOctagon className="h-5 w-5 text-red-300 animate-pulse" />,
   },
   success: {
     wrap: "bg-green-500/15 border-green-500/60 text-green-100",
