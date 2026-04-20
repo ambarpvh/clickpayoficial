@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { DollarSign, Eye, TrendingUp, Zap, LogOut, Copy, Check, Gift, Clock, ArrowUpRight, Crown, History as HistoryIcon, UserCog, Info, X, Megaphone } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import AdTimer from "@/components/AdTimer";
+import AdminMessagesBanner from "@/components/AdminMessagesBanner";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -284,6 +285,9 @@ const Dashboard = () => {
       </nav>
 
       <div className="container mx-auto px-4 py-8 space-y-8">
+        {/* Admin messages banner */}
+        {targetUserId && <AdminMessagesBanner userId={targetUserId} />}
+
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
