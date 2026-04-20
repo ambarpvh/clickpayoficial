@@ -22,7 +22,7 @@ import { formatBRL } from "@/lib/format";
 const Admin = () => {
   const navigate = useNavigate();
   const { user, isAdmin, loading: authLoading, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState<"overview" | "users" | "ads" | "withdrawals" | "plans" | "payments" | "support" | "audit" | "settings">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "users" | "ads" | "withdrawals" | "plans" | "payments" | "support" | "messages" | "audit" | "settings">("overview");
   const [minWithdrawal, setMinWithdrawal] = useState("150");
   const [savingSettings, setSavingSettings] = useState(false);
   const [showAdForm, setShowAdForm] = useState(false);
@@ -504,6 +504,7 @@ const Admin = () => {
     { key: "payments" as const, label: "Pagamentos", icon: CreditCard },
     { key: "withdrawals" as const, label: "Saques", icon: DollarSign },
     { key: "support" as const, label: "Suporte", icon: LifeBuoy },
+    { key: "messages" as const, label: "Mensagens", icon: Megaphone },
     { key: "audit" as const, label: "Auditoria", icon: AlertTriangle },
     { key: "settings" as const, label: "Configurações", icon: Settings },
   ];
@@ -1277,6 +1278,9 @@ const Admin = () => {
               })()
             )}
           </div>
+        )}
+        {activeTab === "messages" && user && (
+          <AdminMessagesPanel adminId={user.id} />
         )}
         {activeTab === "audit" && user && (
           <AuditPanel adminId={user.id} />
