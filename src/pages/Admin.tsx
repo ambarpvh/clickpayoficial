@@ -7,6 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Zap, Users, Eye, DollarSign, AlertCircle, LogOut, Plus, BarChart3, Pencil, Trash2, Ban, ShieldCheck, Settings, Link2, Link2Off, CreditCard, CheckCircle, XCircle, Image, ExternalLink, ArrowUpDown, ArrowUp, ArrowDown, Download, LifeBuoy, Send, MessageSquare, AlertTriangle } from "lucide-react";
 import AuditPanel from "@/components/AuditPanel";
 import UserHealthReport from "@/components/UserHealthReport";
+import AdminMessagesPanel from "@/components/AdminMessagesPanel";
+import { Megaphone } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
