@@ -157,15 +157,15 @@ const History = () => {
     }
 
     // Ranking
-    const { data: allProfiles } = await supabase.from("profiles").select("name, user_id").limit(50);
+    const { data: allProfiles } = await supabase.from("profiles").select("name, user_id");
     if (allProfiles) {
       const rankingData = await Promise.all(
-        allProfiles.slice(0, 20).map(async (p) => {
+        allProfiles.map(async (p) => {
           const { count } = await supabase.from("referrals").select("id", { count: "exact", head: true }).eq("referrer_id", p.user_id);
           return { name: p.name || "Anônimo", total: count || 0 };
         })
       );
-      setRanking(rankingData.filter(r => r.total > 0).sort((a, b) => b.total - a.total).slice(0, 10));
+      setRanking(rankingData.filter(r => r.total > 0).sort((a, b) => b.total - a.total));
     }
   };
 
