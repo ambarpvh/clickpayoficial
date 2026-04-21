@@ -1,10 +1,43 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Zap, ArrowLeft, TrendingUp, Users, Clock, Wallet, Banknote } from "lucide-react";
+import { Zap, ArrowLeft, TrendingUp, Users, Clock, Wallet, Banknote, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { formatBRL } from "@/lib/format";
+
+const PAGE_SIZE = 10;
+
+interface PagerProps {
+  page: number;
+  totalPages: number;
+  onChange: (p: number) => void;
+  totalItems: number;
+}
+
+const Pager = ({ page, totalPages, onChange, totalItems }: PagerProps) => {
+  if (totalPages <= 1) return null;
+  return (
+    <div className="flex items-center justify-between gap-3 p-3 border-t border-border/50 text-xs">
+      <span className="text-muted-foreground">
+        Página {page} de {totalPages} • {totalItems} {totalItems === 1 ? "registro" : "registros"}
+      </span>
+      <div className="flex items-center gap-1">
+        <Button variant="ghost" size="sm" onClick={() => onChange(Math.max(1, page - 1))} disabled={page === 1}>
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        <Button variant="ghost" size="sm" onClick={() => onChange(Math.min(totalPages, page + 1))} disabled={page === totalPages}>
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+function paginate<T>(arr: T[], page: number): T[] {
+  const start = (page - 1) * PAGE_SIZE;
+  return arr.slice(start, start + PAGE_SIZE);
+}
 
 interface ClickRecord {
   id: string;
@@ -53,6 +86,12 @@ const History = () => {
   const [directCount, setDirectCount] = useState(0);
   const [clickValue, setClickValue] = useState(1);
 
+  const [clicksPage, setClicksPage] = useState(1);
+  const [adjustmentsPage, setAdjustmentsPage] = useState(1);
+  const [withdrawalsPage, setWithdrawalsPage] = useState(1);
+  const [referralsPage, setReferralsPage] = useState(1);
+  const [rankingPage, setRankingPage] = useState(1);
+
   useEffect(() => {
     if (!authLoading && !user) { navigate("/login"); return; }
     if (user) loadData();
@@ -79,8 +118,8 @@ const History = () => {
       { data: withdrawalsData },
       { data: referralsData },
     ] = await Promise.all([
-      supabase.from("clicks").select("id, earned_value, clicked_at, ads(title)").eq("user_id", user.id).order("clicked_at", { ascending: false }).limit(100),
-      supabase.from("balance_adjustments").select("id, amount, note, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(100),
+      supabase.from("clicks").select("id, earned_value, clicked_at, ads(title), referral_commission_paid").eq("user_id", user.id).order("clicked_at", { ascending: false }),
+      supabase.from("balance_adjustments").select("id, amount, note, created_at").eq("user_id", user.id).order("created_at", { ascending: false }),
       supabase.from("withdrawals").select("id, amount, status, requested_at, processed_at, holder_name, pix_key").eq("user_id", user.id).order("requested_at", { ascending: false }),
       supabase.from("referrals").select("*").eq("referrer_id", user.id).order("created_at", { ascending: false }),
     ]);
@@ -118,15 +157,15 @@ const History = () => {
     }
 
     // Ranking
-    const { data: allProfiles } = await supabase.from("profiles").select("name, user_id").limit(50);
+    const { data: allProfiles } = await supabase.from("profiles").select("name, user_id");
     if (allProfiles) {
       const rankingData = await Promise.all(
-        allProfiles.slice(0, 20).map(async (p) => {
+        allProfiles.map(async (p) => {
           const { count } = await supabase.from("referrals").select("id", { count: "exact", head: true }).eq("referrer_id", p.user_id);
           return { name: p.name || "Anônimo", total: count || 0 };
         })
       );
-      setRanking(rankingData.filter(r => r.total > 0).sort((a, b) => b.total - a.total).slice(0, 10));
+      setRanking(rankingData.filter(r => r.total > 0).sort((a, b) => b.total - a.total));
     }
   };
 
@@ -136,6 +175,20 @@ const History = () => {
     if (s === "rejected") return <span className="text-destructive font-medium text-xs">❌ Recusado</span>;
     return <span className="text-muted-foreground text-xs">{s}</span>;
   };
+
+  const directReferrals = useMemo(() => referrals.filter(r => r.level === 1), [referrals]);
+
+  const clicksPaged = useMemo(() => paginate(clicks, clicksPage), [clicks, clicksPage]);
+  const adjustmentsPaged = useMemo(() => paginate(adjustments, adjustmentsPage), [adjustments, adjustmentsPage]);
+  const withdrawalsPaged = useMemo(() => paginate(withdrawals, withdrawalsPage), [withdrawals, withdrawalsPage]);
+  const referralsPaged = useMemo(() => paginate(directReferrals, referralsPage), [directReferrals, referralsPage]);
+  const rankingPaged = useMemo(() => paginate(ranking, rankingPage), [ranking, rankingPage]);
+
+  const clicksTotalPages = Math.max(1, Math.ceil(clicks.length / PAGE_SIZE));
+  const adjustmentsTotalPages = Math.max(1, Math.ceil(adjustments.length / PAGE_SIZE));
+  const withdrawalsTotalPages = Math.max(1, Math.ceil(withdrawals.length / PAGE_SIZE));
+  const referralsTotalPages = Math.max(1, Math.ceil(directReferrals.length / PAGE_SIZE));
+  const rankingTotalPages = Math.max(1, Math.ceil(ranking.length / PAGE_SIZE));
 
   if (authLoading) return <div className="min-h-screen bg-background flex items-center justify-center"><Zap className="h-8 w-8 text-primary animate-pulse" /></div>;
 
@@ -170,66 +223,81 @@ const History = () => {
         </div>
 
         {tab === "clicks" && (
-          <div className="glass-card rounded-xl divide-y divide-border/50 animate-fade-in">
+          <div className="glass-card rounded-xl animate-fade-in">
             {clicks.length === 0 ? (
               <p className="p-8 text-muted-foreground text-sm text-center">Nenhum clique registrado ainda</p>
             ) : (
-              clicks.map((c) => {
-                const isCommission = (c as any).referral_commission_paid === true;
-                return (
-                  <div key={c.id} className="p-4 flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium">{isCommission ? "Comissão de indicação" : "Visualização de anúncio"}</p>
-                      <p className="text-muted-foreground text-xs">
-                        {(c.ads as unknown as { title: string })?.title || "Anúncio"} • {new Date(c.clicked_at).toLocaleDateString("pt-BR")} às {new Date(c.clicked_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-                      </p>
-                    </div>
-                    <span className="text-primary font-semibold text-sm">+{formatBRL(Number(c.earned_value))}</span>
-                  </div>
-                );
-              })
+              <>
+                <div className="divide-y divide-border/50">
+                  {clicksPaged.map((c) => {
+                    const isCommission = (c as any).referral_commission_paid === true;
+                    return (
+                      <div key={c.id} className="p-4 flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium">{isCommission ? "Comissão de indicação" : "Visualização de anúncio"}</p>
+                          <p className="text-muted-foreground text-xs">
+                            {(c.ads as unknown as { title: string })?.title || "Anúncio"} • {new Date(c.clicked_at).toLocaleDateString("pt-BR")} às {new Date(c.clicked_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                          </p>
+                        </div>
+                        <span className="text-primary font-semibold text-sm">+{formatBRL(Number(c.earned_value))}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <Pager page={clicksPage} totalPages={clicksTotalPages} onChange={setClicksPage} totalItems={clicks.length} />
+              </>
             )}
           </div>
         )}
 
         {tab === "adjustments" && (
-          <div className="glass-card rounded-xl divide-y divide-border/50 animate-fade-in">
+          <div className="glass-card rounded-xl animate-fade-in">
             {adjustments.length === 0 ? (
               <p className="p-8 text-muted-foreground text-sm text-center">Nenhum ajuste de saldo registrado</p>
             ) : (
-              adjustments.map((a) => (
-                <div key={a.id} className="p-4 flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium">{a.note || (a.amount >= 0 ? "Crédito manual" : "Débito manual")}</p>
-                    <p className="text-muted-foreground text-xs">
-                      {new Date(a.created_at).toLocaleDateString("pt-BR")} às {new Date(a.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-                    </p>
-                  </div>
-                  <span className={`font-semibold text-sm ${a.amount >= 0 ? "text-primary" : "text-destructive"}`}>
-                    {a.amount >= 0 ? "+" : ""}{formatBRL(Number(a.amount))}
-                  </span>
+              <>
+                <div className="divide-y divide-border/50">
+                  {adjustmentsPaged.map((a) => (
+                    <div key={a.id} className="p-4 flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium">{a.note || (a.amount >= 0 ? "Crédito manual" : "Débito manual")}</p>
+                        <p className="text-muted-foreground text-xs">
+                          {new Date(a.created_at).toLocaleDateString("pt-BR")} às {new Date(a.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                      </div>
+                      <span className={`font-semibold text-sm ${a.amount >= 0 ? "text-primary" : "text-destructive"}`}>
+                        {a.amount >= 0 ? "+" : ""}{formatBRL(Number(a.amount))}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-              ))
+                <Pager page={adjustmentsPage} totalPages={adjustmentsTotalPages} onChange={setAdjustmentsPage} totalItems={adjustments.length} />
+              </>
             )}
           </div>
         )}
 
         {tab === "withdrawals" && (
-          <div className="glass-card rounded-xl divide-y divide-border/50 animate-fade-in">
+          <div className="glass-card rounded-xl animate-fade-in">
             {withdrawals.length === 0 ? (
               <p className="p-8 text-muted-foreground text-sm text-center">Nenhum saque solicitado</p>
             ) : (
-              withdrawals.map((w) => (
-                <div key={w.id} className="p-4 flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium">{formatBRL(Number(w.amount))}</p>
-                    <p className="text-muted-foreground text-xs">
-                      {new Date(w.requested_at).toLocaleDateString("pt-BR")} — Pix: {w.pix_key || "N/A"}
-                    </p>
-                  </div>
-                  {statusLabel(w.status)}
+              <>
+                <div className="divide-y divide-border/50">
+                  {withdrawalsPaged.map((w) => (
+                    <div key={w.id} className="p-4 flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium">{formatBRL(Number(w.amount))}</p>
+                        <p className="text-muted-foreground text-xs">
+                          {new Date(w.requested_at).toLocaleDateString("pt-BR")} — Pix: {w.pix_key || "N/A"}
+                        </p>
+                      </div>
+                      {statusLabel(w.status)}
+                    </div>
+                  ))}
                 </div>
-              ))
+                <Pager page={withdrawalsPage} totalPages={withdrawalsTotalPages} onChange={setWithdrawalsPage} totalItems={withdrawals.length} />
+              </>
             )}
           </div>
         )}
@@ -244,48 +312,61 @@ const History = () => {
               <div className="glass-card rounded-xl p-5">
                 <p className="text-sm text-muted-foreground mb-1">Ganhos por indicação</p>
                 <p className="font-heading text-3xl font-bold text-primary">
-                  {formatBRL(referrals.filter(r => r.level === 1).reduce((sum, r) => sum + (r.commissionValue || 0), 0))}
+                  {formatBRL(directReferrals.reduce((sum, r) => sum + (r.commissionValue || 0), 0))}
                 </p>
               </div>
             </div>
 
             <h3 className="font-heading text-lg font-semibold mt-4">Meus indicados diretos</h3>
-            <div className="glass-card rounded-xl divide-y divide-border/50">
-              {referrals.filter(r => r.level === 1).length === 0 ? (
+            <div className="glass-card rounded-xl">
+              {directReferrals.length === 0 ? (
                 <p className="p-8 text-muted-foreground text-sm text-center">Nenhuma indicação direta ainda. Compartilhe seu link!</p>
               ) : (
-                referrals.filter(r => r.level === 1).map((r) => (
-                  <div key={r.id} className="p-4 flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium">{r.profile?.name || "Afiliado"}</p>
-                      <p className="text-muted-foreground text-xs">
-                        {new Date(r.created_at).toLocaleDateString("pt-BR")} às {new Date(r.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })} | {r.planName || "Free"} | {formatBRL(r.commissionValue || 0)}
-                      </p>
-                    </div>
-                    <span className="text-primary font-semibold text-sm">{formatBRL(r.commissionValue || 0)}</span>
+                <>
+                  <div className="divide-y divide-border/50">
+                    {referralsPaged.map((r) => (
+                      <div key={r.id} className="p-4 flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium">{r.profile?.name || "Afiliado"}</p>
+                          <p className="text-muted-foreground text-xs">
+                            {new Date(r.created_at).toLocaleDateString("pt-BR")} às {new Date(r.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })} | {r.planName || "Free"} | {formatBRL(r.commissionValue || 0)}
+                          </p>
+                        </div>
+                        <span className="text-primary font-semibold text-sm">{formatBRL(r.commissionValue || 0)}</span>
+                      </div>
+                    ))}
                   </div>
-                ))
+                  <Pager page={referralsPage} totalPages={referralsTotalPages} onChange={setReferralsPage} totalItems={directReferrals.length} />
+                </>
               )}
             </div>
           </div>
         )}
 
         {tab === "ranking" && (
-          <div className="glass-card rounded-xl divide-y divide-border/50 animate-fade-in">
+          <div className="glass-card rounded-xl animate-fade-in">
             {ranking.length === 0 ? (
               <p className="p-8 text-muted-foreground text-sm text-center">Nenhum dado de ranking disponível</p>
             ) : (
-              ranking.map((r, i) => (
-                <div key={i} className="p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${i < 3 ? "bg-accent text-accent-foreground" : "bg-secondary text-muted-foreground"}`}>
-                      {i + 1}
-                    </span>
-                    <p className="text-sm font-medium">{r.name}</p>
-                  </div>
-                  <span className="text-primary font-semibold text-sm">{r.total} indicações</span>
+              <>
+                <div className="divide-y divide-border/50">
+                  {rankingPaged.map((r, i) => {
+                    const globalIndex = (rankingPage - 1) * PAGE_SIZE + i;
+                    return (
+                      <div key={globalIndex} className="p-4 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${globalIndex < 3 ? "bg-accent text-accent-foreground" : "bg-secondary text-muted-foreground"}`}>
+                            {globalIndex + 1}
+                          </span>
+                          <p className="text-sm font-medium">{r.name}</p>
+                        </div>
+                        <span className="text-primary font-semibold text-sm">{r.total} indicações</span>
+                      </div>
+                    );
+                  })}
                 </div>
-              ))
+                <Pager page={rankingPage} totalPages={rankingTotalPages} onChange={setRankingPage} totalItems={ranking.length} />
+              </>
             )}
           </div>
         )}
