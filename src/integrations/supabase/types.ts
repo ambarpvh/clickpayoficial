@@ -257,6 +257,7 @@ export type Database = {
           block_message: string | null
           cpf: string | null
           created_at: string
+          device_fingerprint: string | null
           email: string
           id: string
           is_blocked: boolean
@@ -273,6 +274,7 @@ export type Database = {
           block_message?: string | null
           cpf?: string | null
           created_at?: string
+          device_fingerprint?: string | null
           email?: string
           id?: string
           is_blocked?: boolean
@@ -289,6 +291,7 @@ export type Database = {
           block_message?: string | null
           cpf?: string | null
           created_at?: string
+          device_fingerprint?: string | null
           email?: string
           id?: string
           is_blocked?: boolean
@@ -489,12 +492,14 @@ export type Database = {
       suspicious_accounts: {
         Row: {
           created_at: string | null
+          device_fingerprint: string | null
           email: string | null
           has_duplicate_name: boolean | null
           is_blocked: boolean | null
           name: string | null
           referrals_last_24h: number | null
           risk_score: number | null
+          shares_device: boolean | null
           shares_ip: boolean | null
           signup_ip: string | null
           user_id: string | null
@@ -516,12 +521,14 @@ export type Database = {
         Args: never
         Returns: {
           created_at: string | null
+          device_fingerprint: string | null
           email: string | null
           has_duplicate_name: boolean | null
           is_blocked: boolean | null
           name: string | null
           referrals_last_24h: number | null
           risk_score: number | null
+          shares_device: boolean | null
           shares_ip: boolean | null
           signup_ip: string | null
           user_id: string | null
@@ -539,6 +546,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      register_device_fingerprint: {
+        Args: { fp_input: string }
+        Returns: undefined
       }
       register_signup_ip: { Args: { ip_input: string }; Returns: undefined }
     }
