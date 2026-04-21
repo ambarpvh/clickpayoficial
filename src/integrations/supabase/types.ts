@@ -302,27 +302,33 @@ export type Database = {
       referrals: {
         Row: {
           commission_rate: number
+          confirmed_at: string | null
           created_at: string
           id: string
           level: number
           referred_id: string
           referrer_id: string
+          status: string
         }
         Insert: {
           commission_rate?: number
+          confirmed_at?: string | null
           created_at?: string
           id?: string
           level?: number
           referred_id: string
           referrer_id: string
+          status?: string
         }
         Update: {
           commission_rate?: number
+          confirmed_at?: string | null
           created_at?: string
           id?: string
           level?: number
           referred_id?: string
           referrer_id?: string
+          status?: string
         }
         Relationships: []
       }
