@@ -1,10 +1,43 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Zap, ArrowLeft, TrendingUp, Users, Clock, Wallet, Banknote } from "lucide-react";
+import { Zap, ArrowLeft, TrendingUp, Users, Clock, Wallet, Banknote, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { formatBRL } from "@/lib/format";
+
+const PAGE_SIZE = 10;
+
+interface PagerProps {
+  page: number;
+  totalPages: number;
+  onChange: (p: number) => void;
+  totalItems: number;
+}
+
+const Pager = ({ page, totalPages, onChange, totalItems }: PagerProps) => {
+  if (totalPages <= 1) return null;
+  return (
+    <div className="flex items-center justify-between gap-3 p-3 border-t border-border/50 text-xs">
+      <span className="text-muted-foreground">
+        Página {page} de {totalPages} • {totalItems} {totalItems === 1 ? "registro" : "registros"}
+      </span>
+      <div className="flex items-center gap-1">
+        <Button variant="ghost" size="sm" onClick={() => onChange(Math.max(1, page - 1))} disabled={page === 1}>
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        <Button variant="ghost" size="sm" onClick={() => onChange(Math.min(totalPages, page + 1))} disabled={page === totalPages}>
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+function paginate<T>(arr: T[], page: number): T[] {
+  const start = (page - 1) * PAGE_SIZE;
+  return arr.slice(start, start + PAGE_SIZE);
+}
 
 interface ClickRecord {
   id: string;
