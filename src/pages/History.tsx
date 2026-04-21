@@ -312,48 +312,61 @@ const History = () => {
               <div className="glass-card rounded-xl p-5">
                 <p className="text-sm text-muted-foreground mb-1">Ganhos por indicação</p>
                 <p className="font-heading text-3xl font-bold text-primary">
-                  {formatBRL(referrals.filter(r => r.level === 1).reduce((sum, r) => sum + (r.commissionValue || 0), 0))}
+                  {formatBRL(directReferrals.reduce((sum, r) => sum + (r.commissionValue || 0), 0))}
                 </p>
               </div>
             </div>
 
             <h3 className="font-heading text-lg font-semibold mt-4">Meus indicados diretos</h3>
-            <div className="glass-card rounded-xl divide-y divide-border/50">
-              {referrals.filter(r => r.level === 1).length === 0 ? (
+            <div className="glass-card rounded-xl">
+              {directReferrals.length === 0 ? (
                 <p className="p-8 text-muted-foreground text-sm text-center">Nenhuma indicação direta ainda. Compartilhe seu link!</p>
               ) : (
-                referrals.filter(r => r.level === 1).map((r) => (
-                  <div key={r.id} className="p-4 flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium">{r.profile?.name || "Afiliado"}</p>
-                      <p className="text-muted-foreground text-xs">
-                        {new Date(r.created_at).toLocaleDateString("pt-BR")} às {new Date(r.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })} | {r.planName || "Free"} | {formatBRL(r.commissionValue || 0)}
-                      </p>
-                    </div>
-                    <span className="text-primary font-semibold text-sm">{formatBRL(r.commissionValue || 0)}</span>
+                <>
+                  <div className="divide-y divide-border/50">
+                    {referralsPaged.map((r) => (
+                      <div key={r.id} className="p-4 flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium">{r.profile?.name || "Afiliado"}</p>
+                          <p className="text-muted-foreground text-xs">
+                            {new Date(r.created_at).toLocaleDateString("pt-BR")} às {new Date(r.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })} | {r.planName || "Free"} | {formatBRL(r.commissionValue || 0)}
+                          </p>
+                        </div>
+                        <span className="text-primary font-semibold text-sm">{formatBRL(r.commissionValue || 0)}</span>
+                      </div>
+                    ))}
                   </div>
-                ))
+                  <Pager page={referralsPage} totalPages={referralsTotalPages} onChange={setReferralsPage} totalItems={directReferrals.length} />
+                </>
               )}
             </div>
           </div>
         )}
 
         {tab === "ranking" && (
-          <div className="glass-card rounded-xl divide-y divide-border/50 animate-fade-in">
+          <div className="glass-card rounded-xl animate-fade-in">
             {ranking.length === 0 ? (
               <p className="p-8 text-muted-foreground text-sm text-center">Nenhum dado de ranking disponível</p>
             ) : (
-              ranking.map((r, i) => (
-                <div key={i} className="p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${i < 3 ? "bg-accent text-accent-foreground" : "bg-secondary text-muted-foreground"}`}>
-                      {i + 1}
-                    </span>
-                    <p className="text-sm font-medium">{r.name}</p>
-                  </div>
-                  <span className="text-primary font-semibold text-sm">{r.total} indicações</span>
+              <>
+                <div className="divide-y divide-border/50">
+                  {rankingPaged.map((r, i) => {
+                    const globalIndex = (rankingPage - 1) * PAGE_SIZE + i;
+                    return (
+                      <div key={globalIndex} className="p-4 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${globalIndex < 3 ? "bg-accent text-accent-foreground" : "bg-secondary text-muted-foreground"}`}>
+                            {globalIndex + 1}
+                          </span>
+                          <p className="text-sm font-medium">{r.name}</p>
+                        </div>
+                        <span className="text-primary font-semibold text-sm">{r.total} indicações</span>
+                      </div>
+                    );
+                  })}
                 </div>
-              ))
+                <Pager page={rankingPage} totalPages={rankingTotalPages} onChange={setRankingPage} totalItems={ranking.length} />
+              </>
             )}
           </div>
         )}
