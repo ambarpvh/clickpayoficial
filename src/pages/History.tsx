@@ -251,43 +251,53 @@ const History = () => {
         )}
 
         {tab === "adjustments" && (
-          <div className="glass-card rounded-xl divide-y divide-border/50 animate-fade-in">
+          <div className="glass-card rounded-xl animate-fade-in">
             {adjustments.length === 0 ? (
               <p className="p-8 text-muted-foreground text-sm text-center">Nenhum ajuste de saldo registrado</p>
             ) : (
-              adjustments.map((a) => (
-                <div key={a.id} className="p-4 flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium">{a.note || (a.amount >= 0 ? "Crédito manual" : "Débito manual")}</p>
-                    <p className="text-muted-foreground text-xs">
-                      {new Date(a.created_at).toLocaleDateString("pt-BR")} às {new Date(a.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-                    </p>
-                  </div>
-                  <span className={`font-semibold text-sm ${a.amount >= 0 ? "text-primary" : "text-destructive"}`}>
-                    {a.amount >= 0 ? "+" : ""}{formatBRL(Number(a.amount))}
-                  </span>
+              <>
+                <div className="divide-y divide-border/50">
+                  {adjustmentsPaged.map((a) => (
+                    <div key={a.id} className="p-4 flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium">{a.note || (a.amount >= 0 ? "Crédito manual" : "Débito manual")}</p>
+                        <p className="text-muted-foreground text-xs">
+                          {new Date(a.created_at).toLocaleDateString("pt-BR")} às {new Date(a.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                      </div>
+                      <span className={`font-semibold text-sm ${a.amount >= 0 ? "text-primary" : "text-destructive"}`}>
+                        {a.amount >= 0 ? "+" : ""}{formatBRL(Number(a.amount))}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-              ))
+                <Pager page={adjustmentsPage} totalPages={adjustmentsTotalPages} onChange={setAdjustmentsPage} totalItems={adjustments.length} />
+              </>
             )}
           </div>
         )}
 
         {tab === "withdrawals" && (
-          <div className="glass-card rounded-xl divide-y divide-border/50 animate-fade-in">
+          <div className="glass-card rounded-xl animate-fade-in">
             {withdrawals.length === 0 ? (
               <p className="p-8 text-muted-foreground text-sm text-center">Nenhum saque solicitado</p>
             ) : (
-              withdrawals.map((w) => (
-                <div key={w.id} className="p-4 flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium">{formatBRL(Number(w.amount))}</p>
-                    <p className="text-muted-foreground text-xs">
-                      {new Date(w.requested_at).toLocaleDateString("pt-BR")} — Pix: {w.pix_key || "N/A"}
-                    </p>
-                  </div>
-                  {statusLabel(w.status)}
+              <>
+                <div className="divide-y divide-border/50">
+                  {withdrawalsPaged.map((w) => (
+                    <div key={w.id} className="p-4 flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium">{formatBRL(Number(w.amount))}</p>
+                        <p className="text-muted-foreground text-xs">
+                          {new Date(w.requested_at).toLocaleDateString("pt-BR")} — Pix: {w.pix_key || "N/A"}
+                        </p>
+                      </div>
+                      {statusLabel(w.status)}
+                    </div>
+                  ))}
                 </div>
-              ))
+                <Pager page={withdrawalsPage} totalPages={withdrawalsTotalPages} onChange={setWithdrawalsPage} totalItems={withdrawals.length} />
+              </>
             )}
           </div>
         )}
