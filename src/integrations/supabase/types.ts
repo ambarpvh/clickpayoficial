@@ -266,6 +266,7 @@ export type Database = {
           pix_key: string | null
           referred_by: string | null
           signup_ip: string | null
+          state: string | null
           updated_at: string
           user_id: string
         }
@@ -283,6 +284,7 @@ export type Database = {
           pix_key?: string | null
           referred_by?: string | null
           signup_ip?: string | null
+          state?: string | null
           updated_at?: string
           user_id: string
         }
@@ -300,6 +302,7 @@ export type Database = {
           pix_key?: string | null
           referred_by?: string | null
           signup_ip?: string | null
+          state?: string | null
           updated_at?: string
           user_id?: string
         }

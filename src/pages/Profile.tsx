@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Zap, ArrowLeft, Save, KeyRound, User as UserIcon, LifeBuoy } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,6 +19,7 @@ const Profile = () => {
   const [cpf, setCpf] = useState("");
   const [pixKey, setPixKey] = useState("");
   const [phone, setPhone] = useState("");
+  const [state, setState] = useState("");
   const [saving, setSaving] = useState(false);
 
   const [newPassword, setNewPassword] = useState("");
@@ -33,7 +35,7 @@ const Profile = () => {
     if (!user) return;
     const { data } = await supabase
       .from("profiles")
-      .select("name, email, cpf, pix_key, phone")
+      .select("name, email, cpf, pix_key, phone, state")
       .eq("user_id", user.id)
       .maybeSingle();
     if (data) {
@@ -42,6 +44,7 @@ const Profile = () => {
       setCpf(data.cpf || "");
       setPixKey(data.pix_key || "");
       setPhone(data.phone || "");
+      setState(data.state || "");
       return;
     }
 
@@ -50,6 +53,7 @@ const Profile = () => {
     setCpf("");
     setPixKey("");
     setPhone("");
+    setState("");
   };
 
   const handleSave = async () => {
@@ -57,7 +61,7 @@ const Profile = () => {
     setSaving(true);
     const { error } = await supabase
       .from("profiles")
-      .update({ name, cpf, pix_key: pixKey, phone })
+      .update({ name, cpf, pix_key: pixKey, phone, state })
       .eq("user_id", user.id);
     setSaving(false);
     if (error) {
@@ -147,6 +151,43 @@ const Profile = () => {
                 <div className="space-y-1">
                   <Label>Telefone</Label>
                   <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(00) 00000-0000" />
+                </div>
+                <div className="space-y-1">
+                  <Label>Estado (UF)</Label>
+                  <Select value={state} onValueChange={setState}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Selecione seu estado" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="AC">AC - Acre</SelectItem>
+                      <SelectItem value="AL">AL - Alagoas</SelectItem>
+                      <SelectItem value="AP">AP - Amapá</SelectItem>
+                      <SelectItem value="AM">AM - Amazonas</SelectItem>
+                      <SelectItem value="BA">BA - Bahia</SelectItem>
+                      <SelectItem value="CE">CE - Ceará</SelectItem>
+                      <SelectItem value="DF">DF - Distrito Federal</SelectItem>
+                      <SelectItem value="ES">ES - Espírito Santo</SelectItem>
+                      <SelectItem value="GO">GO - Goiás</SelectItem>
+                      <SelectItem value="MA">MA - Maranhão</SelectItem>
+                      <SelectItem value="MT">MT - Mato Grosso</SelectItem>
+                      <SelectItem value="MS">MS - Mato Grosso do Sul</SelectItem>
+                      <SelectItem value="MG">MG - Minas Gerais</SelectItem>
+                      <SelectItem value="PA">PA - Pará</SelectItem>
+                      <SelectItem value="PB">PB - Paraíba</SelectItem>
+                      <SelectItem value="PR">PR - Paraná</SelectItem>
+                      <SelectItem value="PE">PE - Pernambuco</SelectItem>
+                      <SelectItem value="PI">PI - Piauí</SelectItem>
+                      <SelectItem value="RJ">RJ - Rio de Janeiro</SelectItem>
+                      <SelectItem value="RN">RN - Rio Grande do Norte</SelectItem>
+                      <SelectItem value="RS">RS - Rio Grande do Sul</SelectItem>
+                      <SelectItem value="RO">RO - Rondônia</SelectItem>
+                      <SelectItem value="RR">RR - Roraima</SelectItem>
+                      <SelectItem value="SC">SC - Santa Catarina</SelectItem>
+                      <SelectItem value="SP">SP - São Paulo</SelectItem>
+                      <SelectItem value="SE">SE - Sergipe</SelectItem>
+                      <SelectItem value="TO">TO - Tocantins</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <Button variant="hero" className="w-full" onClick={handleSave} disabled={saving}>
