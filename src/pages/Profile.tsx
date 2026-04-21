@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Zap, ArrowLeft, Save, KeyRound, User as UserIcon, LifeBuoy } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,6 +19,7 @@ const Profile = () => {
   const [cpf, setCpf] = useState("");
   const [pixKey, setPixKey] = useState("");
   const [phone, setPhone] = useState("");
+  const [state, setState] = useState("");
   const [saving, setSaving] = useState(false);
 
   const [newPassword, setNewPassword] = useState("");
