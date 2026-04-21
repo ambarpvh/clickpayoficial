@@ -176,6 +176,20 @@ const History = () => {
     return <span className="text-muted-foreground text-xs">{s}</span>;
   };
 
+  const directReferrals = useMemo(() => referrals.filter(r => r.level === 1), [referrals]);
+
+  const clicksPaged = useMemo(() => paginate(clicks, clicksPage), [clicks, clicksPage]);
+  const adjustmentsPaged = useMemo(() => paginate(adjustments, adjustmentsPage), [adjustments, adjustmentsPage]);
+  const withdrawalsPaged = useMemo(() => paginate(withdrawals, withdrawalsPage), [withdrawals, withdrawalsPage]);
+  const referralsPaged = useMemo(() => paginate(directReferrals, referralsPage), [directReferrals, referralsPage]);
+  const rankingPaged = useMemo(() => paginate(ranking, rankingPage), [ranking, rankingPage]);
+
+  const clicksTotalPages = Math.max(1, Math.ceil(clicks.length / PAGE_SIZE));
+  const adjustmentsTotalPages = Math.max(1, Math.ceil(adjustments.length / PAGE_SIZE));
+  const withdrawalsTotalPages = Math.max(1, Math.ceil(withdrawals.length / PAGE_SIZE));
+  const referralsTotalPages = Math.max(1, Math.ceil(directReferrals.length / PAGE_SIZE));
+  const rankingTotalPages = Math.max(1, Math.ceil(ranking.length / PAGE_SIZE));
+
   if (authLoading) return <div className="min-h-screen bg-background flex items-center justify-center"><Zap className="h-8 w-8 text-primary animate-pulse" /></div>;
 
   return (
