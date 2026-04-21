@@ -86,6 +86,12 @@ const History = () => {
   const [directCount, setDirectCount] = useState(0);
   const [clickValue, setClickValue] = useState(1);
 
+  const [clicksPage, setClicksPage] = useState(1);
+  const [adjustmentsPage, setAdjustmentsPage] = useState(1);
+  const [withdrawalsPage, setWithdrawalsPage] = useState(1);
+  const [referralsPage, setReferralsPage] = useState(1);
+  const [rankingPage, setRankingPage] = useState(1);
+
   useEffect(() => {
     if (!authLoading && !user) { navigate("/login"); return; }
     if (user) loadData();
