@@ -152,6 +152,43 @@ const Profile = () => {
                   <Label>Telefone</Label>
                   <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(00) 00000-0000" />
                 </div>
+                <div className="space-y-1">
+                  <Label>Estado (UF)</Label>
+                  <Select value={state} onValueChange={setState}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Selecione seu estado" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="AC">AC - Acre</SelectItem>
+                      <SelectItem value="AL">AL - Alagoas</SelectItem>
+                      <SelectItem value="AP">AP - Amapá</SelectItem>
+                      <SelectItem value="AM">AM - Amazonas</SelectItem>
+                      <SelectItem value="BA">BA - Bahia</SelectItem>
+                      <SelectItem value="CE">CE - Ceará</SelectItem>
+                      <SelectItem value="DF">DF - Distrito Federal</SelectItem>
+                      <SelectItem value="ES">ES - Espírito Santo</SelectItem>
+                      <SelectItem value="GO">GO - Goiás</SelectItem>
+                      <SelectItem value="MA">MA - Maranhão</SelectItem>
+                      <SelectItem value="MT">MT - Mato Grosso</SelectItem>
+                      <SelectItem value="MS">MS - Mato Grosso do Sul</SelectItem>
+                      <SelectItem value="MG">MG - Minas Gerais</SelectItem>
+                      <SelectItem value="PA">PA - Pará</SelectItem>
+                      <SelectItem value="PB">PB - Paraíba</SelectItem>
+                      <SelectItem value="PR">PR - Paraná</SelectItem>
+                      <SelectItem value="PE">PE - Pernambuco</SelectItem>
+                      <SelectItem value="PI">PI - Piauí</SelectItem>
+                      <SelectItem value="RJ">RJ - Rio de Janeiro</SelectItem>
+                      <SelectItem value="RN">RN - Rio Grande do Norte</SelectItem>
+                      <SelectItem value="RS">RS - Rio Grande do Sul</SelectItem>
+                      <SelectItem value="RO">RO - Rondônia</SelectItem>
+                      <SelectItem value="RR">RR - Roraima</SelectItem>
+                      <SelectItem value="SC">SC - Santa Catarina</SelectItem>
+                      <SelectItem value="SP">SP - São Paulo</SelectItem>
+                      <SelectItem value="SE">SE - Sergipe</SelectItem>
+                      <SelectItem value="TO">TO - Tocantins</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <Button variant="hero" className="w-full" onClick={handleSave} disabled={saving}>
                 <Save className="h-4 w-4 mr-1" />
