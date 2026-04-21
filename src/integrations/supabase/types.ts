@@ -257,6 +257,7 @@ export type Database = {
           block_message: string | null
           cpf: string | null
           created_at: string
+          device_fingerprint: string | null
           email: string
           id: string
           is_blocked: boolean
@@ -264,6 +265,7 @@ export type Database = {
           phone: string | null
           pix_key: string | null
           referred_by: string | null
+          signup_ip: string | null
           updated_at: string
           user_id: string
         }
@@ -272,6 +274,7 @@ export type Database = {
           block_message?: string | null
           cpf?: string | null
           created_at?: string
+          device_fingerprint?: string | null
           email?: string
           id?: string
           is_blocked?: boolean
@@ -279,6 +282,7 @@ export type Database = {
           phone?: string | null
           pix_key?: string | null
           referred_by?: string | null
+          signup_ip?: string | null
           updated_at?: string
           user_id: string
         }
@@ -287,6 +291,7 @@ export type Database = {
           block_message?: string | null
           cpf?: string | null
           created_at?: string
+          device_fingerprint?: string | null
           email?: string
           id?: string
           is_blocked?: boolean
@@ -294,6 +299,7 @@ export type Database = {
           phone?: string | null
           pix_key?: string | null
           referred_by?: string | null
+          signup_ip?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -302,27 +308,33 @@ export type Database = {
       referrals: {
         Row: {
           commission_rate: number
+          confirmed_at: string | null
           created_at: string
           id: string
           level: number
           referred_id: string
           referrer_id: string
+          status: string
         }
         Insert: {
           commission_rate?: number
+          confirmed_at?: string | null
           created_at?: string
           id?: string
           level?: number
           referred_id: string
           referrer_id: string
+          status?: string
         }
         Update: {
           commission_rate?: number
+          confirmed_at?: string | null
           created_at?: string
           id?: string
           level?: number
           referred_id?: string
           referrer_id?: string
+          status?: string
         }
         Relationships: []
       }
@@ -477,7 +489,23 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      suspicious_accounts: {
+        Row: {
+          created_at: string | null
+          device_fingerprint: string | null
+          email: string | null
+          has_duplicate_name: boolean | null
+          is_blocked: boolean | null
+          name: string | null
+          referrals_last_24h: number | null
+          risk_score: number | null
+          shares_device: boolean | null
+          shares_ip: boolean | null
+          signup_ip: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       ensure_user_setup: {
@@ -489,6 +517,29 @@ export type Database = {
         }
         Returns: undefined
       }
+      get_suspicious_accounts: {
+        Args: never
+        Returns: {
+          created_at: string | null
+          device_fingerprint: string | null
+          email: string | null
+          has_duplicate_name: boolean | null
+          is_blocked: boolean | null
+          name: string | null
+          referrals_last_24h: number | null
+          risk_score: number | null
+          shares_device: boolean | null
+          shares_ip: boolean | null
+          signup_ip: string | null
+          user_id: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "suspicious_accounts"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -496,6 +547,11 @@ export type Database = {
         }
         Returns: boolean
       }
+      register_device_fingerprint: {
+        Args: { fp_input: string }
+        Returns: undefined
+      }
+      register_signup_ip: { Args: { ip_input: string }; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "user"

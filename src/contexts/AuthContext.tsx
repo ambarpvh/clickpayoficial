@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureUserSetup } from "@/lib/ensureUserSetup";
+import { reportFraudSignals } from "@/lib/fraudSignals";
 
 interface AuthContextType {
   user: User | null;
@@ -47,7 +48,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const handleUserLogin = async (u: User) => {
       checkAdmin(u.id);
       // Ensure profile, plan, role and referral are set up
-      ensureUserSetup(u).catch(() => {});
+      ensureUserSetup(u)
+        .catch(() => {})
+        .finally(() => {
+          // Captura IP + device fingerprint para detecção de fraude
+          reportFraudSignals(u.id).catch(() => {});
+        });
     };
 
     // First get the initial session

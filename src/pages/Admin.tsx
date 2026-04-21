@@ -8,6 +8,7 @@ import { Zap, Users, Eye, DollarSign, AlertCircle, LogOut, Plus, BarChart3, Penc
 import AuditPanel from "@/components/AuditPanel";
 import UserHealthReport from "@/components/UserHealthReport";
 import AdminMessagesPanel from "@/components/AdminMessagesPanel";
+import SuspiciousAccountsPanel from "@/components/SuspiciousAccountsPanel";
 import { Megaphone } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -22,7 +23,7 @@ import { formatBRL } from "@/lib/format";
 const Admin = () => {
   const navigate = useNavigate();
   const { user, isAdmin, loading: authLoading, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState<"overview" | "users" | "ads" | "withdrawals" | "plans" | "payments" | "support" | "messages" | "audit" | "settings">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "users" | "ads" | "withdrawals" | "plans" | "payments" | "support" | "messages" | "audit" | "suspicious" | "settings">("overview");
   const [minWithdrawal, setMinWithdrawal] = useState("150");
   const [savingSettings, setSavingSettings] = useState(false);
   const [showAdForm, setShowAdForm] = useState(false);
@@ -506,6 +507,7 @@ const Admin = () => {
     { key: "support" as const, label: "Suporte", icon: LifeBuoy },
     { key: "messages" as const, label: "Mensagens", icon: Megaphone },
     { key: "audit" as const, label: "Auditoria", icon: AlertTriangle },
+    { key: "suspicious" as const, label: "Suspeitas", icon: AlertTriangle },
     { key: "settings" as const, label: "Configurações", icon: Settings },
   ];
 
@@ -1284,6 +1286,9 @@ const Admin = () => {
         )}
         {activeTab === "audit" && user && (
           <AuditPanel adminId={user.id} />
+        )}
+        {activeTab === "suspicious" && user && (
+          <SuspiciousAccountsPanel />
         )}
         {activeTab === "settings" && (
           <div className="animate-fade-in max-w-md">
