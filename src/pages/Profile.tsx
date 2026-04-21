@@ -35,7 +35,7 @@ const Profile = () => {
     if (!user) return;
     const { data } = await supabase
       .from("profiles")
-      .select("name, email, cpf, pix_key, phone")
+      .select("name, email, cpf, pix_key, phone, state")
       .eq("user_id", user.id)
       .maybeSingle();
     if (data) {
@@ -44,6 +44,7 @@ const Profile = () => {
       setCpf(data.cpf || "");
       setPixKey(data.pix_key || "");
       setPhone(data.phone || "");
+      setState(data.state || "");
       return;
     }
 
@@ -52,6 +53,7 @@ const Profile = () => {
     setCpf("");
     setPixKey("");
     setPhone("");
+    setState("");
   };
 
   const handleSave = async () => {
@@ -59,7 +61,7 @@ const Profile = () => {
     setSaving(true);
     const { error } = await supabase
       .from("profiles")
-      .update({ name, cpf, pix_key: pixKey, phone })
+      .update({ name, cpf, pix_key: pixKey, phone, state })
       .eq("user_id", user.id);
     setSaving(false);
     if (error) {
