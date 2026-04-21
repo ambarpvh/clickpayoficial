@@ -118,8 +118,8 @@ const History = () => {
       { data: withdrawalsData },
       { data: referralsData },
     ] = await Promise.all([
-      supabase.from("clicks").select("id, earned_value, clicked_at, ads(title)").eq("user_id", user.id).order("clicked_at", { ascending: false }).limit(100),
-      supabase.from("balance_adjustments").select("id, amount, note, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(100),
+      supabase.from("clicks").select("id, earned_value, clicked_at, ads(title), referral_commission_paid").eq("user_id", user.id).order("clicked_at", { ascending: false }),
+      supabase.from("balance_adjustments").select("id, amount, note, created_at").eq("user_id", user.id).order("created_at", { ascending: false }),
       supabase.from("withdrawals").select("id, amount, status, requested_at, processed_at, holder_name, pix_key").eq("user_id", user.id).order("requested_at", { ascending: false }),
       supabase.from("referrals").select("*").eq("referrer_id", user.id).order("created_at", { ascending: false }),
     ]);
