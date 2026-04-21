@@ -223,24 +223,29 @@ const History = () => {
         </div>
 
         {tab === "clicks" && (
-          <div className="glass-card rounded-xl divide-y divide-border/50 animate-fade-in">
+          <div className="glass-card rounded-xl animate-fade-in">
             {clicks.length === 0 ? (
               <p className="p-8 text-muted-foreground text-sm text-center">Nenhum clique registrado ainda</p>
             ) : (
-              clicks.map((c) => {
-                const isCommission = (c as any).referral_commission_paid === true;
-                return (
-                  <div key={c.id} className="p-4 flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium">{isCommission ? "Comissão de indicação" : "Visualização de anúncio"}</p>
-                      <p className="text-muted-foreground text-xs">
-                        {(c.ads as unknown as { title: string })?.title || "Anúncio"} • {new Date(c.clicked_at).toLocaleDateString("pt-BR")} às {new Date(c.clicked_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-                      </p>
-                    </div>
-                    <span className="text-primary font-semibold text-sm">+{formatBRL(Number(c.earned_value))}</span>
-                  </div>
-                );
-              })
+              <>
+                <div className="divide-y divide-border/50">
+                  {clicksPaged.map((c) => {
+                    const isCommission = (c as any).referral_commission_paid === true;
+                    return (
+                      <div key={c.id} className="p-4 flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium">{isCommission ? "Comissão de indicação" : "Visualização de anúncio"}</p>
+                          <p className="text-muted-foreground text-xs">
+                            {(c.ads as unknown as { title: string })?.title || "Anúncio"} • {new Date(c.clicked_at).toLocaleDateString("pt-BR")} às {new Date(c.clicked_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                          </p>
+                        </div>
+                        <span className="text-primary font-semibold text-sm">+{formatBRL(Number(c.earned_value))}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <Pager page={clicksPage} totalPages={clicksTotalPages} onChange={setClicksPage} totalItems={clicks.length} />
+              </>
             )}
           </div>
         )}
