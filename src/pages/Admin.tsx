@@ -23,7 +23,7 @@ import { formatBRL } from "@/lib/format";
 const Admin = () => {
   const navigate = useNavigate();
   const { user, isAdmin, loading: authLoading, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState<"overview" | "users" | "ads" | "withdrawals" | "plans" | "payments" | "support" | "messages" | "audit" | "suspicious" | "settings">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "ads" | "withdrawals" | "plans" | "payments" | "support" | "messages" | "audit" | "suspicious" | "settings">("overview");
   const [minWithdrawal, setMinWithdrawal] = useState("150");
   const [savingSettings, setSavingSettings] = useState(false);
   const [showAdForm, setShowAdForm] = useState(false);
@@ -499,7 +499,6 @@ const Admin = () => {
 
   const tabs = [
     { key: "overview" as const, label: "Visão Geral", icon: BarChart3 },
-    { key: "users" as const, label: "Usuários", icon: Users },
     { key: "ads" as const, label: "Anúncios", icon: Eye },
     { key: "plans" as const, label: "Planos", icon: Settings },
     { key: "payments" as const, label: "Pagamentos", icon: CreditCard },
