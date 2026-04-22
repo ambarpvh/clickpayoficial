@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
-import { Users, UserCheck, UserX, Ban, Share2, TrendingUp, Wallet } from "lucide-react";
+import { Users, UserCheck, UserX, Ban, TrendingUp, Wallet } from "lucide-react";
 import { formatBRL } from "@/lib/format";
 import { format, subDays } from "date-fns";
 
@@ -16,7 +16,6 @@ type Stats = {
   totalBalance: number;
   byPlan: { name: string; count: number }[];
   signupsPerDay: { date: string; count: number }[];
-  topReferrers: { user_id: string; name: string; email: string; count: number }[];
 };
 
 const COLORS = {
@@ -65,18 +64,6 @@ const UserHealthReport = () => {
         const referrerSet = new Set(Object.keys(referrerCounts));
         const withReferrals = profiles.filter((p: any) => referrerSet.has(p.user_id)).length;
 
-        const profileMap: Record<string, any> = {};
-        profiles.forEach((p: any) => { profileMap[p.user_id] = p; });
-        const topReferrers = Object.entries(referrerCounts)
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 10)
-          .map(([user_id, count]) => ({
-            user_id,
-            name: profileMap[user_id]?.name || "—",
-            email: profileMap[user_id]?.email || "—",
-            count,
-          }));
-
         const newLast30d = profiles.filter((p: any) => p.created_at >= since30).length;
 
         const totalBalance = adjustments.reduce((sum: number, a: any) => sum + Number(a.amount || 0), 0);
@@ -114,7 +101,6 @@ const UserHealthReport = () => {
           totalBalance,
           byPlan,
           signupsPerDay,
-          topReferrers,
         });
       } finally {
         setLoading(false);
@@ -153,7 +139,7 @@ const UserHealthReport = () => {
     { label: "Ativos (7 dias)", value: `${pct(stats.active7d)}%`, sub: `${stats.active7d} usuários`, icon: UserCheck, color: "text-emerald-400" },
     { label: "Inativos", value: `${pct(stats.inactive)}%`, sub: `${stats.inactive} usuários`, icon: UserX, color: "text-muted-foreground" },
     { label: "Bloqueados", value: `${pct(stats.blocked)}%`, sub: `${stats.blocked} contas`, icon: Ban, color: "text-destructive" },
-    { label: "Indicadores", value: `${pct(stats.withReferrals)}%`, sub: `${stats.withReferrals} indicaram alguém`, icon: Share2, color: "text-amber-400" },
+    { label: "Indicadores", value: `${pct(stats.withReferrals)}%`, sub: `${stats.withReferrals} indicaram alguém`, icon: Users, color: "text-amber-400" },
     { label: "Novos (30d)", value: stats.newLast30d, sub: "cadastros recentes", icon: TrendingUp, color: "text-primary" },
     { label: "Saldo total no sistema", value: formatBRL(stats.totalBalance), icon: Wallet, color: "text-emerald-400" },
   ];
@@ -242,46 +228,6 @@ const UserHealthReport = () => {
             </BarChart>
           </ChartContainer>
         </div>
-      </div>
-
-      {/* Top 10 referrers */}
-      <div className="rounded-lg border border-border/50 bg-background/40 p-4">
-        <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
-          <Share2 className="h-4 w-4 text-amber-400" />
-          Top 10 melhores indicadores
-        </h4>
-        {stats.topReferrers.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-6">Nenhuma indicação registrada ainda.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-xs uppercase tracking-wide text-muted-foreground border-b border-border/50">
-                  <th className="py-2 pr-2 w-10">#</th>
-                  <th className="py-2 pr-2">Nome</th>
-                  <th className="py-2 pr-2">Email</th>
-                  <th className="py-2 text-right">Indicações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stats.topReferrers.map((r, i) => (
-                  <tr key={r.user_id} className="border-b border-border/30 last:border-0 hover:bg-background/40">
-                    <td className="py-2 pr-2 font-mono text-muted-foreground">
-                      {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}º`}
-                    </td>
-                    <td className="py-2 pr-2 font-medium truncate max-w-[200px]">{r.name}</td>
-                    <td className="py-2 pr-2 text-muted-foreground truncate max-w-[260px]">{r.email}</td>
-                    <td className="py-2 text-right">
-                      <span className="inline-flex items-center justify-center min-w-[36px] px-2 py-0.5 rounded-md bg-primary/15 text-primary font-semibold">
-                        {r.count}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
       </div>
     </div>
   );
