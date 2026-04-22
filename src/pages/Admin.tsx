@@ -163,7 +163,6 @@ const Admin = () => {
         { count: pendingCount, error: pendingCountError },
         { count: activeAdsCount, error: activeAdsCountError },
         { data: approvedW, error: approvedWError },
-        { data: profilesData, error: profilesError },
         { data: adsData, error: adsError },
         { data: plansData, error: plansError },
         { data: withdrawalsData, error: withdrawalsError },
@@ -174,14 +173,13 @@ const Admin = () => {
         supabase.from("withdrawals").select("id", { count: "exact", head: true }).eq("status", "pending"),
         supabase.from("ads").select("id", { count: "exact", head: true }).eq("is_active", true),
         supabase.from("withdrawals").select("amount").eq("status", "approved"),
-        supabase.from("profiles").select("*", { count: "exact" }).order("created_at", { ascending: false }).range(0, 9999),
         supabase.from("ads").select("*").order("created_at", { ascending: false }),
         supabase.from("plans").select("*").order("price", { ascending: true }),
         supabase.from("withdrawals").select("*").eq("status", "pending").order("requested_at", { ascending: false }),
         supabase.from("payments").select("*").eq("status", "pending").order("created_at", { ascending: false }),
       ]);
 
-      const firstError = userCountError || clickCountError || pendingCountError || activeAdsCountError || approvedWError || profilesError || adsError || plansError || withdrawalsError || paymentsError;
+      const firstError = userCountError || clickCountError || pendingCountError || activeAdsCountError || approvedWError || adsError || plansError || withdrawalsError || paymentsError;
 
       if (firstError) {
         console.error("Erro ao carregar dados do admin:", firstError);
@@ -192,36 +190,6 @@ const Admin = () => {
       const totalPaid = approvedW?.reduce((s, w) => s + Number(w.amount), 0) || 0;
 
       setStats({ users: userCount || 0, clicks: clickCount || 0, pendingWithdrawals: pendingCount || 0, activeAds: activeAdsCount || 0, totalPaid });
-      // Fetch balances for each user
-      const userIds = (profilesData || []).map((p: any) => p.user_id);
-      const [
-        { data: allClicks },
-        { data: allAdjustments },
-        { data: allWithdrawalsAll },
-        { data: allUserPlans },
-      ] = await Promise.all([
-        supabase.from("clicks").select("user_id, earned_value").in("user_id", userIds),
-        supabase.from("balance_adjustments").select("user_id, amount").in("user_id", userIds),
-        supabase.from("withdrawals").select("user_id, amount, status").in("user_id", userIds),
-        supabase.from("user_plans").select("user_id, plan_id, is_active").eq("is_active", true).in("user_id", userIds),
-      ]);
-
-      const balanceMap: Record<string, number> = {};
-      (allClicks || []).forEach((c: any) => { balanceMap[c.user_id] = (balanceMap[c.user_id] || 0) + Number(c.earned_value); });
-      (allAdjustments || []).forEach((a: any) => { balanceMap[a.user_id] = (balanceMap[a.user_id] || 0) + Number(a.amount); });
-      (allWithdrawalsAll || []).forEach((w: any) => { if (w.status === "approved" || w.status === "pending") { balanceMap[w.user_id] = (balanceMap[w.user_id] || 0) - Number(w.amount); } });
-
-      const planMap: Record<string, string> = {};
-      (allUserPlans || []).forEach((up: any) => { planMap[up.user_id] = up.plan_id; });
-
-      const enrichedUsers = (profilesData || []).map((p: any) => ({
-        ...p,
-        balance: balanceMap[p.user_id] || 0,
-        activePlanId: planMap[p.user_id] || null,
-      }));
-
-      setUsers(enrichedUsers);
-      setUsersTotal(userCount || 0);
       setAds(adsData || []);
       setPlans(plansData || []);
       setWithdrawals(withdrawalsData || []);
@@ -569,7 +537,7 @@ const Admin = () => {
         {activeTab === "overview" && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in">
             {[
-              { label: "Total Usuários", value: String(stats.users), icon: Users },
+              { label: "Total Usuários", value: String(stats.users), icon: Eye },
               { label: "Total Cliques", value: String(stats.clicks), icon: Eye },
               { label: "Anúncios Ativos", value: String(stats.activeAds), icon: Eye },
               { label: "Saques Pendentes", value: String(stats.pendingWithdrawals), icon: AlertCircle },
