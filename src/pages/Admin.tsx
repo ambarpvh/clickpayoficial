@@ -4,9 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Zap, Users, Eye, DollarSign, AlertCircle, LogOut, Plus, BarChart3, Pencil, Trash2, Ban, ShieldCheck, Settings, Link2, Link2Off, CreditCard, CheckCircle, XCircle, Image, ExternalLink, ArrowUpDown, ArrowUp, ArrowDown, Download, LifeBuoy, Send, MessageSquare, AlertTriangle } from "lucide-react";
+import { Zap, Eye, DollarSign, AlertCircle, LogOut, Plus, BarChart3, Pencil, Trash2, Ban, ShieldCheck, Settings, Link2, Link2Off, CreditCard, CheckCircle, XCircle, Image, ExternalLink, LifeBuoy, Send, MessageSquare, AlertTriangle } from "lucide-react";
 import AuditPanel from "@/components/AuditPanel";
-import UserHealthReport from "@/components/UserHealthReport";
 import AdminMessagesPanel from "@/components/AdminMessagesPanel";
 import SuspiciousAccountsPanel from "@/components/SuspiciousAccountsPanel";
 import { Megaphone } from "lucide-react";
@@ -66,13 +65,6 @@ const Admin = () => {
   const [blockSubmitting, setBlockSubmitting] = useState(false);
 
   // Data
-  const [users, setUsers] = useState<any[]>([]);
-  const [usersTotal, setUsersTotal] = useState(0);
-  const [usersPage, setUsersPage] = useState(0);
-  const [usersSortKey, setUsersSortKey] = useState<"date" | "name" | "plan" | "balance">("date");
-  const [usersSortAsc, setUsersSortAsc] = useState(false);
-  const [usersSearch, setUsersSearch] = useState("");
-  const USERS_PER_PAGE = 20;
   const [ads, setAds] = useState<any[]>([]);
   const [plans, setPlans] = useState<any[]>([]);
   const [withdrawals, setWithdrawals] = useState<any[]>([]);
