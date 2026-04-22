@@ -139,7 +139,7 @@ const UserHealthReport = () => {
     { label: "Ativos (7 dias)", value: `${pct(stats.active7d)}%`, sub: `${stats.active7d} usuários`, icon: UserCheck, color: "text-emerald-400" },
     { label: "Inativos", value: `${pct(stats.inactive)}%`, sub: `${stats.inactive} usuários`, icon: UserX, color: "text-muted-foreground" },
     { label: "Bloqueados", value: `${pct(stats.blocked)}%`, sub: `${stats.blocked} contas`, icon: Ban, color: "text-destructive" },
-    { label: "Indicadores", value: `${pct(stats.withReferrals)}%`, sub: `${stats.withReferrals} indicaram alguém`, icon: Share2, color: "text-amber-400" },
+    { label: "Indicadores", value: `${pct(stats.withReferrals)}%`, sub: `${stats.withReferrals} indicaram alguém`, icon: Users, color: "text-amber-400" },
     { label: "Novos (30d)", value: stats.newLast30d, sub: "cadastros recentes", icon: TrendingUp, color: "text-primary" },
     { label: "Saldo total no sistema", value: formatBRL(stats.totalBalance), icon: Wallet, color: "text-emerald-400" },
   ];
