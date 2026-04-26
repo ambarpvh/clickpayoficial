@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Zap, Eye, DollarSign, AlertCircle, LogOut, Plus, BarChart3, Pencil, Trash2, Ban, ShieldCheck, Settings, Link2, Link2Off, CreditCard, CheckCircle, XCircle, Image, ExternalLink, LifeBuoy, Send, MessageSquare, AlertTriangle } from "lucide-react";
+import { Zap, Users, Eye, DollarSign, AlertCircle, LogOut, Plus, BarChart3, Pencil, Trash2, Ban, ShieldCheck, Settings, Link2, Link2Off, CreditCard, CheckCircle, XCircle, Image, ExternalLink, ArrowUpDown, ArrowUp, ArrowDown, Download, LifeBuoy, Send, MessageSquare, AlertTriangle } from "lucide-react";
 import AuditPanel from "@/components/AuditPanel";
+import UserHealthReport from "@/components/UserHealthReport";
 import AdminMessagesPanel from "@/components/AdminMessagesPanel";
 import SuspiciousAccountsPanel from "@/components/SuspiciousAccountsPanel";
 import { Megaphone } from "lucide-react";
@@ -22,7 +23,7 @@ import { formatBRL } from "@/lib/format";
 const Admin = () => {
   const navigate = useNavigate();
   const { user, isAdmin, loading: authLoading, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState<"overview" | "ads" | "withdrawals" | "plans" | "payments" | "support" | "messages" | "audit" | "suspicious" | "settings">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "users" | "ads" | "withdrawals" | "plans" | "payments" | "support" | "messages" | "audit" | "suspicious" | "settings">("overview");
   const [minWithdrawal, setMinWithdrawal] = useState("150");
   const [savingSettings, setSavingSettings] = useState(false);
   const [showAdForm, setShowAdForm] = useState(false);
@@ -65,6 +66,13 @@ const Admin = () => {
   const [blockSubmitting, setBlockSubmitting] = useState(false);
 
   // Data
+  const [users, setUsers] = useState<any[]>([]);
+  const [usersTotal, setUsersTotal] = useState(0);
+  const [usersPage, setUsersPage] = useState(0);
+  const [usersSortKey, setUsersSortKey] = useState<"date" | "name" | "plan" | "balance">("date");
+  const [usersSortAsc, setUsersSortAsc] = useState(false);
+  const [usersSearch, setUsersSearch] = useState("");
+  const USERS_PER_PAGE = 20;
   const [ads, setAds] = useState<any[]>([]);
   const [plans, setPlans] = useState<any[]>([]);
   const [withdrawals, setWithdrawals] = useState<any[]>([]);
@@ -163,6 +171,7 @@ const Admin = () => {
         { count: pendingCount, error: pendingCountError },
         { count: activeAdsCount, error: activeAdsCountError },
         { data: approvedW, error: approvedWError },
+        { data: profilesData, error: profilesError },
         { data: adsData, error: adsError },
         { data: plansData, error: plansError },
         { data: withdrawalsData, error: withdrawalsError },
@@ -173,13 +182,14 @@ const Admin = () => {
         supabase.from("withdrawals").select("id", { count: "exact", head: true }).eq("status", "pending"),
         supabase.from("ads").select("id", { count: "exact", head: true }).eq("is_active", true),
         supabase.from("withdrawals").select("amount").eq("status", "approved"),
+        supabase.from("profiles").select("*", { count: "exact" }).order("created_at", { ascending: false }).range(0, 9999),
         supabase.from("ads").select("*").order("created_at", { ascending: false }),
         supabase.from("plans").select("*").order("price", { ascending: true }),
         supabase.from("withdrawals").select("*").eq("status", "pending").order("requested_at", { ascending: false }),
         supabase.from("payments").select("*").eq("status", "pending").order("created_at", { ascending: false }),
       ]);
 
-      const firstError = userCountError || clickCountError || pendingCountError || activeAdsCountError || approvedWError || adsError || plansError || withdrawalsError || paymentsError;
+      const firstError = userCountError || clickCountError || pendingCountError || activeAdsCountError || approvedWError || profilesError || adsError || plansError || withdrawalsError || paymentsError;
 
       if (firstError) {
         console.error("Erro ao carregar dados do admin:", firstError);
@@ -190,6 +200,36 @@ const Admin = () => {
       const totalPaid = approvedW?.reduce((s, w) => s + Number(w.amount), 0) || 0;
 
       setStats({ users: userCount || 0, clicks: clickCount || 0, pendingWithdrawals: pendingCount || 0, activeAds: activeAdsCount || 0, totalPaid });
+      // Fetch balances for each user
+      const userIds = (profilesData || []).map((p: any) => p.user_id);
+      const [
+        { data: allClicks },
+        { data: allAdjustments },
+        { data: allWithdrawalsAll },
+        { data: allUserPlans },
+      ] = await Promise.all([
+        supabase.from("clicks").select("user_id, earned_value").in("user_id", userIds),
+        supabase.from("balance_adjustments").select("user_id, amount").in("user_id", userIds),
+        supabase.from("withdrawals").select("user_id, amount, status").in("user_id", userIds),
+        supabase.from("user_plans").select("user_id, plan_id, is_active").eq("is_active", true).in("user_id", userIds),
+      ]);
+
+      const balanceMap: Record<string, number> = {};
+      (allClicks || []).forEach((c: any) => { balanceMap[c.user_id] = (balanceMap[c.user_id] || 0) + Number(c.earned_value); });
+      (allAdjustments || []).forEach((a: any) => { balanceMap[a.user_id] = (balanceMap[a.user_id] || 0) + Number(a.amount); });
+      (allWithdrawalsAll || []).forEach((w: any) => { if (w.status === "approved" || w.status === "pending") { balanceMap[w.user_id] = (balanceMap[w.user_id] || 0) - Number(w.amount); } });
+
+      const planMap: Record<string, string> = {};
+      (allUserPlans || []).forEach((up: any) => { planMap[up.user_id] = up.plan_id; });
+
+      const enrichedUsers = (profilesData || []).map((p: any) => ({
+        ...p,
+        balance: balanceMap[p.user_id] || 0,
+        activePlanId: planMap[p.user_id] || null,
+      }));
+
+      setUsers(enrichedUsers);
+      setUsersTotal(userCount || 0);
       setAds(adsData || []);
       setPlans(plansData || []);
       setWithdrawals(withdrawalsData || []);
@@ -459,6 +499,7 @@ const Admin = () => {
 
   const tabs = [
     { key: "overview" as const, label: "Visão Geral", icon: BarChart3 },
+    { key: "users" as const, label: "Usuários", icon: Users },
     { key: "ads" as const, label: "Anúncios", icon: Eye },
     { key: "plans" as const, label: "Planos", icon: Settings },
     { key: "payments" as const, label: "Pagamentos", icon: CreditCard },
@@ -537,7 +578,7 @@ const Admin = () => {
         {activeTab === "overview" && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in">
             {[
-              { label: "Total Usuários", value: String(stats.users), icon: Eye },
+              { label: "Total Usuários", value: String(stats.users), icon: Users },
               { label: "Total Cliques", value: String(stats.clicks), icon: Eye },
               { label: "Anúncios Ativos", value: String(stats.activeAds), icon: Eye },
               { label: "Saques Pendentes", value: String(stats.pendingWithdrawals), icon: AlertCircle },
@@ -586,6 +627,255 @@ const Admin = () => {
                   <Bar dataKey="revenue" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ChartContainer>
+            </div>
+          </div>
+        )}
+
+        {/* Users */}
+        {activeTab === "users" && (
+          <div className="animate-fade-in space-y-4">
+            <UserHealthReport />
+            <div className="glass-card rounded-xl overflow-hidden">
+            <div className="p-4 border-b border-border/50 flex flex-col sm:flex-row sm:items-center gap-2 sm:justify-between">
+              <Input
+                type="search"
+                placeholder="Buscar por nome ou email..."
+                value={usersSearch}
+                onChange={(e) => { setUsersSearch(e.target.value); setUsersPage(0); }}
+                className="bg-secondary border-border max-w-md"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const q = usersSearch.trim().toLowerCase();
+                  const filtered = q
+                    ? users.filter((u: any) =>
+                        (u.name || "").toLowerCase().includes(q) ||
+                        (u.email || "").toLowerCase().includes(q)
+                      )
+                    : users;
+                  const sorted = [...filtered].sort((a, b) => {
+                    const dir = usersSortAsc ? 1 : -1;
+                    switch (usersSortKey) {
+                      case "date": return dir * (new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+                      case "name": return dir * (a.name || "").localeCompare(b.name || "", "pt-BR");
+                      case "plan": {
+                        const pa = plans.find((p: any) => p.id === a.activePlanId);
+                        const pb = plans.find((p: any) => p.id === b.activePlanId);
+                        return dir * ((pa?.price || 0) - (pb?.price || 0));
+                      }
+                      case "balance": return dir * ((a.balance || 0) - (b.balance || 0));
+                      default: return 0;
+                    }
+                  });
+                  if (sorted.length === 0) {
+                    toast.info("Nenhum usuário no filtro atual para exportar.");
+                    return;
+                  }
+                  const escape = (v: any) => {
+                    const s = v == null ? "" : String(v);
+                    return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+                  };
+                  const headers = ["Data de Cadastro", "Nome", "Email", "Telefone", "CPF", "Chave PIX", "Plano", "Valor Geral (R$)"];
+                  const rows = sorted.map((u: any) => [
+                    new Date(u.created_at).toLocaleDateString("pt-BR"),
+                    u.name || "",
+                    u.email || "",
+                    u.phone || "",
+                    u.cpf || "",
+                    u.pix_key || "",
+                    plans.find((p: any) => p.id === u.activePlanId)?.name || "Free",
+                    (u.balance || 0).toFixed(2).replace(".", ","),
+                  ]);
+                  const csv = "\uFEFF" + [headers, ...rows].map((r) => r.map(escape).join(";")).join("\n");
+                  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  const stamp = new Date().toISOString().slice(0, 10);
+                  a.download = `usuarios_${stamp}.csv`;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  URL.revokeObjectURL(url);
+                  toast.success(`${sorted.length} usuário(s) exportado(s) em CSV.`);
+                }}
+              >
+                <Download className="h-4 w-4 mr-1" /> Exportar CSV
+              </Button>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border/50">
+                    {([
+                      { key: "date" as const, label: "Data", hiddenSm: false },
+                      { key: "name" as const, label: "Nome", hiddenSm: false },
+                      { key: null as null, label: "Email", hiddenSm: true },
+                      { key: "plan" as const, label: "Plano", hiddenSm: false },
+                      { key: "balance" as const, label: "Valor Geral", hiddenSm: false },
+                      { key: null as null, label: "Ações", hiddenSm: false },
+                    ]).map((col, i) => (
+                      <th
+                        key={i}
+                        className={`text-left p-4 text-muted-foreground font-medium ${col.hiddenSm ? "hidden sm:table-cell" : ""} ${col.key ? "cursor-pointer select-none hover:text-foreground transition-colors" : ""}`}
+                        onClick={() => {
+                          if (!col.key) return;
+                          if (usersSortKey === col.key) setUsersSortAsc(!usersSortAsc);
+                          else { setUsersSortKey(col.key); setUsersSortAsc(col.key === "name"); }
+                          setUsersPage(0);
+                        }}
+                      >
+                        <span className="inline-flex items-center gap-1">
+                          {col.label}
+                          {col.key && (
+                            usersSortKey === col.key
+                              ? (usersSortAsc ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />)
+                              : <ArrowUpDown className="h-3 w-3 opacity-40" />
+                          )}
+                        </span>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {(() => {
+                    const q = usersSearch.trim().toLowerCase();
+                    const filtered = q
+                      ? users.filter((u: any) =>
+                          (u.name || "").toLowerCase().includes(q) ||
+                          (u.email || "").toLowerCase().includes(q)
+                        )
+                      : users;
+                    const sorted = [...filtered].sort((a, b) => {
+                      const dir = usersSortAsc ? 1 : -1;
+                      switch (usersSortKey) {
+                        case "date": return dir * (new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+                        case "name": return dir * (a.name || "").localeCompare(b.name || "", "pt-BR");
+                        case "plan": {
+                          const pa = plans.find((p: any) => p.id === a.activePlanId);
+                          const pb = plans.find((p: any) => p.id === b.activePlanId);
+                          return dir * ((pa?.price || 0) - (pb?.price || 0));
+                        }
+                        case "balance": return dir * ((a.balance || 0) - (b.balance || 0));
+                        default: return 0;
+                      }
+                    });
+                    const paged = sorted.slice(usersPage * USERS_PER_PAGE, (usersPage + 1) * USERS_PER_PAGE);
+                    if (paged.length === 0) {
+                      return (
+                        <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">Nenhum usuário encontrado</td></tr>
+                      );
+                    }
+                    return paged.map((u: any) => (
+                    <tr key={u.id} className="border-b border-border/30 hover:bg-secondary/30">
+                      <td className="p-4 text-muted-foreground text-xs whitespace-nowrap">{new Date(u.created_at).toLocaleDateString("pt-BR")}</td>
+                      <td className="p-4 font-medium">{u.name || "Sem nome"}</td>
+                      <td className="p-4 text-muted-foreground hidden sm:table-cell">{u.email}</td>
+                      <td className="p-4"><span className="text-primary font-semibold">{plans.find((p: any) => p.id === u.activePlanId)?.name || "Free"}</span></td>
+                      <td className="p-4 font-semibold">{formatBRL(u.balance || 0)}</td>
+                      <td className="p-4">
+                        <div className="flex flex-wrap items-start gap-2">
+                          {adjustingBalance === u.user_id ? (
+                            <div className="flex flex-col gap-1">
+                              <div className="flex items-center gap-1">
+                                <select value={adjustType} onChange={(e) => setAdjustType(e.target.value as "add" | "remove")} className="h-8 text-xs rounded-md bg-secondary border border-border px-1">
+                                  <option value="add">+ Adicionar</option>
+                                  <option value="remove">- Remover</option>
+                                </select>
+                                <Input type="number" placeholder="Valor" value={adjustAmount} onChange={(e) => setAdjustAmount(e.target.value)} className="w-20 h-8 bg-secondary border-border text-xs" />
+                              </div>
+                              <Input placeholder="Observação..." value={adjustNote} onChange={(e) => setAdjustNote(e.target.value)} className="h-8 bg-secondary border-border text-xs" />
+                              <div className="flex gap-1">
+                                <Button size="sm" className="h-7 text-xs" onClick={() => adjustBalance(u.user_id)}>Confirmar</Button>
+                                <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => { setAdjustingBalance(null); setAdjustAmount(""); setAdjustNote(""); }}>✕</Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => { setAdjustingBalance(u.user_id); setAdjustType("add"); setAdjustAmount(""); setAdjustNote(""); }}>
+                              <DollarSign className="h-3 w-3 mr-1" /> Saldo
+                            </Button>
+                          )}
+                          {changingPlanUser === u.user_id ? (
+                            <div className="flex items-center gap-1">
+                              <select
+                                value={selectedNewPlan}
+                                onChange={(e) => setSelectedNewPlan(e.target.value)}
+                                className="h-8 text-xs rounded-md bg-secondary border border-border px-2"
+                              >
+                                <option value="">Selecione...</option>
+                                {plans.map((p: any) => (
+                                  <option key={p.id} value={p.id}>{p.name}</option>
+                                ))}
+                              </select>
+                              <Button size="sm" className="h-8 text-xs" onClick={() => changeUserPlan(u.user_id)}>OK</Button>
+                              <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => setChangingPlanUser(null)}>✕</Button>
+                            </div>
+                          ) : (
+                            <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => { setChangingPlanUser(u.user_id); setSelectedNewPlan(""); }}>
+                              <Settings className="h-3 w-3 mr-1" /> Plano
+                            </Button>
+                          )}
+                          <Button size="sm" variant="default" className="h-8 text-xs" onClick={() => window.open(`/dashboard?view_as=${u.user_id}`, '_blank')} title="Ver painel do usuário">
+                            <Eye className="h-4 w-4 mr-1" /> Ver Painel
+                          </Button>
+                          {blockingUser === u.user_id ? (
+                            <div className="flex flex-col gap-1 w-full sm:w-72 mt-1">
+                              <Textarea
+                                value={blockMessage}
+                                onChange={(e) => setBlockMessage(e.target.value)}
+                                placeholder="Mensagem que o usuário verá ao tentar entrar..."
+                                rows={3}
+                                maxLength={500}
+                                className="text-xs"
+                              />
+                              <div className="flex gap-1">
+                                <Button size="sm" variant="destructive" className="h-7 text-xs" disabled={blockSubmitting} onClick={() => blockUser(u.user_id)}>
+                                  {blockSubmitting ? "Bloqueando..." : "Confirmar bloqueio"}
+                                </Button>
+                                <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => { setBlockingUser(null); setBlockMessage(""); }}>✕</Button>
+                              </div>
+                            </div>
+                          ) : u.is_blocked ? (
+                            <Button size="sm" variant="outline" className="h-8 text-xs border-primary/40 text-primary" onClick={() => unblockUser(u.user_id)} title={u.block_message || ""}>
+                              <ShieldCheck className="h-3 w-3 mr-1" /> Desbloquear
+                            </Button>
+                          ) : (
+                            <Button size="sm" variant="outline" className="h-8 text-xs border-destructive/40 text-destructive hover:bg-destructive/10" onClick={() => { setBlockingUser(u.user_id); setBlockMessage(""); }}>
+                              <Ban className="h-3 w-3 mr-1" /> Bloquear
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ));
+                  })()}
+                </tbody>
+              </table>
+            </div>
+            {/* Pagination */}
+            {(() => {
+              const q = usersSearch.trim().toLowerCase();
+              const filteredTotal = q
+                ? users.filter((u: any) =>
+                    (u.name || "").toLowerCase().includes(q) ||
+                    (u.email || "").toLowerCase().includes(q)
+                  ).length
+                : usersTotal;
+              if (filteredTotal <= USERS_PER_PAGE) return null;
+              return (
+                <div className="flex items-center justify-between p-4 border-t border-border/50">
+                  <span className="text-xs text-muted-foreground">
+                    Mostrando {usersPage * USERS_PER_PAGE + 1}–{Math.min((usersPage + 1) * USERS_PER_PAGE, filteredTotal)} de {filteredTotal}
+                  </span>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" disabled={usersPage === 0} onClick={() => setUsersPage(p => p - 1)}>Anterior</Button>
+                    <Button size="sm" variant="outline" disabled={(usersPage + 1) * USERS_PER_PAGE >= filteredTotal} onClick={() => setUsersPage(p => p + 1)}>Próximo</Button>
+                  </div>
+                </div>
+              );
+            })()}
             </div>
           </div>
         )}
