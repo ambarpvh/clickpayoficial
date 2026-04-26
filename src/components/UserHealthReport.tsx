@@ -228,22 +228,6 @@ const UserHealthReport = () => {
         </div>
       </div>
 
-      {/* Signups per day */}
-      <div className="rounded-lg border border-border/50 bg-background/40 p-4">
-        <h4 className="text-sm font-semibold mb-3">Cadastros por dia (últimos 30 dias)</h4>
-        <div className="h-56">
-          <ChartContainer config={{ count: { label: "Cadastros", color: "hsl(var(--primary))" } }}>
-            <BarChart data={stats.signupsPerDay}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-              <XAxis dataKey="date" tick={{ fontSize: 10 }} interval={2} />
-              <YAxis allowDecimals={false} tick={{ fontSize: 10 }} />
-              <ChartTooltip content={<ChartTooltipContent />} />
-              <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ChartContainer>
-        </div>
-      </div>
-
     </div>
   );
 };
