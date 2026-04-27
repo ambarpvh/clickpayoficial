@@ -37,6 +37,7 @@ const App = () => (
             <Route path="/payment/:planId" element={<Payment />} />
             <Route path="/history" element={<History />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/anunciar" element={<Advertiser />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
