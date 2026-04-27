@@ -96,15 +96,18 @@ const Advertiser = () => {
     setSubmitting(true);
     try {
       const payload = {
-        ...result.data,
-        ad_description: result.data.ad_description || null,
+        full_name: result.data.full_name,
+        email: result.data.email,
+        phone: result.data.phone,
+        ad_link: result.data.ad_link,
+        ad_description: result.data.ad_description ?? null,
         clicks_amount: clicks,
         total_value: totalValue,
       };
 
       const { error: insertError } = await supabase
         .from("advertiser_leads")
-        .insert(payload);
+        .insert([payload]);
 
       if (insertError) throw insertError;
 
