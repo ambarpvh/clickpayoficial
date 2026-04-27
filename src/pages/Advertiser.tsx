@@ -111,18 +111,9 @@ const Advertiser = () => {
 
       if (insertError) throw insertError;
 
-      // Notify admin via edge function (best-effort)
-      try {
-        await supabase.functions.invoke("send-advertiser-lead", {
-          body: payload,
-        });
-      } catch (notifyErr) {
-        console.warn("[advertiser] notify failed", notifyErr);
-      }
-
       toast({
         title: "Pedido enviado!",
-        description: "Recebemos sua solicitação. Entraremos em contato em breve por email.",
+        description: "Recebemos sua solicitação. Nossa equipe entrará em contato em breve.",
       });
       setDialogOpen(false);
       setForm({ full_name: "", email: "", phone: "", ad_link: "", ad_description: "" });
