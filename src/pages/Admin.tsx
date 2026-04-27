@@ -1292,6 +1292,9 @@ const Admin = () => {
         {activeTab === "suspicious" && user && (
           <SuspiciousAccountsPanel />
         )}
+        {activeTab === "advertisers" && user && (
+          <AdvertiserLeadsPanel />
+        )}
         {activeTab === "settings" && (
           <div className="animate-fade-in max-w-md">
             <h2 className="font-heading text-xl font-bold mb-4">Configurações</h2>
