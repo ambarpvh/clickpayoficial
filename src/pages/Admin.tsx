@@ -23,7 +23,7 @@ import { formatBRL } from "@/lib/format";
 const Admin = () => {
   const navigate = useNavigate();
   const { user, isAdmin, loading: authLoading, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState<"overview" | "users" | "ads" | "withdrawals" | "plans" | "payments" | "support" | "messages" | "audit" | "suspicious" | "settings">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "users" | "ads" | "withdrawals" | "plans" | "payments" | "support" | "messages" | "audit" | "suspicious" | "advertisers" | "settings">("overview");
   const [minWithdrawal, setMinWithdrawal] = useState("150");
   const [savingSettings, setSavingSettings] = useState(false);
   const [showAdForm, setShowAdForm] = useState(false);
