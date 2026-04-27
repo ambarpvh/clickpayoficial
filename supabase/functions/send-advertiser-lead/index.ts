@@ -10,7 +10,7 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const ADMIN_EMAIL = "clickpayoficial@gmail.com";
+const ADMIN_EMAIL = "oficialclickpay@gmail.com";
 
 interface LeadPayload {
   full_name: string;
