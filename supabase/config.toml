@@ -1,1 +1,4 @@
 project_id = "rreiywlwawholjjrmdxa"
+
+[functions.send-advertiser-lead]
+verify_jwt = false

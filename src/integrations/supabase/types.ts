@@ -109,6 +109,48 @@ export type Database = {
         }
         Relationships: []
       }
+      advertiser_leads: {
+        Row: {
+          ad_description: string | null
+          ad_link: string
+          clicks_amount: number
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          phone: string | null
+          status: string
+          total_value: number
+          updated_at: string
+        }
+        Insert: {
+          ad_description?: string | null
+          ad_link: string
+          clicks_amount: number
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          phone?: string | null
+          status?: string
+          total_value: number
+          updated_at?: string
+        }
+        Update: {
+          ad_description?: string | null
+          ad_link?: string
+          clicks_amount?: number
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          phone?: string | null
+          status?: string
+          total_value?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       balance_adjustments: {
         Row: {
           admin_id: string
