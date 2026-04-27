@@ -16,6 +16,7 @@ import History from "./pages/History";
 import Profile from "./pages/Profile";
 import Advertiser from "./pages/Advertiser";
 import NotFound from "./pages/NotFound";
+import WhatsAppBanner from "./components/WhatsAppBanner";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ const App = () => (
             <Route path="/anunciar" element={<Advertiser />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <WhatsAppBanner />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
