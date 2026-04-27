@@ -14,6 +14,7 @@ import Plans from "./pages/Plans";
 import Payment from "./pages/Payment";
 import History from "./pages/History";
 import Profile from "./pages/Profile";
+import Advertiser from "./pages/Advertiser";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
