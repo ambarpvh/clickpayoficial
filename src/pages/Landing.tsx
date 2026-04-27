@@ -156,10 +156,16 @@ const Landing = () => {
             <Zap className="h-6 w-6 text-primary" />
             <span className="font-heading text-xl font-bold text-foreground">ClickPay</span>
           </div>
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" onClick={() => navigate("/login")}>Entrar</Button>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/anunciar")} className="hidden sm:inline-flex">
+              <Target className="h-4 w-4" /> Quero Anunciar
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/anunciar")} className="sm:hidden" aria-label="Quero Anunciar">
+              <Target className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/login")}>Entrar</Button>
             <Button variant="hero" size="sm" onClick={() => navigate("/register")}>
-              Começar Agora
+              Começar
             </Button>
           </div>
         </div>
