@@ -9,6 +9,7 @@ import AuditPanel from "@/components/AuditPanel";
 import UserHealthReport from "@/components/UserHealthReport";
 import AdminMessagesPanel from "@/components/AdminMessagesPanel";
 import SuspiciousAccountsPanel from "@/components/SuspiciousAccountsPanel";
+import AdvertiserLeadsPanel from "@/components/AdvertiserLeadsPanel";
 import { Megaphone } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
