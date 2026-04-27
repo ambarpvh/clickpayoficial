@@ -509,6 +509,7 @@ const Admin = () => {
     { key: "messages" as const, label: "Mensagens", icon: Megaphone },
     { key: "audit" as const, label: "Auditoria", icon: AlertTriangle },
     { key: "suspicious" as const, label: "Suspeitas", icon: AlertTriangle },
+    { key: "advertisers" as const, label: "Anunciantes", icon: Megaphone },
     { key: "settings" as const, label: "Configurações", icon: Settings },
   ];
 
