@@ -1,0 +1,2 @@
+[functions.send-advertiser-lead]
+verify_jwt = false
