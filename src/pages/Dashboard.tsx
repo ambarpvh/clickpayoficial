@@ -95,8 +95,20 @@ const Dashboard = () => {
       .gte("clicked_at", today);
 
     setTodayClicks(todayClicksData?.length || 0);
-    setTodayEarnings(todayClicksData?.reduce((sum, c) => sum + Number(c.earned_value), 0) || 0);
+    const todayAdsEarnings = todayClicksData?.reduce((sum, c) => sum + Number(c.earned_value), 0) || 0;
     setTodayClickedAdIds(new Set((todayClicksData || []).map((c) => c.ad_id)));
+
+    // Ganhos do dia por indicações/ajustes positivos (comissões creditadas hoje)
+    const { data: todayAdjustments } = await supabase
+      .from("balance_adjustments")
+      .select("amount")
+      .eq("user_id", targetUserId)
+      .gte("created_at", today);
+    const todayReferralEarnings = todayAdjustments?.reduce(
+      (sum, a) => sum + Math.max(0, Number(a.amount)),
+      0
+    ) || 0;
+    setTodayEarnings(todayAdsEarnings + todayReferralEarnings);
 
     const { data: allClicks } = await supabase.from("clicks").select("earned_value").eq("user_id", targetUserId);
     const totalEarned = allClicks?.reduce((sum, c) => sum + Number(c.earned_value), 0) || 0;
