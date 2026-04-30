@@ -130,17 +130,73 @@ const Advertiser = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div
+      className="advertiser-theme min-h-screen"
+      style={{
+        // Paleta de negócios: azul royal/corporativo + dourado
+        // Escopo local — não afeta o restante do app
+        ['--adv-bg' as any]: '218 50% 6%',
+        ['--adv-surface' as any]: '218 45% 10%',
+        ['--adv-primary' as any]: '218 90% 58%',          // azul royal vibrante
+        ['--adv-primary-foreground' as any]: '218 50% 6%',
+        ['--adv-accent' as any]: '42 95% 58%',            // dourado
+        ['--adv-border' as any]: '218 35% 20%',
+        ['--adv-muted' as any]: '218 15% 65%',
+        backgroundColor: 'hsl(var(--adv-bg))',
+        backgroundImage:
+          'radial-gradient(ellipse at top, hsl(var(--adv-primary) / 0.18), transparent 60%), radial-gradient(ellipse at bottom right, hsl(var(--adv-accent) / 0.10), transparent 55%)',
+      }}
+    >
+      <style>{`
+        .advertiser-theme .adv-glass {
+          background: hsl(var(--adv-surface) / 0.6);
+          border: 1px solid hsl(var(--adv-border) / 0.7);
+          backdrop-filter: blur(12px);
+        }
+        .advertiser-theme .adv-text-primary { color: hsl(var(--adv-primary)); }
+        .advertiser-theme .adv-text-accent { color: hsl(var(--adv-accent)); }
+        .advertiser-theme .adv-gradient-text {
+          background: linear-gradient(135deg, hsl(var(--adv-primary)), hsl(var(--adv-accent)));
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+        .advertiser-theme .adv-btn-primary {
+          background: linear-gradient(135deg, hsl(var(--adv-primary)), hsl(218 95% 50%));
+          color: hsl(var(--adv-primary-foreground));
+          font-weight: 700;
+          box-shadow: 0 10px 30px -8px hsl(var(--adv-primary) / 0.55);
+        }
+        .advertiser-theme .adv-btn-primary:hover { filter: brightness(1.08); }
+        .advertiser-theme .adv-btn-outline {
+          border: 1px solid hsl(var(--adv-primary) / 0.5);
+          color: hsl(var(--adv-primary));
+          background: transparent;
+        }
+        .advertiser-theme .adv-btn-outline:hover { background: hsl(var(--adv-primary) / 0.1); }
+        .advertiser-theme .adv-glow { box-shadow: 0 0 50px hsl(var(--adv-primary) / 0.18); }
+        .advertiser-theme .adv-muted { color: hsl(var(--adv-muted)); }
+        .advertiser-theme .adv-icon-bg {
+          background: hsl(var(--adv-primary) / 0.15);
+          color: hsl(var(--adv-primary));
+        }
+        .advertiser-theme [data-radix-slider-range] { background: hsl(var(--adv-primary)) !important; }
+        .advertiser-theme [data-radix-slider-thumb] {
+          border-color: hsl(var(--adv-primary)) !important;
+          background: hsl(var(--adv-bg)) !important;
+        }
+      `}</style>
+
       {/* Navbar */}
-      <nav className="fixed top-0 w-full z-50 glass-card border-b border-border/50">
+      <nav className="fixed top-0 w-full z-50 adv-glass border-b" style={{ borderColor: 'hsl(var(--adv-border) / 0.6)' }}>
         <div className="container mx-auto flex items-center justify-between h-16 px-4">
           <button onClick={() => navigate("/")} className="flex items-center gap-2">
-            <Zap className="h-6 w-6 text-primary" />
-            <span className="font-heading text-xl font-bold text-foreground">ClickPay</span>
+            <Zap className="h-6 w-6 adv-text-accent" />
+            <span className="font-heading text-xl font-bold text-foreground">ClickPay <span className="adv-text-accent text-sm font-medium">· Anunciantes</span></span>
           </button>
           <div className="flex items-center gap-3">
             <Button variant="ghost" onClick={() => navigate("/")}>Voltar</Button>
-            <Button variant="hero" size="sm" onClick={() => document.getElementById("comprar")?.scrollIntoView({ behavior: "smooth" })}>
+            <Button className="adv-btn-primary" size="sm" onClick={() => document.getElementById("comprar")?.scrollIntoView({ behavior: "smooth" })}>
               Comprar Cliques
             </Button>
           </div>
@@ -149,24 +205,30 @@ const Advertiser = () => {
 
       {/* Hero */}
       <section className="pt-32 pb-20 px-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(152_60%_48%/0.10),transparent_60%)]" />
         <div className="container mx-auto text-center relative z-10 max-w-4xl">
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-sm text-primary mb-6 animate-fade-in">
+          <div
+            className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm mb-6 animate-fade-in"
+            style={{
+              background: 'hsl(var(--adv-accent) / 0.12)',
+              border: '1px solid hsl(var(--adv-accent) / 0.4)',
+              color: 'hsl(var(--adv-accent))',
+            }}
+          >
             <Sparkles className="h-3.5 w-3.5" />
-            Para Anunciantes
+            Para Anunciantes · Invista em tráfego real
           </div>
-          <h1 className="font-heading text-5xl md:text-6xl font-bold mb-6 animate-slide-up">
-            Coloque seu Link na <span className="gradient-text-primary">Frente de Milhares</span> de Usuários Ativos
+          <h1 className="font-heading text-5xl md:text-6xl font-bold mb-6 animate-slide-up text-foreground">
+            Coloque seu Link na <span className="adv-gradient-text">Frente de Milhares</span> de Usuários Ativos
           </h1>
-          <p className="text-muted-foreground text-lg md:text-xl max-w-2xl mx-auto mb-10 animate-slide-up">
+          <p className="adv-muted text-lg md:text-xl max-w-2xl mx-auto mb-10 animate-slide-up">
             Pague apenas pelos cliques reais que recebe. Audiência engajada, anti-fraude robusto
             e resultados mensuráveis a partir de R$ 0,25 por clique.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up">
-            <Button variant="hero" size="lg" onClick={() => document.getElementById("comprar")?.scrollIntoView({ behavior: "smooth" })}>
+            <Button size="lg" className="adv-btn-primary" onClick={() => document.getElementById("comprar")?.scrollIntoView({ behavior: "smooth" })}>
               Quero Anunciar Agora <ArrowRight className="h-5 w-5" />
             </Button>
-            <Button variant="outline" size="lg" onClick={() => document.getElementById("beneficios")?.scrollIntoView({ behavior: "smooth" })}>
+            <Button size="lg" variant="outline" className="adv-btn-outline" onClick={() => document.getElementById("beneficios")?.scrollIntoView({ behavior: "smooth" })}>
               Ver Benefícios
             </Button>
           </div>
@@ -174,17 +236,17 @@ const Advertiser = () => {
       </section>
 
       {/* Stats */}
-      <section className="py-16 px-4 border-y border-border/50">
+      <section className="py-16 px-4 border-y" style={{ borderColor: 'hsl(var(--adv-border) / 0.5)' }}>
         <div className="container mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
             { icon: Users, value: "2.500+", label: "Usuários ativos diariamente" },
             { icon: Eye, value: "2.5M+", label: "Anúncios já visualizados" },
             { icon: Target, value: "R$ 0,25", label: "Por clique real" },
           ].map((s) => (
-            <div key={s.label} className="glass-card rounded-xl p-6 text-center glow-primary">
-              <s.icon className="h-8 w-8 text-primary mx-auto mb-3" />
-              <p className="font-heading text-3xl font-bold">{s.value}</p>
-              <p className="text-muted-foreground text-sm mt-1">{s.label}</p>
+            <div key={s.label} className="adv-glass rounded-xl p-6 text-center adv-glow">
+              <s.icon className="h-8 w-8 adv-text-primary mx-auto mb-3" />
+              <p className="font-heading text-3xl font-bold text-foreground">{s.value}</p>
+              <p className="adv-muted text-sm mt-1">{s.label}</p>
             </div>
           ))}
         </div>
@@ -194,22 +256,28 @@ const Advertiser = () => {
       <section id="beneficios" className="py-20 px-4">
         <div className="container mx-auto">
           <div className="text-center mb-12 max-w-2xl mx-auto">
-            <h2 className="font-heading text-3xl md:text-4xl font-bold mb-4">
-              Por Que Anunciar no <span className="gradient-text-primary">ClickPay</span>?
+            <h2 className="font-heading text-3xl md:text-4xl font-bold mb-4 text-foreground">
+              Por Que Anunciar no <span className="adv-gradient-text">ClickPay</span>?
             </h2>
-            <p className="text-muted-foreground">
+            <p className="adv-muted">
               Diferente de outras plataformas de tráfego, aqui você atinge pessoas reais
               que entram todos os dias com a intenção de interagir com anúncios.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {benefits.map((b) => (
-              <div key={b.title} className="glass-card rounded-xl p-6 hover:border-primary/50 transition-all duration-300">
-                <div className="h-12 w-12 rounded-lg bg-primary/15 flex items-center justify-center mb-4">
-                  <b.icon className="h-6 w-6 text-primary" />
+              <div
+                key={b.title}
+                className="adv-glass rounded-xl p-6 transition-all duration-300"
+                style={{ transition: 'border-color .3s' }}
+                onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'hsl(var(--adv-primary) / 0.6)')}
+                onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'hsl(var(--adv-border) / 0.7)')}
+              >
+                <div className="h-12 w-12 rounded-lg adv-icon-bg flex items-center justify-center mb-4">
+                  <b.icon className="h-6 w-6" />
                 </div>
-                <h3 className="font-heading text-lg font-semibold mb-2">{b.title}</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">{b.desc}</p>
+                <h3 className="font-heading text-lg font-semibold mb-2 text-foreground">{b.title}</h3>
+                <p className="adv-muted text-sm leading-relaxed">{b.desc}</p>
               </div>
             ))}
           </div>
@@ -217,11 +285,11 @@ const Advertiser = () => {
       </section>
 
       {/* How it works */}
-      <section className="py-20 px-4 bg-secondary/20">
+      <section className="py-20 px-4" style={{ background: 'hsl(var(--adv-surface) / 0.4)' }}>
         <div className="container mx-auto">
           <div className="text-center mb-12">
-            <h2 className="font-heading text-3xl md:text-4xl font-bold mb-4">Como Funciona</h2>
-            <p className="text-muted-foreground">3 passos simples para começar a anunciar</p>
+            <h2 className="font-heading text-3xl md:text-4xl font-bold mb-4 text-foreground">Como Funciona</h2>
+            <p className="adv-muted">3 passos simples para começar a anunciar</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {[
@@ -229,11 +297,11 @@ const Advertiser = () => {
               { step: "02", title: "Envie seus dados", desc: "Preencha link do anúncio e dados de contato em segundos.", icon: Globe },
               { step: "03", title: "Receba os cliques", desc: "Seu anúncio entra em rotação e você acompanha os resultados.", icon: CheckCircle2 },
             ].map((s) => (
-              <div key={s.step} className="glass-card rounded-xl p-8 text-center group hover:border-primary/50 transition-all">
-                <span className="gradient-text-primary font-heading text-4xl font-bold">{s.step}</span>
-                <s.icon className="h-10 w-10 text-primary mx-auto my-4 group-hover:scale-110 transition-transform" />
-                <h3 className="font-heading text-xl font-semibold mb-2">{s.title}</h3>
-                <p className="text-muted-foreground text-sm">{s.desc}</p>
+              <div key={s.step} className="adv-glass rounded-xl p-8 text-center group transition-all">
+                <span className="adv-gradient-text font-heading text-4xl font-bold">{s.step}</span>
+                <s.icon className="h-10 w-10 adv-text-primary mx-auto my-4 group-hover:scale-110 transition-transform" />
+                <h3 className="font-heading text-xl font-semibold mb-2 text-foreground">{s.title}</h3>
+                <p className="adv-muted text-sm">{s.desc}</p>
               </div>
             ))}
           </div>
@@ -244,18 +312,21 @@ const Advertiser = () => {
       <section id="comprar" className="py-20 px-4">
         <div className="container mx-auto max-w-3xl">
           <div className="text-center mb-10">
-            <h2 className="font-heading text-3xl md:text-4xl font-bold mb-4">
-              Calcule seu <span className="gradient-text-primary">Pacote de Cliques</span>
+            <h2 className="font-heading text-3xl md:text-4xl font-bold mb-4 text-foreground">
+              Calcule seu <span className="adv-gradient-text">Pacote de Cliques</span>
             </h2>
-            <p className="text-muted-foreground">
+            <p className="adv-muted">
               Arraste a barra abaixo e veja em tempo real quantos cliques você compra e o investimento total.
             </p>
           </div>
 
-          <div className="glass-card rounded-2xl p-6 md:p-10 border-2 border-primary/40 glow-primary">
+          <div
+            className="adv-glass rounded-2xl p-6 md:p-10 adv-glow"
+            style={{ borderWidth: '2px', borderColor: 'hsl(var(--adv-primary) / 0.5)' }}
+          >
             <div className="text-center mb-8">
-              <p className="text-sm text-muted-foreground mb-2">Você está comprando</p>
-              <p className="font-heading text-5xl md:text-6xl font-bold gradient-text-primary mb-2">
+              <p className="text-sm adv-muted mb-2">Você está comprando</p>
+              <p className="font-heading text-5xl md:text-6xl font-bold adv-gradient-text mb-2">
                 {clicks.toLocaleString("pt-BR")}
               </p>
               <p className="text-foreground font-semibold">cliques reais</p>
@@ -270,31 +341,36 @@ const Advertiser = () => {
                 step={STEP_CLICKS}
                 className="my-4"
               />
-              <div className="flex justify-between text-xs text-muted-foreground">
+              <div className="flex justify-between text-xs adv-muted">
                 <span>{MIN_CLICKS.toLocaleString("pt-BR")} cliques</span>
                 <span>{MAX_CLICKS.toLocaleString("pt-BR")} cliques</span>
               </div>
             </div>
 
-            <div className="rounded-xl bg-primary/10 border border-primary/30 p-6 text-center mb-6">
-              <p className="text-sm text-muted-foreground mb-1">Valor total do investimento</p>
-              <p className="font-heading text-4xl md:text-5xl font-bold text-primary">
+            <div
+              className="rounded-xl p-6 text-center mb-6"
+              style={{
+                background: 'hsl(var(--adv-accent) / 0.10)',
+                border: '1px solid hsl(var(--adv-accent) / 0.35)',
+              }}
+            >
+              <p className="text-sm adv-muted mb-1">Valor total do investimento</p>
+              <p className="font-heading text-4xl md:text-5xl font-bold adv-text-accent">
                 {formatBRL(totalValue)}
               </p>
-              <p className="text-xs text-muted-foreground mt-2">
+              <p className="text-xs adv-muted mt-2">
                 {formatBRL(CLICK_PRICE)} por clique real entregue
               </p>
             </div>
 
             <Button
-              variant="hero"
               size="lg"
-              className="w-full text-lg"
+              className="w-full text-lg adv-btn-primary"
               onClick={() => setDialogOpen(true)}
             >
               Comprar Cliques <ArrowRight className="h-5 w-5" />
             </Button>
-            <p className="text-xs text-muted-foreground text-center mt-4">
+            <p className="text-xs adv-muted text-center mt-4">
               Após enviar, nossa equipe entra em contato com instruções de pagamento.
             </p>
           </div>
@@ -302,23 +378,23 @@ const Advertiser = () => {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border/50 py-8 px-4 mt-10">
+      <footer className="border-t py-8 px-4 mt-10" style={{ borderColor: 'hsl(var(--adv-border) / 0.5)' }}>
         <div className="container mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <Zap className="h-5 w-5 text-primary" />
-            <span className="font-heading font-bold">ClickPay</span>
+            <Zap className="h-5 w-5 adv-text-accent" />
+            <span className="font-heading font-bold text-foreground">ClickPay</span>
           </div>
-          <p className="text-muted-foreground text-sm">© 2026 ClickPay. Todos os direitos reservados.</p>
+          <p className="adv-muted text-sm">© 2026 ClickPay. Todos os direitos reservados.</p>
         </div>
       </footer>
 
       {/* Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="advertiser-theme max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Finalizar pedido de anúncio</DialogTitle>
             <DialogDescription>
-              Você está comprando <strong className="text-primary">{clicks.toLocaleString("pt-BR")} cliques</strong> por <strong className="text-primary">{formatBRL(totalValue)}</strong>. Preencha seus dados abaixo.
+              Você está comprando <strong className="adv-text-primary">{clicks.toLocaleString("pt-BR")} cliques</strong> por <strong className="adv-text-accent">{formatBRL(totalValue)}</strong>. Preencha seus dados abaixo.
             </DialogDescription>
           </DialogHeader>
 
@@ -386,18 +462,18 @@ const Advertiser = () => {
               />
             </div>
 
-            <div className="rounded-lg bg-secondary/40 p-4 text-sm">
+            <div className="rounded-lg p-4 text-sm" style={{ background: 'hsl(var(--adv-surface) / 0.7)', border: '1px solid hsl(var(--adv-border) / 0.6)' }}>
               <div className="flex justify-between mb-1">
-                <span className="text-muted-foreground">Cliques:</span>
+                <span className="adv-muted">Cliques:</span>
                 <span className="font-semibold">{clicks.toLocaleString("pt-BR")}</span>
               </div>
               <div className="flex justify-between mb-1">
-                <span className="text-muted-foreground">Valor por clique:</span>
+                <span className="adv-muted">Valor por clique:</span>
                 <span className="font-semibold">{formatBRL(CLICK_PRICE)}</span>
               </div>
-              <div className="flex justify-between pt-2 border-t border-border/50 mt-2">
+              <div className="flex justify-between pt-2 border-t mt-2" style={{ borderColor: 'hsl(var(--adv-border) / 0.6)' }}>
                 <span className="text-foreground font-bold">Total:</span>
-                <span className="text-primary font-bold text-lg">{formatBRL(totalValue)}</span>
+                <span className="adv-text-accent font-bold text-lg">{formatBRL(totalValue)}</span>
               </div>
             </div>
 
@@ -405,7 +481,7 @@ const Advertiser = () => {
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} disabled={submitting}>
                 Cancelar
               </Button>
-              <Button type="submit" variant="hero" disabled={submitting}>
+              <Button type="submit" className="adv-btn-primary" disabled={submitting}>
                 {submitting ? "Enviando..." : "Comprar Cliques"}
               </Button>
             </DialogFooter>
