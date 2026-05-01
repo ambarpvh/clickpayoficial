@@ -25,7 +25,7 @@ const Register = () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: "https://www.clickpaybrasil.online",
+        redirectTo: `${window.location.origin}/dashboard`,
         queryParams: { prompt: "select_account" },
       },
     });
