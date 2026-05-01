@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Zap } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
 import FakeSignupPopups from "@/components/FakeSignupPopups";
 import { useEffect } from "react";
 
@@ -23,16 +22,16 @@ const Register = () => {
       localStorage.setItem("clickpay_ref", refId);
     }
     await supabase.auth.signOut();
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-      extraParams: { prompt: "select_account" },
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: "https://www.clickpaybrasil.online",
+        queryParams: { prompt: "select_account" },
+      },
     });
-    if (result.error) {
-      toast.error(String(result.error));
-      return;
+    if (error) {
+      toast.error(error.message);
     }
-    if (result.redirected) return;
-    navigate("/dashboard");
   };
 
   return (
