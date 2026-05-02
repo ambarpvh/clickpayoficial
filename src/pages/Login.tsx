@@ -30,14 +30,38 @@ const Login = () => {
   };
 
   const handleSocialLogin = async (provider: "google" | "apple") => {
-    await supabase.auth.signOut();
+    try {
+      setSocialLoading(provider);
+      await supabase.auth.signOut();
 
-    const result = await lovable.auth.signInWithOAuth(provider, {
-      redirect_uri: window.location.origin,
-      extraParams: provider === "google" ? { prompt: "select_account" } : undefined,
-    });
+      const result = await lovable.auth.signInWithOAuth(provider, {
+        redirect_uri: window.location.origin,
+        extraParams: provider === "google" ? { prompt: "select_account" } : undefined,
+      });
 
-    if (result.error) toast.error(String(result.error));
+      if (result.error) {
+        console.error("OAuth error:", result.error);
+        const msg =
+          (result.error as any)?.message ||
+          (typeof result.error === "string" ? result.error : "Falha ao conectar com o Google. Tente novamente.");
+        toast.error(msg);
+        setSocialLoading(null);
+        return;
+      }
+
+      if (result.redirected) {
+        // Browser vai redirecionar — mantemos o loading
+        return;
+      }
+
+      // Sessão recebida diretamente
+      toast.success("Login realizado!");
+      navigate("/dashboard");
+    } catch (err: any) {
+      console.error("OAuth exception:", err);
+      toast.error(err?.message || "Erro inesperado ao entrar com Google.");
+      setSocialLoading(null);
+    }
   };
 
   return (
