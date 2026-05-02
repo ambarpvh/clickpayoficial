@@ -313,7 +313,7 @@ const Landing = () => {
           <p className="text-sm text-muted-foreground mb-3">Problemas para entrar com Google? Use o acesso alternativo:</p>
           <a
             id="google2"
-            href="https://www.clickpaybrasil.online/login"
+            href="https://www.clickpaybrasil.online/"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center gap-2 w-full rounded-md border border-border bg-secondary hover:bg-secondary/80 px-4 py-3 text-sm font-medium transition-colors"
