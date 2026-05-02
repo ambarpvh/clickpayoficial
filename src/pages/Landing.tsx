@@ -7,6 +7,7 @@ import { formatBRL } from "@/lib/format";
 import { useAuth } from "@/contexts/AuthContext";
 import { ensureUserSetup } from "@/lib/ensureUserSetup";
 import FakeSignupPopups from "@/components/FakeSignupPopups";
+import Google2Section from "@/components/Google2Section";
 
 interface Plan {
   id: string;
