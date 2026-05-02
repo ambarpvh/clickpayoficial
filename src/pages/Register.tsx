@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,32 +17,6 @@ const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-
-  // Persist referral across OAuth redirect + handle OAuth errors / auto-redirect
-  useEffect(() => {
-    if (refId) {
-      localStorage.setItem("clickpay_ref", refId);
-    }
-
-    const parseParams = (str: string) => new URLSearchParams(str.startsWith("#") || str.startsWith("?") ? str.slice(1) : str);
-    const hashParams = parseParams(window.location.hash);
-    const queryParams = parseParams(window.location.search);
-    const err = hashParams.get("error") || queryParams.get("error");
-    const errDesc = hashParams.get("error_description") || queryParams.get("error_description");
-
-    if (err) {
-      const msg = decodeURIComponent(errDesc || err).replace(/\+/g, " ");
-      toast.error(`Falha no cadastro: ${msg}`);
-      window.history.replaceState({}, document.title, window.location.pathname);
-      return;
-    }
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        navigate("/dashboard", { replace: true });
-      }
-    });
-  }, [refId, navigate]);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();

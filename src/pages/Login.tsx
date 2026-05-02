@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,30 +14,6 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  // Handle OAuth callback: detect errors in URL or redirect if session exists
-  useEffect(() => {
-    const parseParams = (str: string) => new URLSearchParams(str.startsWith("#") || str.startsWith("?") ? str.slice(1) : str);
-    const hashParams = parseParams(window.location.hash);
-    const queryParams = parseParams(window.location.search);
-    const err = hashParams.get("error") || queryParams.get("error");
-    const errDesc = hashParams.get("error_description") || queryParams.get("error_description");
-
-    if (err) {
-      const msg = decodeURIComponent(errDesc || err).replace(/\+/g, " ");
-      toast.error(`Falha no login: ${msg}`);
-      window.history.replaceState({}, document.title, window.location.pathname);
-      return;
-    }
-
-    // If already logged in (e.g. after OAuth redirect), go to dashboard
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        navigate("/dashboard", { replace: true });
-      }
-    });
-  }, [navigate]);
-
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
