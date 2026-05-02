@@ -41,9 +41,8 @@ const Login = () => {
 
       if (result.error) {
         console.error("OAuth error:", result.error);
-        const msg =
-          (result.error as any)?.message ||
-          (typeof result.error === "string" ? result.error : "Falha ao conectar com o Google. Tente novamente.");
+        const errAny = result.error as any;
+        const msg = errAny?.message || (typeof errAny === "string" ? errAny : "Falha ao conectar com o Google. Tente novamente.");
         toast.error(msg);
         setSocialLoading(null);
         return;
