@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ensureUserSetup } from "@/lib/ensureUserSetup";
 import FakeSignupPopups from "@/components/FakeSignupPopups";
 import Google2Section from "@/components/Google2Section";
+import MigrationNoticeDialog from "@/components/MigrationNoticeDialog";
 
 interface Plan {
   id: string;
