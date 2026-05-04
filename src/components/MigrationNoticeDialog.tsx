@@ -31,7 +31,7 @@ export default function MigrationNoticeDialog() {
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg border-destructive/50 bg-gradient-to-br from-red-950/95 via-background to-red-900/40 dark:from-red-950/80 dark:to-red-900/30">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <span aria-hidden>🚨</span> Aviso Importante
