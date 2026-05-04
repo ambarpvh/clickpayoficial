@@ -7,6 +7,7 @@ import { Zap, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
+import MigrationNoticeDialog from "@/components/MigrationNoticeDialog";
 
 const Login = () => {
   const navigate = useNavigate();
