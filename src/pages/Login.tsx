@@ -7,6 +7,7 @@ import { Zap, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
+import MigrationNoticeDialog from "@/components/MigrationNoticeDialog";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -65,6 +66,7 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 relative">
+      <MigrationNoticeDialog />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(152_60%_48%/0.06),transparent_60%)]" />
       <div className="glass-card rounded-2xl p-8 w-full max-w-md animate-slide-up relative z-10">
         <div className="text-center mb-8">
