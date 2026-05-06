@@ -562,6 +562,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      get_referred_basic_info: {
+        Args: { _referrer_id: string }
+        Returns: {
+          avatar_url: string
+          email: string
+          name: string
+          user_id: string
+        }[]
+      }
       get_suspicious_accounts: {
         Args: never
         Returns: {
