@@ -136,7 +136,7 @@ const History = () => {
     if (direct.length > 0) {
       const directIds = direct.map(r => r.referred_id);
       const [{ data: profiles }, { data: userPlans }] = await Promise.all([
-        supabase.rpc("get_referred_basic_info", { _referrer_id: user.id }),
+        supabase.from("profiles").select("user_id, name, email").in("user_id", directIds),
         supabase.from("user_plans").select("user_id, plans(name, price)").in("user_id", directIds).eq("is_active", true),
       ]);
       const profileMap = new Map((profiles || []).map(p => [p.user_id, p]));

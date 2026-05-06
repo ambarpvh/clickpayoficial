@@ -7,8 +7,6 @@ import { formatBRL } from "@/lib/format";
 import { useAuth } from "@/contexts/AuthContext";
 import { ensureUserSetup } from "@/lib/ensureUserSetup";
 import FakeSignupPopups from "@/components/FakeSignupPopups";
-import Google2Section from "@/components/Google2Section";
-import MigrationNoticeDialog from "@/components/MigrationNoticeDialog";
 
 interface Plan {
   id: string;
@@ -151,7 +149,6 @@ const Landing = () => {
   return (
     <div className="min-h-screen bg-background">
       <FakeSignupPopups />
-      <MigrationNoticeDialog />
       {/* Navbar */}
       <nav className="fixed top-0 w-full z-50 glass-card border-b border-border/50">
         <div className="container mx-auto flex items-center justify-between h-16 px-4">
@@ -309,10 +306,6 @@ const Landing = () => {
 
       {/* Social Proof */}
       <SocialProofSection />
-
-      {/* Login alternativo Google nativo (GIS) */}
-      <Google2Section />
-
 
       {/* Footer */}
       <footer className="border-t border-border/50 py-8 px-4">

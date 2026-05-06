@@ -1,8 +1,8 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { DollarSign, TrendingUp, Zap, LogOut, Copy, Check, Gift, Clock, Crown, History as HistoryIcon, UserCog, Info, X, Megaphone } from "lucide-react";
+import { DollarSign, Eye, TrendingUp, Zap, LogOut, Copy, Check, Gift, Clock, ArrowUpRight, Crown, History as HistoryIcon, UserCog, Info, X, Megaphone } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import AdTimer from "@/components/AdTimer";
 import AdminMessagesBanner from "@/components/AdminMessagesBanner";
 import { toast } from "sonner";
@@ -34,459 +34,479 @@ const Dashboard = () => {
   const { user, isAdmin, signOut, loading: authLoading } = useAuth();
   const viewAsUserId = isAdmin ? searchParams.get("view_as") : null;
   const targetUserId = viewAsUserId || user?.id;
-
-  const [balance, setBalance] = useState(0);
-  const [totalClicks, setTotalClicks] = useState(0);
-  const [todayEarnings, setTodayEarnings] = useState(0);
   const [ads, setAds] = useState<Ad[]>([]);
-  const [clicks, setClicks] = useState<Click[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [activeAd, setActiveAd] = useState<Ad | null>(null);
+  const [historyItems, setHistoryItems] = useState<Array<{ id: string; type: string; label: string; sublabel: string; amount: number; date: Date }>>([]);
+  
+  const [balance, setBalance] = useState(0);
+  const [clickValue, setClickValue] = useState(0.001);
+  const [planName, setPlanName] = useState("Free");
+  const [dailyLimit, setDailyLimit] = useState(10);
+  const [todayClicks, setTodayClicks] = useState(0);
+  const [todayEarnings, setTodayEarnings] = useState(0);
+  const [todayClickedAdIds, setTodayClickedAdIds] = useState<Set<string>>(new Set());
+  const [activeAd, setActiveAd] = useState<{ id: string; title: string; url: string; reward: string; view_time: number; open_link: boolean } | null>(null);
   const [referralCount, setReferralCount] = useState(0);
-  const [referralEarnings, setReferralEarnings] = useState(0);
-  const [isVip, setIsVip] = useState(false);
-  const [showReferralModal, setShowReferralModal] = useState(false);
-  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [minWithdrawal, setMinWithdrawal] = useState(150);
+  const [allPlans, setAllPlans] = useState<Array<{ name: string; referral_commission: number }>>([]);
+  const [viewedUserName, setViewedUserName] = useState("");
+  const [showFloatingCta, setShowFloatingCta] = useState(true);
+  const [floatingText, setFloatingText] = useState("VER ANÚNCIOS");
 
   useEffect(() => {
-    // Se ainda estiver carregando a autenticação, não faz nada
-    if (authLoading) return;
+    if (!showFloatingCta) return;
+    const id = setInterval(() => {
+      setFloatingText(prev => prev === "VER ANÚNCIOS" ? "CLIQUE" : "VER ANÚNCIOS");
+    }, 1500);
+    return () => clearInterval(id);
+  }, [showFloatingCta]);
 
-    // Se terminou de carregar e não tem usuário, redireciona para login
-    if (!user) {
-      console.log("No user found after auth loading, redirecting to login...");
-      navigate("/login");
-      return;
-    }
-
-    // Se tem usuário e targetUserId, carrega os dados
-    if (targetUserId) {
-      loadData();
-    }
-  }, [user, authLoading, targetUserId, navigate]);
+  useEffect(() => {
+    if (!authLoading && !user) { navigate("/login"); return; }
+    if (user && targetUserId) loadData();
+  }, [user, authLoading, targetUserId]);
 
   const loadData = async () => {
-    if (!targetUserId) return;
-    
-    try {
-      setLoading(true);
-      
-      // Load active plan to identify VIP users
-      const { data: activePlan } = await supabase
-        .from("user_plans")
-        .select("plans(price)")
-        .eq("user_id", targetUserId)
-        .eq("is_active", true)
-        .maybeSingle();
+    if (!user || !targetUserId) return;
 
-      setIsVip(Number((activePlan as any)?.plans?.price || 0) > 0);
+    const { data: userPlan } = await supabase
+      .from("user_plans")
+      .select("plan_id, plans(name, click_value, daily_click_limit)")
+      .eq("user_id", targetUserId)
+      .eq("is_active", true)
+      .order("started_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-      // Load ads
-      const { data: adsData, error: adsError } = await supabase
-        .from("ads")
-        .select("*")
-        .eq("is_active", true);
-
-      if (adsError) throw adsError;
-      setAds(adsData || []);
-
-      // Load clicks/history
-      const { data: clicksData, error: clicksError } = await supabase
-        .from("clicks")
-        .select(`
-          id,
-          ad_id,
-          earned_value,
-          clicked_at,
-          referral_commission_paid,
-          ads (
-            title
-          )
-        `)
-        .eq("user_id", targetUserId)
-        .order("clicked_at", { ascending: false });
-
-      if (clicksError) throw clicksError;
-      setClicks(clicksData as any[] || []);
-      setTotalClicks(clicksData?.length || 0);
-
-      // Calculate today's earnings
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const todayClicks = clicksData?.filter(c => new Date(c.clicked_at) >= today) || [];
-      const todaySum = todayClicks.reduce((acc, curr) => acc + curr.earned_value, 0);
-      setTodayEarnings(todaySum);
-
-      const clicksSum = (clicksData || []).reduce((acc, curr) => acc + curr.earned_value, 0);
-      const { data: adjustmentsData } = await supabase
-        .from("balance_adjustments")
-        .select("amount")
-        .eq("user_id", targetUserId);
-      const { data: withdrawalsData } = await supabase
-        .from("withdrawals")
-        .select("amount")
-        .eq("user_id", targetUserId)
-        .in("status", ["approved", "pending"]);
-      const adjustmentsSum = (adjustmentsData || []).reduce((acc, curr) => acc + curr.amount, 0);
-      const withdrawalsSum = (withdrawalsData || []).reduce((acc, curr) => acc + curr.amount, 0);
-      setBalance(clicksSum + adjustmentsSum - withdrawalsSum);
-
-      // Load referrals
-      const { count: refCount, error: refError } = await supabase
-        .from("profiles")
-        .select("*", { count: "exact", head: true })
-        .eq("referred_by", targetUserId);
-
-      if (refError) throw refError;
-      setReferralCount(refCount || 0);
-
-      // Load referral earnings
-      const { data: refEarningsData, error: refEarningsError } = await supabase
-        .from("balance_adjustments")
-        .select("amount")
-        .eq("user_id", targetUserId)
-        .ilike("note", "Comissão:%");
-
-      if (!refEarningsError && refEarningsData) {
-        const refSum = refEarningsData.reduce((acc, curr) => acc + curr.amount, 0);
-        setReferralEarnings(refSum);
-      }
-
-    } catch (error: any) {
-      toast.error("Erro ao carregar dados: " + error.message);
-    } finally {
-      setLoading(false);
+    if (userPlan?.plans) {
+      const plan = userPlan.plans as unknown as { name: string; click_value: number; daily_click_limit: number };
+      setPlanName(plan.name);
+      setClickValue(plan.click_value);
+      setDailyLimit(plan.daily_click_limit);
     }
-  };
 
-  const handleAdClick = (ad: Ad) => {
-    setActiveAd(ad);
+    const { data: adsData } = await supabase.from("ads").select("*").eq("is_active", true);
+    setAds(adsData || []);
+
+    const today = new Date().toISOString().split("T")[0];
+    const { data: todayClicksData } = await supabase
+      .from("clicks")
+      .select("*, ads(title)")
+      .eq("user_id", targetUserId)
+      .gte("clicked_at", today);
+
+    setTodayClicks(todayClicksData?.length || 0);
+    const todayAdsEarnings = todayClicksData?.reduce((sum, c) => sum + Number(c.earned_value), 0) || 0;
+    setTodayClickedAdIds(new Set((todayClicksData || []).map((c) => c.ad_id)));
+
+    // Ganhos do dia por indicações/ajustes positivos (comissões creditadas hoje)
+    const { data: todayAdjustments } = await supabase
+      .from("balance_adjustments")
+      .select("amount")
+      .eq("user_id", targetUserId)
+      .gte("created_at", today);
+    const todayReferralEarnings = todayAdjustments?.reduce(
+      (sum, a) => sum + Math.max(0, Number(a.amount)),
+      0
+    ) || 0;
+    setTodayEarnings(todayAdsEarnings + todayReferralEarnings);
+
+    const { data: allClicks } = await supabase.from("clicks").select("earned_value").eq("user_id", targetUserId);
+    const totalEarned = allClicks?.reduce((sum, c) => sum + Number(c.earned_value), 0) || 0;
+
+    const { data: withdrawals } = await supabase.from("withdrawals").select("amount, status").eq("user_id", targetUserId).in("status", ["approved", "pending"]);
+    const totalWithdrawn = withdrawals?.reduce((sum, w) => sum + Number(w.amount), 0) || 0;
+
+    const { data: adjustmentsData } = await supabase.from("balance_adjustments").select("amount").eq("user_id", targetUserId);
+    const totalAdjustments = adjustmentsData?.reduce((sum, a) => sum + Number(a.amount), 0) || 0;
+
+    setBalance(totalEarned + totalAdjustments - totalWithdrawn);
+
+    // Load min withdrawal setting
+    const { data: settingData } = await supabase.from("settings").select("value").eq("key", "min_withdrawal").maybeSingle();
+    if (settingData) setMinWithdrawal(Number(settingData.value));
+
+    // Load all plans for commission display
+    const { data: plansData } = await supabase.from("plans").select("name, referral_commission").eq("is_active", true).order("price", { ascending: true });
+    setAllPlans(plansData || []);
+
+    // Load profile data for withdrawal pre-fill
+    const { data: profileData } = await supabase.from("profiles").select("name, cpf, pix_key, phone, email").eq("user_id", targetUserId).maybeSingle();
+    if (profileData) {
+      setWName(profileData.name || "");
+      setWCpf(profileData.cpf || "");
+      setWPix(profileData.pix_key || "");
+      setWPhone(profileData.phone || "");
+      if (viewAsUserId) setViewedUserName(profileData.name || profileData.email || "");
+    }
+
+    const [{ data: recentClicks }, { data: recentAdjustments }] = await Promise.all([
+      supabase.from("clicks").select("*, ads(title)").eq("user_id", targetUserId).order("clicked_at", { ascending: false }).limit(10),
+      supabase.from("balance_adjustments").select("*").eq("user_id", targetUserId).order("created_at", { ascending: false }).limit(10),
+    ]);
+
+    const items: Array<{ id: string; type: string; label: string; sublabel: string; amount: number; date: Date }> = [];
+    (recentClicks || []).forEach((c: any) => {
+      const isCommission = c.referral_commission_paid === true;
+      items.push({
+        id: c.id,
+        type: isCommission ? "comissao" : "anuncio",
+        label: isCommission ? "Comissão de indicação" : "Visualização de anúncio",
+        sublabel: c.ads?.title || "Anúncio",
+        amount: Number(c.earned_value),
+        date: new Date(c.clicked_at),
+      });
+    });
+    (recentAdjustments || []).forEach((a: any) => {
+      items.push({
+        id: a.id,
+        type: "ajuste",
+        label: a.note || "Ajuste de saldo",
+        sublabel: "",
+        amount: Number(a.amount),
+        date: new Date(a.created_at),
+      });
+    });
+    items.sort((a, b) => b.date.getTime() - a.date.getTime());
+    setHistoryItems(items.slice(0, 10));
+
+    const { count } = await supabase.from("referrals").select("id", { count: "exact", head: true }).eq("referrer_id", targetUserId);
+    setReferralCount(count || 0);
   };
 
   const handleAdComplete = async (adId: string) => {
-    if (!activeAd || !user) return;
+    if (!user) return;
+    const ad = ads.find((a) => a.id === adId);
+    if (!ad) return;
 
-    try {
-      const completedAd = activeAd;
-      const { error } = await supabase
-        .from("clicks")
-        .insert({ ad_id: adId, user_id: user.id });
+    const adEarnedValue = ad.reward_value != null ? ad.reward_value : clickValue;
 
-      if (error) throw error;
+    const { error } = await supabase.from("clicks").insert({
+      user_id: user.id,
+      ad_id: ad.id,
+      earned_value: adEarnedValue,
+    });
 
-      toast.success(`Você ganhou ${formatBRL(completedAd.reward_value || 0)}!`);
-      setActiveAd(null);
+    if (error) {
+      toast.error("Erro ao registrar clique");
+    } else {
+      toast.success("Recompensa creditada!");
       loadData();
-    } catch (error: any) {
-      toast.error(error.message);
-      setActiveAd(null);
     }
   };
 
-  const copyReferralLink = () => {
-    const link = `${window.location.origin}/register?ref=${user?.id}`;
-    navigator.clipboard.writeText(link);
-    toast.success("Link de indicação copiado!");
+  const [showWithdrawForm, setShowWithdrawForm] = useState(false);
+  const [wName, setWName] = useState("");
+  const [wCpf, setWCpf] = useState("");
+  const [wPix, setWPix] = useState("");
+  const [wPhone, setWPhone] = useState("");
+  const [wSubmitting, setWSubmitting] = useState(false);
+
+  const handleWithdrawal = async () => {
+    if (!user) return;
+    if (balance < minWithdrawal) { toast.info(`Saque mínimo: ${formatBRL(minWithdrawal)}`); return; }
+    if (!wName || !wCpf || !wPix || !wPhone) { toast.error("Preencha todos os campos"); return; }
+    if (wCpf.replace(/\D/g, "").length !== 11) { toast.error("CPF inválido"); return; }
+
+    if (!window.confirm("⚠️ ATENÇÃO: Confira se os dados estão corretos antes de enviar.\n\nNome: " + wName + "\nCPF: " + wCpf + "\nChave Pix: " + wPix + "\nTelefone: " + wPhone + "\n\nO saque será processado em até 3 dias úteis. Os dados devem ser os mesmos da conta que receberá o Pix.\n\nDeseja continuar?")) return;
+
+    setWSubmitting(true);
+    const { error } = await supabase.from("withdrawals").insert({
+      user_id: user.id, amount: balance,
+      holder_name: wName, cpf: wCpf, pix_key: wPix, phone: wPhone,
+    });
+    setWSubmitting(false);
+    if (error) { toast.error("Erro ao solicitar saque"); return; }
+    toast.success("Saque solicitado! Será processado em até 3 dias úteis.");
+    setShowWithdrawForm(false);
+    setWName(""); setWCpf(""); setWPix(""); setWPhone("");
+    loadData();
   };
 
-  // Se estiver carregando a autenticação inicial, mostra um loading state limpo
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-yellow-400/20 border-t-yellow-400 rounded-full animate-spin" />
-      </div>
-    );
-  }
+  const referralBaseUrl = window.location.hostname.includes('preview--') 
+    ? window.location.origin.replace('preview--', '') 
+    : window.location.origin;
 
-  // Se não tiver usuário, o useEffect já vai cuidar do redirecionamento, 
-  // mas retornamos null para não renderizar nada por um frame
-  if (!user) return null;
+  const [copied, setCopied] = useState(false);
+  const copyReferral = useCallback(() => {
+    const link = `${referralBaseUrl}/register?ref=${user?.id}`;
+    navigator.clipboard.writeText(link);
+    toast.success("Link copiado!");
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }, [referralBaseUrl, user?.id]);
+
+  const availableAds = ads.filter((a) => !todayClickedAdIds.has(a.id));
+  const canClick = todayClicks < dailyLimit;
+  const allAdsViewed = canClick && availableAds.length === 0 && ads.length > 0;
+  const showCountdown = !canClick || allAdsViewed;
+  const progressPercent = Math.min((todayClicks / dailyLimit) * 100, 100);
+
+  // Countdown to next day (midnight)
+  const [countdown, setCountdown] = useState("");
+  useEffect(() => {
+    if (!showCountdown) { setCountdown(""); return; }
+    const tick = () => {
+      const now = new Date();
+      const tomorrow = new Date(now);
+      tomorrow.setHours(24, 0, 0, 0);
+      const diff = tomorrow.getTime() - now.getTime();
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      setCountdown(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [showCountdown]);
+
+  if (authLoading) return <div className="min-h-screen bg-background flex items-center justify-center"><Zap className="h-8 w-8 text-primary animate-pulse" /></div>;
 
   return (
-    <div className="min-h-screen bg-black text-white pb-20">
-      <AdminMessagesBanner userId={user.id} />
-      
-      {/* Header */}
-      <header className="bg-zinc-900/50 border-b border-zinc-800 p-4 sticky top-0 z-40 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
+    <div className="min-h-screen bg-background">
+      {viewAsUserId && (
+        <div className="bg-yellow-500/20 border-b border-yellow-500/50 text-yellow-200 text-center py-2 text-sm font-medium">
+          ⚠️ Visualizando painel de <span className="font-bold">{viewedUserName || "usuário"}</span> (modo admin) — <button className="underline" onClick={() => window.close()}>Fechar</button>
+        </div>
+      )}
+      <nav className="border-b border-border/50 glass-card">
+        <div className="container mx-auto flex items-center justify-between h-14 px-4">
           <div className="flex items-center gap-2">
-            <Zap className="w-8 h-8 text-yellow-400 fill-yellow-400" />
-            <h1 className="text-xl font-bold tracking-tight">ClickPay</h1>
+            <Zap className="h-5 w-5 text-primary" />
+            <span className="font-heading text-lg font-bold">ClickPay</span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             {isAdmin && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate("/admin")}
-                className="text-zinc-400 hover:text-white"
-              >
-                <UserCog className="w-5 h-5" />
-              </Button>
+              <Button variant="ghost" size="sm" onClick={() => navigate("/admin")}>Admin</Button>
             )}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => signOut()}
-              className="text-zinc-400 hover:text-red-400"
-            >
-              <LogOut className="w-5 h-5" />
+            <Button variant="ghost" size="sm" onClick={() => navigate("/profile")}>
+              <UserCog className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Meu Cadastro</span>
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/history")}>
+              <HistoryIcon className="h-4 w-4" />
+            </Button>
+            <Button variant="gold" size="sm" onClick={() => navigate("/plans")}>
+              <Crown className="h-4 w-4 mr-1" /> Upgrade
+            </Button>
+            <span className="text-sm text-muted-foreground hidden sm:inline">Plano: <span className="text-primary font-semibold">{planName}</span></span>
+            <Button variant="ghost" size="sm" onClick={() => { signOut(); navigate("/"); }}>
+              <LogOut className="h-4 w-4" />
             </Button>
           </div>
         </div>
-      </header>
+      </nav>
 
-      <main className="max-w-7xl mx-auto p-4 space-y-6">
-        {viewAsUserId && (
-          <div className="bg-yellow-400/10 border border-yellow-400/20 p-3 rounded-lg flex items-center justify-between">
-            <p className="text-yellow-400 text-sm font-medium">
-              Visualizando como usuário: {viewAsUserId}
-            </p>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => navigate("/dashboard")}
-              className="text-yellow-400 hover:bg-yellow-400/20"
-            >
-              Sair da visualização
-            </Button>
-          </div>
-        )}
+      <div className="container mx-auto px-4 py-8 space-y-8">
+        {/* Admin messages banner */}
+        {targetUserId && <AdminMessagesBanner userId={targetUserId} />}
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-zinc-900/50 border border-zinc-800 p-6 rounded-2xl space-y-2 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-              <DollarSign className="w-12 h-12" />
+        {/* Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { label: "Saldo Atual", value: formatBRL(balance), icon: DollarSign, glow: true },
+            { label: "Anúncios Hoje", value: `${todayClicks}/${dailyLimit}`, icon: Eye, glow: false },
+            { label: "Ganhos Hoje", value: formatBRL(todayEarnings), icon: TrendingUp, glow: false },
+            { label: "Indicações", value: String(referralCount), icon: Gift, glow: false },
+          ].map((stat) => (
+            <div key={stat.label} className={`glass-card rounded-xl p-5 ${stat.glow ? "glow-primary border-primary/30" : ""}`}>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-muted-foreground text-sm">{stat.label}</span>
+                <stat.icon className="h-4 w-4 text-primary" />
+              </div>
+              <p className="font-heading text-2xl font-bold">{stat.value}</p>
             </div>
-            <p className="text-zinc-400 text-sm font-medium">Saldo Disponível</p>
-            <h2 className="text-3xl font-bold text-yellow-400">{formatBRL(balance)}</h2>
-            <div className="pt-2">
-              <Button 
-                onClick={() => navigate("/payment")}
-                className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-bold h-10"
-              >
-                Sacar Agora
-              </Button>
-            </div>
-          </div>
-
-          <div className="bg-zinc-900/50 border border-zinc-800 p-6 rounded-2xl space-y-2 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-              <TrendingUp className="w-12 h-12" />
-            </div>
-            <p className="text-zinc-400 text-sm font-medium">Ganhos de Hoje</p>
-            <h2 className="text-3xl font-bold text-white">{formatBRL(todayEarnings)}</h2>
-            <p className="text-xs text-zinc-500 flex items-center gap-1">
-              <Check className="w-3 h-3 text-green-500" />
-              {totalClicks} cliques totais realizados
-            </p>
-          </div>
-
-          <div className="bg-zinc-900/50 border border-zinc-800 p-6 rounded-2xl space-y-2 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-              <Gift className="w-12 h-12" />
-            </div>
-            <p className="text-zinc-400 text-sm font-medium">Indicações</p>
-            <h2 className="text-3xl font-bold text-white">{referralCount}</h2>
-            <p className="text-xs text-zinc-500">
-              Ganhos: <span className="text-green-400 font-medium">{formatBRL(referralEarnings)}</span>
-            </p>
-          </div>
+          ))}
         </div>
 
-        {/* VIP Banner */}
-        {!isVip && (
-          <div className="bg-gradient-to-r from-yellow-400/20 to-yellow-600/20 border border-yellow-400/30 p-6 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="bg-yellow-400 p-3 rounded-xl">
-                <Crown className="w-6 h-6 text-black" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-white">Seja um Membro VIP</h3>
-                <p className="text-zinc-400 text-sm">Ganhe 2x mais por clique e tenha saques instantâneos!</p>
-              </div>
-            </div>
-            <Button 
-              onClick={() => navigate("/plans")}
-              className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold px-8 h-12 whitespace-nowrap"
-            >
-              Ver Planos VIP
-            </Button>
+        {/* Daily progress bar */}
+        <div className="glass-card rounded-xl p-5">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-semibold">Progresso diário</span>
+            <span className="text-muted-foreground text-xs">{todayClicks}/{dailyLimit} cliques</span>
           </div>
-        )}
-
-        {/* Ads Section */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xl font-bold flex items-center gap-2">
-              <Megaphone className="w-5 h-5 text-yellow-400" />
-              Anúncios Disponíveis
-            </h3>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => setShowHistoryModal(true)}
-              className="text-zinc-400 hover:text-white flex items-center gap-2"
-            >
-              <HistoryIcon className="w-4 h-4" />
-              Histórico
-            </Button>
+          <div className="w-full h-3 bg-secondary rounded-full overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-500 ease-out"
+              style={{
+                width: `${progressPercent}%`,
+                background: "var(--gradient-primary)",
+              }}
+            />
           </div>
+          <p className="text-muted-foreground text-xs mt-2">
+            Ganhos hoje: <span className="text-primary font-semibold">{formatBRL(todayEarnings)}</span>
+          </p>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {ads.map((ad) => (
-              <div 
-                key={ad.id}
-                className="bg-zinc-900/50 border border-zinc-800 p-5 rounded-2xl space-y-4 hover:border-yellow-400/30 transition-all group"
-              >
-                <div className="space-y-1">
-                  <h4 className="font-bold text-white group-hover:text-yellow-400 transition-colors">{ad.title}</h4>
-                  <div className="flex items-center gap-3 text-xs text-zinc-500">
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {ad.view_time}s
-                    </span>
-                    <span className="flex items-center gap-1 text-green-400 font-medium">
-                      <DollarSign className="w-3 h-3" />
-                      {formatBRL(ad.reward_value || 0)}
-                    </span>
-                  </div>
+        {/* Referral link */}
+        <div className="glass-card rounded-xl p-5 flex flex-col gap-3">
+          <div>
+            <p className="text-sm font-semibold mb-1">Seu link de indicação</p>
+            <p className="text-muted-foreground text-xs break-all">{referralBaseUrl}/register?ref={user?.id?.slice(0, 8)}...</p>
+            <p className="text-accent text-xs mt-1 flex items-center gap-1 flex-wrap">
+              <span>Comissões:</span>
+              {allPlans.map((p, i) => (
+                <span key={p.name}>{i > 0 ? " | " : ""}{p.name}: <span className="font-semibold">{formatBRL(p.referral_commission)}</span></span>
+              ))}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help shrink-0" />
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-[220px] text-center">
+                    <p>Você recebe esta comissão quando alguém se cadastra pelo seu link de indicação</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </p>
+          </div>
+          <Button
+            variant="hero"
+            size="lg"
+            className={`w-full text-base font-bold gap-2 transition-all duration-300 ${copied ? "bg-green-600 hover:bg-green-600 scale-105" : ""}`}
+            onClick={copyReferral}
+          >
+            {copied ? (
+              <><Check className="h-5 w-5 animate-scale-in" /> Link Copiado!</>
+            ) : (
+              <><Copy className="h-5 w-5" /> Copiar Link de Indicação</>
+            )}
+          </Button>
+        </div>
+
+        {/* Ads + History */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-4">
+            <h2 id="anuncios-section" className="font-heading text-xl font-bold">Anúncios Disponíveis</h2>
+            {showCountdown ? (
+              <div className="glass-card rounded-xl p-8 text-center">
+                <Clock className="h-10 w-10 text-primary mx-auto mb-3 animate-pulse" />
+                <p className="text-foreground font-semibold text-lg mb-1">
+                  {!canClick ? "Limite diário atingido!" : "Todos os anúncios foram visualizados!"}
+                </p>
+                <p className="text-muted-foreground text-sm mb-4">Próximos anúncios disponíveis em:</p>
+                <div className="inline-flex items-center gap-1 bg-primary/10 border border-primary/30 rounded-xl px-6 py-3">
+                  <span className="font-heading text-3xl font-bold text-primary tracking-widest">{countdown || "--:--:--"}</span>
                 </div>
-                <Button 
-                  onClick={() => handleAdClick(ad)}
-                  className="w-full bg-zinc-800 hover:bg-yellow-400 hover:text-black text-white font-medium h-10 transition-all"
-                >
-                  Visualizar Anúncio
+                <p className="text-muted-foreground text-xs mt-4">Ou faça upgrade para aumentar seu limite diário</p>
+                <Button variant="gold" size="sm" className="mt-3" onClick={() => navigate("/plans")}>
+                  <Crown className="h-4 w-4 mr-1" /> Fazer Upgrade
                 </Button>
               </div>
-            ))}
-            {ads.length === 0 && !loading && (
-              <div className="col-span-full py-12 text-center space-y-2">
-                <Info className="w-12 h-12 text-zinc-700 mx-auto" />
-                <p className="text-zinc-500">Nenhum anúncio disponível no momento.</p>
+            ) : (
+              availableAds.map((ad) => {
+                const adValue = ad.reward_value != null ? ad.reward_value : clickValue;
+                return (
+                  <div key={ad.id} className="glass-card rounded-xl p-4 flex items-center justify-between hover:border-primary/40 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Eye className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm">{ad.title}</p>
+                        <p className="text-muted-foreground text-xs">Ganhe {formatBRL(adValue)} • {ad.view_time}s</p>
+                      </div>
+                    </div>
+                    <Button size="sm" onClick={() => setActiveAd({ id: ad.id, title: ad.title, url: ad.url, reward: formatBRL(adValue), view_time: ad.view_time, open_link: ad.open_link !== false })}>
+                      Ver Anúncio <ArrowUpRight className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="font-heading text-xl font-bold">Histórico</h2>
+              <Button variant="ghost" size="sm" onClick={() => navigate("/history")}>Ver tudo</Button>
+            </div>
+            <div className="glass-card rounded-xl divide-y divide-border/50">
+              {historyItems.length === 0 ? (
+                <p className="p-4 text-muted-foreground text-sm text-center">Nenhuma atividade ainda</p>
+              ) : (
+                historyItems.map((item) => (
+                  <div key={item.id} className="p-3 flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium">{item.label}</p>
+                      <p className="text-muted-foreground text-xs">
+                        {item.sublabel ? `${item.sublabel} • ` : ""}{item.date.toLocaleDateString("pt-BR")}
+                      </p>
+                    </div>
+                    <span className={`font-semibold text-sm ${item.amount >= 0 ? "text-primary" : "text-destructive"}`}>
+                      {item.amount >= 0 ? "+" : ""}{formatBRL(item.amount)}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+            <Button variant="gold" className="w-full" onClick={() => setShowWithdrawForm(true)}>
+              Solicitar Saque
+            </Button>
+            {showWithdrawForm && (
+              <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onClick={() => setShowWithdrawForm(false)}>
+                <div className="bg-background border border-border rounded-xl p-6 max-w-md w-full space-y-4" onClick={(e) => e.stopPropagation()}>
+                  <h3 className="font-heading text-lg font-bold">Solicitar Saque</h3>
+                  <p className="text-sm text-muted-foreground">Valor: <span className="text-primary font-bold">{formatBRL(balance)}</span></p>
+                  <div className="bg-accent/10 border border-accent/30 rounded-lg p-3">
+                    <p className="text-xs text-accent font-medium">⚠️ Os dados devem ser iguais aos da conta que receberá o Pix. Confira antes de enviar. Processamento em até 3 dias úteis.</p>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="space-y-1">
+                      <label className="text-sm font-medium">Nome completo (titular)</label>
+                      <input className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="Nome completo" value={wName} onChange={(e) => setWName(e.target.value)} />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-sm font-medium">CPF</label>
+                      <input className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="000.000.000-00" value={wCpf} onChange={(e) => setWCpf(e.target.value)} />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-sm font-medium">Chave Pix</label>
+                      <input className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="CPF, e-mail, celular ou chave aleatória" value={wPix} onChange={(e) => setWPix(e.target.value)} />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-sm font-medium">Telefone</label>
+                      <input className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="(00) 00000-0000" value={wPhone} onChange={(e) => setWPhone(e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="flex gap-2 justify-end">
+                    <Button variant="ghost" onClick={() => setShowWithdrawForm(false)}>Cancelar</Button>
+                    <Button variant="gold" disabled={wSubmitting} onClick={handleWithdrawal}>
+                      {wSubmitting ? "Enviando..." : "Confirmar Saque"}
+                    </Button>
+                  </div>
+                </div>
               </div>
             )}
           </div>
         </div>
+      </div>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <button 
-            onClick={() => setShowReferralModal(true)}
-            className="bg-zinc-900/50 border border-zinc-800 p-4 rounded-2xl flex flex-col items-center gap-2 hover:bg-zinc-800/50 transition-colors"
-          >
-            <div className="bg-blue-500/10 p-2 rounded-lg">
-              <Copy className="w-5 h-5 text-blue-400" />
-            </div>
-            <span className="text-xs font-medium text-zinc-400">Indicar Amigos</span>
-          </button>
-          <button 
-            onClick={() => navigate("/profile")}
-            className="bg-zinc-900/50 border border-zinc-800 p-4 rounded-2xl flex flex-col items-center gap-2 hover:bg-zinc-800/50 transition-colors"
-          >
-            <div className="bg-purple-500/10 p-2 rounded-lg">
-              <UserCog className="w-5 h-5 text-purple-400" />
-            </div>
-            <span className="text-xs font-medium text-zinc-400">Meu Perfil</span>
-          </button>
-          <button 
-            onClick={() => navigate("/history")}
-            className="bg-zinc-900/50 border border-zinc-800 p-4 rounded-2xl flex flex-col items-center gap-2 hover:bg-zinc-800/50 transition-colors"
-          >
-            <div className="bg-green-500/10 p-2 rounded-lg">
-              <HistoryIcon className="w-5 h-5 text-green-400" />
-            </div>
-            <span className="text-xs font-medium text-zinc-400">Extrato</span>
-          </button>
-          <button 
-            onClick={() => window.open("https://wa.me/5541999999999", "_blank")}
-            className="bg-zinc-900/50 border border-zinc-800 p-4 rounded-2xl flex flex-col items-center gap-2 hover:bg-zinc-800/50 transition-colors"
-          >
-            <div className="bg-green-500/10 p-2 rounded-lg">
-              <Megaphone className="w-5 h-5 text-green-500" />
-            </div>
-            <span className="text-xs font-medium text-zinc-400">Suporte</span>
-          </button>
-        </div>
-      </main>
-
-      {/* Ad Viewer Modal */}
       {activeAd && (
-        <AdTimer
-          ad={{
-            ...activeAd,
-            reward: formatBRL(activeAd.reward_value || 0),
-          }}
-          onComplete={handleAdComplete}
-          onClose={() => setActiveAd(null)}
-        />
+        <AdTimer ad={activeAd} onComplete={handleAdComplete} onClose={() => setActiveAd(null)} />
       )}
 
-      {/* Referral Modal */}
-      {showReferralModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-3xl p-6 space-y-6 shadow-2xl">
-            <div className="flex justify-between items-center">
-              <h3 className="text-xl font-bold">Indique e Ganhe</h3>
-              <Button variant="ghost" size="icon" onClick={() => setShowReferralModal(false)}>
-                <X className="w-5 h-5" />
-              </Button>
-            </div>
-            <div className="space-y-4">
-              <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-2xl text-center space-y-2">
-                <Gift className="w-8 h-8 text-blue-400 mx-auto" />
-                <p className="text-sm text-zinc-300">
-                  Ganhe <span className="text-blue-400 font-bold">10% de comissão</span> sobre cada clique dos seus amigos indicados!
-                </p>
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs text-zinc-500 font-medium uppercase tracking-wider">Seu Link de Indicação</label>
-                <div className="flex gap-2">
-                  <div className="flex-1 bg-black/50 border border-zinc-800 p-3 rounded-xl text-sm font-mono text-zinc-400 truncate">
-                    {window.location.origin}/register?ref={user?.id}
-                  </div>
-                  <Button onClick={copyReferralLink} className="bg-yellow-400 hover:bg-yellow-500 text-black">
-                    <Copy className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* History Modal */}
-      {showHistoryModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="w-full max-w-2xl bg-zinc-900 border border-zinc-800 rounded-3xl p-6 space-y-6 shadow-2xl max-h-[80vh] flex flex-col">
-            <div className="flex justify-between items-center">
-              <h3 className="text-xl font-bold">Histórico de Ganhos</h3>
-              <Button variant="ghost" size="icon" onClick={() => setShowHistoryModal(false)}>
-                <X className="w-5 h-5" />
-              </Button>
-            </div>
-            <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
-              {clicks.map((click) => (
-                <div key={click.id} className="bg-black/30 border border-zinc-800/50 p-4 rounded-xl flex justify-between items-center">
-                  <div>
-                    <p className="font-medium text-sm">{click.ads?.title || "Anúncio Visualizado"}</p>
-                    <p className="text-xs text-zinc-500">{new Date(click.clicked_at).toLocaleString()}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-green-400 font-bold">+{formatBRL(click.earned_value)}</p>
-                    {click.referral_commission_paid && (
-                      <span className="text-[10px] bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded-full">Comissão Paga</span>
-                    )}
-                  </div>
-                </div>
-              ))}
-              {clicks.length === 0 && (
-                <div className="text-center py-12 text-zinc-500">
-                  Nenhum histórico encontrado.
-                </div>
-              )}
-            </div>
+      {showFloatingCta && !viewAsUserId && !showCountdown && (
+        <div className="fixed top-1/2 right-6 -translate-y-1/2 z-50 animate-fade-in">
+          <div className="relative">
+            <button
+              onClick={() => {
+                document.getElementById("anuncios-section")?.scrollIntoView({ behavior: "smooth" });
+                setShowFloatingCta(false);
+              }}
+              className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-heading font-bold text-lg px-6 py-3 rounded-full shadow-[0_0_20px_hsl(var(--primary)/0.5)] transition-all duration-300 hover:scale-105 animate-pulse"
+            >
+              <Megaphone className="h-5 w-5" />
+              <span key={floatingText} className="inline-block min-w-[140px] text-center animate-fade-in">
+                {floatingText}
+              </span>
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowFloatingCta(false); }}
+              className="absolute -top-2 -right-2 bg-background border border-border rounded-full p-0.5 hover:bg-muted transition-colors"
+            >
+              <X className="h-4 w-4 text-muted-foreground" />
+            </button>
           </div>
         </div>
       )}
