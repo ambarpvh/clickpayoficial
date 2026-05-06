@@ -6,49 +6,16 @@ import { supabase } from "@/integrations/supabase/client";
 export default function Google2Section() {
   const [loading, setLoading] = useState(false);
 
-  // URLs que DEVEM estar cadastradas na allow list de Auth do backend
-  const REDIRECT_URL = "https://www.clickpaybrasil.online/dashboard";
-  const ALLOWED_REDIRECTS = [
-    "https://www.clickpaybrasil.online/dashboard",
-    "https://www.clickpaybrasil.online/**",
-    "https://clickpaybrasil.online/dashboard",
-  ];
-
-  const validateRedirect = (url: string) => {
-    try {
-      const parsed = new URL(url);
-      if (parsed.protocol !== "https:") {
-        return "redirectTo deve usar HTTPS.";
-      }
-      const matches = ALLOWED_REDIRECTS.some((allowed) => {
-        if (allowed.endsWith("/**")) {
-          return url.startsWith(allowed.slice(0, -3));
-        }
-        return allowed === url;
-      });
-      if (!matches) {
-        return `redirectTo "${url}" não está na lista permitida. Adicione na URI allow list do backend.`;
-      }
-      return null;
-    } catch {
-      return "redirectTo inválido.";
-    }
-  };
-
   const handleGoogleLogin = async () => {
-    const validationError = validateRedirect(REDIRECT_URL);
-    if (validationError) {
-      console.error("[google2] redirect validation failed:", validationError);
-      toast.error(validationError);
-      return;
-    }
-    console.info("[google2] iniciando OAuth com redirectTo:", REDIRECT_URL);
+    // Sempre redireciona para o /dashboard da origem atual (preview, lovable.app ou domínio customizado)
+    const redirectUrl = `${window.location.origin}/dashboard`;
+    console.info("[google2] iniciando OAuth com redirectTo:", redirectUrl);
     setLoading(true);
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: REDIRECT_URL,
+          redirectTo: redirectUrl,
           queryParams: {
             prompt: "select_account",
           },
