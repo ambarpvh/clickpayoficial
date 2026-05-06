@@ -43,22 +43,26 @@ const Login = () => {
     try {
       setSocialLoading(provider);
       
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: `${window.location.origin}/dashboard`,
-          queryParams: provider === "google" ? {
-            prompt: "select_account",
-            access_type: "offline",
-          } : undefined,
-        },
+      const result = await lovable.auth.signInWithOAuth(provider, {
+        redirect_uri: window.location.origin,
+        extraParams: provider === "google" ? {
+          prompt: "select_account",
+          access_type: "offline",
+        } : undefined,
       });
 
-      if (error) {
-        console.error("OAuth error:", error);
-        toast.error(error.message || "Falha ao conectar com o Google.");
+      if (result.error) {
+        console.error("OAuth error:", result.error);
+        toast.error(result.error.message || "Falha ao conectar com o Google.");
         setSocialLoading(null);
+        return;
       }
+
+      if (result.redirected) {
+        return;
+      }
+
+      navigate("/dashboard", { replace: true });
     } catch (err: any) {
       console.error("OAuth exception:", err);
       toast.error("Ocorreu um erro inesperado.");

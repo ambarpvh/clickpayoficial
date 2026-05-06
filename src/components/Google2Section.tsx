@@ -1,31 +1,32 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
 
 export default function Google2Section() {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
   const handleGoogleLogin = async () => {
-    // Sempre redireciona para o /dashboard da origem atual (preview, lovable.app ou domínio customizado)
-    const redirectUrl = `${window.location.origin}/dashboard`;
-    console.info("[google2] iniciando OAuth com redirectTo:", redirectUrl);
+    const redirectUri = window.location.origin;
+    console.info("[google2] iniciando OAuth gerenciado com redirect_uri:", redirectUri);
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: redirectUrl,
-          queryParams: {
-            prompt: "select_account",
-          },
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: redirectUri,
+        extraParams: {
+          prompt: "select_account",
         },
       });
-      if (error) {
-        console.error("signInWithOAuth error:", error);
-        toast.error(error.message || "Falha ao autenticar com Google.");
+      if (result.error) {
+        console.error("google2 OAuth error:", result.error);
+        toast.error(result.error.message || "Falha ao autenticar com Google.");
         setLoading(false);
+        return;
       }
+      if (result.redirected) return;
+      navigate("/dashboard", { replace: true });
     } catch (e: any) {
       console.error(e);
       toast.error(e?.message || "Erro inesperado.");

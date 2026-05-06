@@ -1,9 +1,8 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { DollarSign, Eye, TrendingUp, Zap, LogOut, Copy, Check, Gift, Clock, ArrowUpRight, Crown, History as HistoryIcon, UserCog, Info, X, Megaphone } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { DollarSign, TrendingUp, Zap, LogOut, Copy, Check, Gift, Clock, Crown, History as HistoryIcon, UserCog, Info, X, Megaphone } from "lucide-react";
 import AdTimer from "@/components/AdTimer";
 import AdminMessagesBanner from "@/components/AdminMessagesBanner";
 import { toast } from "sonner";
@@ -46,7 +45,6 @@ const Dashboard = () => {
   const [referralCount, setReferralCount] = useState(0);
   const [referralEarnings, setReferralEarnings] = useState(0);
   const [isVip, setIsVip] = useState(false);
-  const [showVipModal, setShowVipModal] = useState(false);
   const [showReferralModal, setShowReferralModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
 
@@ -73,22 +71,21 @@ const Dashboard = () => {
     try {
       setLoading(true);
       
-      // Load profile data
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("balance, is_vip")
-        .eq("id", targetUserId)
-        .single();
+      // Load active plan to identify VIP users
+      const { data: activePlan } = await supabase
+        .from("user_plans")
+        .select("plans(price)")
+        .eq("user_id", targetUserId)
+        .eq("is_active", true)
+        .maybeSingle();
 
-      if (profileError) throw profileError;
-      setBalance(profile.balance || 0);
-      setIsVip(profile.is_vip || false);
+      setIsVip(Number((activePlan as any)?.plans?.price || 0) > 0);
 
       // Load ads
       const { data: adsData, error: adsError } = await supabase
         .from("ads")
         .select("*")
-        .eq("active", true);
+        .eq("is_active", true);
 
       if (adsError) throw adsError;
       setAds(adsData || []);
@@ -120,6 +117,20 @@ const Dashboard = () => {
       const todaySum = todayClicks.reduce((acc, curr) => acc + curr.earned_value, 0);
       setTodayEarnings(todaySum);
 
+      const clicksSum = (clicksData || []).reduce((acc, curr) => acc + curr.earned_value, 0);
+      const { data: adjustmentsData } = await supabase
+        .from("balance_adjustments")
+        .select("amount")
+        .eq("user_id", targetUserId);
+      const { data: withdrawalsData } = await supabase
+        .from("withdrawals")
+        .select("amount")
+        .eq("user_id", targetUserId)
+        .in("status", ["approved", "pending"]);
+      const adjustmentsSum = (adjustmentsData || []).reduce((acc, curr) => acc + curr.amount, 0);
+      const withdrawalsSum = (withdrawalsData || []).reduce((acc, curr) => acc + curr.amount, 0);
+      setBalance(clicksSum + adjustmentsSum - withdrawalsSum);
+
       // Load referrals
       const { count: refCount, error: refError } = await supabase
         .from("profiles")
@@ -131,13 +142,13 @@ const Dashboard = () => {
 
       // Load referral earnings
       const { data: refEarningsData, error: refEarningsError } = await supabase
-        .from("clicks")
-        .select("earned_value")
-        .eq("referrer_id", targetUserId)
-        .eq("referral_commission_paid", true);
+        .from("balance_adjustments")
+        .select("amount")
+        .eq("user_id", targetUserId)
+        .ilike("note", "Comissão:%");
 
       if (!refEarningsError && refEarningsData) {
-        const refSum = refEarningsData.reduce((acc, curr) => acc + (curr.earned_value * 0.1), 0);
+        const refSum = refEarningsData.reduce((acc, curr) => acc + curr.amount, 0);
         setReferralEarnings(refSum);
       }
 
@@ -152,18 +163,18 @@ const Dashboard = () => {
     setActiveAd(ad);
   };
 
-  const handleAdComplete = async () => {
+  const handleAdComplete = async (adId: string) => {
     if (!activeAd || !user) return;
 
     try {
-      const { data, error } = await supabase.rpc("complete_ad_view", {
-        p_ad_id: activeAd.id,
-        p_user_id: user.id
-      });
+      const completedAd = activeAd;
+      const { error } = await supabase
+        .from("clicks")
+        .insert({ ad_id: adId, user_id: user.id });
 
       if (error) throw error;
 
-      toast.success(`Você ganhou ${formatBRL(activeAd.reward_value || 0)}!`);
+      toast.success(`Você ganhou ${formatBRL(completedAd.reward_value || 0)}!`);
       setActiveAd(null);
       loadData();
     } catch (error: any) {
@@ -193,7 +204,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-black text-white pb-20">
-      <AdminMessagesBanner />
+      <AdminMessagesBanner userId={user.id} />
       
       {/* Header */}
       <header className="bg-zinc-900/50 border-b border-zinc-800 p-4 sticky top-0 z-40 backdrop-blur-md">
@@ -402,44 +413,14 @@ const Dashboard = () => {
 
       {/* Ad Viewer Modal */}
       {activeAd && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
-          <div className="w-full max-w-4xl bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden shadow-2xl">
-            <div className="p-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/80">
-              <div className="flex items-center gap-3">
-                <div className="bg-yellow-400/10 p-2 rounded-lg">
-                  <Clock className="w-5 h-5 text-yellow-400" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-sm">{activeAd.title}</h4>
-                  <AdTimer 
-                    duration={activeAd.view_time} 
-                    onComplete={handleAdComplete} 
-                  />
-                </div>
-              </div>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={() => setActiveAd(null)}
-                className="text-zinc-500 hover:text-white"
-              >
-                <X className="w-6 h-6" />
-              </Button>
-            </div>
-            <div className="aspect-video bg-black relative">
-              <iframe 
-                src={activeAd.url} 
-                className="w-full h-full border-none"
-                title="Ad Content"
-                allow="autoplay"
-              />
-              <div className="absolute inset-0 pointer-events-none border-4 border-yellow-400/20 animate-pulse" />
-            </div>
-            <div className="p-4 bg-zinc-900/80 text-center">
-              <p className="text-xs text-zinc-500">Aguarde o cronômetro finalizar para receber sua recompensa.</p>
-            </div>
-          </div>
-        </div>
+        <AdTimer
+          ad={{
+            ...activeAd,
+            reward: formatBRL(activeAd.reward_value || 0),
+          }}
+          onComplete={handleAdComplete}
+          onClose={() => setActiveAd(null)}
+        />
       )}
 
       {/* Referral Modal */}
