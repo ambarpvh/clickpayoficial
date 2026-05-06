@@ -71,22 +71,21 @@ const Dashboard = () => {
     try {
       setLoading(true);
       
-      // Load profile data
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("balance, is_vip")
-        .eq("id", targetUserId)
-        .single();
+      // Load active plan to identify VIP users
+      const { data: activePlan } = await supabase
+        .from("user_plans")
+        .select("plans(price)")
+        .eq("user_id", targetUserId)
+        .eq("is_active", true)
+        .maybeSingle();
 
-      if (profileError) throw profileError;
-      setBalance(profile.balance || 0);
-      setIsVip(profile.is_vip || false);
+      setIsVip(Number((activePlan as any)?.plans?.price || 0) > 0);
 
       // Load ads
       const { data: adsData, error: adsError } = await supabase
         .from("ads")
         .select("*")
-        .eq("active", true);
+        .eq("is_active", true);
 
       if (adsError) throw adsError;
       setAds(adsData || []);
@@ -118,6 +117,20 @@ const Dashboard = () => {
       const todaySum = todayClicks.reduce((acc, curr) => acc + curr.earned_value, 0);
       setTodayEarnings(todaySum);
 
+      const clicksSum = (clicksData || []).reduce((acc, curr) => acc + curr.earned_value, 0);
+      const { data: adjustmentsData } = await supabase
+        .from("balance_adjustments")
+        .select("amount")
+        .eq("user_id", targetUserId);
+      const { data: withdrawalsData } = await supabase
+        .from("withdrawals")
+        .select("amount")
+        .eq("user_id", targetUserId)
+        .in("status", ["approved", "pending"]);
+      const adjustmentsSum = (adjustmentsData || []).reduce((acc, curr) => acc + curr.amount, 0);
+      const withdrawalsSum = (withdrawalsData || []).reduce((acc, curr) => acc + curr.amount, 0);
+      setBalance(clicksSum + adjustmentsSum - withdrawalsSum);
+
       // Load referrals
       const { count: refCount, error: refError } = await supabase
         .from("profiles")
@@ -129,13 +142,13 @@ const Dashboard = () => {
 
       // Load referral earnings
       const { data: refEarningsData, error: refEarningsError } = await supabase
-        .from("clicks")
-        .select("earned_value")
-        .eq("referrer_id", targetUserId)
-        .eq("referral_commission_paid", true);
+        .from("balance_adjustments")
+        .select("amount")
+        .eq("user_id", targetUserId)
+        .ilike("note", "Comissão:%");
 
       if (!refEarningsError && refEarningsData) {
-        const refSum = refEarningsData.reduce((acc, curr) => acc + (curr.earned_value * 0.1), 0);
+        const refSum = refEarningsData.reduce((acc, curr) => acc + curr.amount, 0);
         setReferralEarnings(refSum);
       }
 
