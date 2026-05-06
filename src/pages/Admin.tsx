@@ -201,18 +201,26 @@ const Admin = () => {
       const totalPaid = approvedW?.reduce((s, w) => s + Number(w.amount), 0) || 0;
 
       setStats({ users: userCount || 0, clicks: clickCount || 0, pendingWithdrawals: pendingCount || 0, activeAds: activeAdsCount || 0, totalPaid });
-      // Fetch balances for each user
+      // Fetch balances for each user (paginated to bypass 1000-row cap)
       const userIds = (profilesData || []).map((p: any) => p.user_id);
-      const [
-        { data: allClicks },
-        { data: allAdjustments },
-        { data: allWithdrawalsAll },
-        { data: allUserPlans },
-      ] = await Promise.all([
-        supabase.from("clicks").select("user_id, earned_value").in("user_id", userIds),
-        supabase.from("balance_adjustments").select("user_id, amount").in("user_id", userIds),
-        supabase.from("withdrawals").select("user_id, amount, status").in("user_id", userIds),
-        supabase.from("user_plans").select("user_id, plan_id, is_active").eq("is_active", true).in("user_id", userIds),
+      const fetchAll = async <T,>(builder: () => any): Promise<T[]> => {
+        const pageSize = 1000;
+        let from = 0;
+        const out: T[] = [];
+        while (true) {
+          const { data, error } = await builder().range(from, from + pageSize - 1);
+          if (error || !data || data.length === 0) break;
+          out.push(...data);
+          if (data.length < pageSize) break;
+          from += pageSize;
+        }
+        return out;
+      };
+      const [allClicks, allAdjustments, allWithdrawalsAll, allUserPlans] = await Promise.all([
+        fetchAll<any>(() => supabase.from("clicks").select("user_id, earned_value").in("user_id", userIds)),
+        fetchAll<any>(() => supabase.from("balance_adjustments").select("user_id, amount").in("user_id", userIds)),
+        fetchAll<any>(() => supabase.from("withdrawals").select("user_id, amount, status").in("user_id", userIds)),
+        fetchAll<any>(() => supabase.from("user_plans").select("user_id, plan_id, is_active").eq("is_active", true).in("user_id", userIds)),
       ]);
 
       const balanceMap: Record<string, number> = {};
