@@ -163,18 +163,18 @@ const Dashboard = () => {
     setActiveAd(ad);
   };
 
-  const handleAdComplete = async () => {
+  const handleAdComplete = async (adId: string) => {
     if (!activeAd || !user) return;
 
     try {
-      const { data, error } = await supabase.rpc("complete_ad_view", {
-        p_ad_id: activeAd.id,
-        p_user_id: user.id
-      });
+      const completedAd = activeAd;
+      const { error } = await supabase
+        .from("clicks")
+        .insert({ ad_id: adId, user_id: user.id });
 
       if (error) throw error;
 
-      toast.success(`Você ganhou ${formatBRL(activeAd.reward_value || 0)}!`);
+      toast.success(`Você ganhou ${formatBRL(completedAd.reward_value || 0)}!`);
       setActiveAd(null);
       loadData();
     } catch (error: any) {
@@ -204,7 +204,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-black text-white pb-20">
-      <AdminMessagesBanner />
+      <AdminMessagesBanner userId={user.id} />
       
       {/* Header */}
       <header className="bg-zinc-900/50 border-b border-zinc-800 p-4 sticky top-0 z-40 backdrop-blur-md">
@@ -413,44 +413,14 @@ const Dashboard = () => {
 
       {/* Ad Viewer Modal */}
       {activeAd && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
-          <div className="w-full max-w-4xl bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden shadow-2xl">
-            <div className="p-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/80">
-              <div className="flex items-center gap-3">
-                <div className="bg-yellow-400/10 p-2 rounded-lg">
-                  <Clock className="w-5 h-5 text-yellow-400" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-sm">{activeAd.title}</h4>
-                  <AdTimer 
-                    duration={activeAd.view_time} 
-                    onComplete={handleAdComplete} 
-                  />
-                </div>
-              </div>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={() => setActiveAd(null)}
-                className="text-zinc-500 hover:text-white"
-              >
-                <X className="w-6 h-6" />
-              </Button>
-            </div>
-            <div className="aspect-video bg-black relative">
-              <iframe 
-                src={activeAd.url} 
-                className="w-full h-full border-none"
-                title="Ad Content"
-                allow="autoplay"
-              />
-              <div className="absolute inset-0 pointer-events-none border-4 border-yellow-400/20 animate-pulse" />
-            </div>
-            <div className="p-4 bg-zinc-900/80 text-center">
-              <p className="text-xs text-zinc-500">Aguarde o cronômetro finalizar para receber sua recompensa.</p>
-            </div>
-          </div>
-        </div>
+        <AdTimer
+          ad={{
+            ...activeAd,
+            reward: formatBRL(activeAd.reward_value || 0),
+          }}
+          onComplete={handleAdComplete}
+          onClose={() => setActiveAd(null)}
+        />
       )}
 
       {/* Referral Modal */}
