@@ -1,9 +1,8 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { DollarSign, Eye, TrendingUp, Zap, LogOut, Copy, Check, Gift, Clock, ArrowUpRight, Crown, History as HistoryIcon, UserCog, Info, X, Megaphone } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { DollarSign, TrendingUp, Zap, LogOut, Copy, Check, Gift, Clock, Crown, History as HistoryIcon, UserCog, Info, X, Megaphone } from "lucide-react";
 import AdTimer from "@/components/AdTimer";
 import AdminMessagesBanner from "@/components/AdminMessagesBanner";
 import { toast } from "sonner";
@@ -46,7 +45,6 @@ const Dashboard = () => {
   const [referralCount, setReferralCount] = useState(0);
   const [referralEarnings, setReferralEarnings] = useState(0);
   const [isVip, setIsVip] = useState(false);
-  const [showVipModal, setShowVipModal] = useState(false);
   const [showReferralModal, setShowReferralModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
 
